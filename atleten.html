@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atletenbeheer - Multisport Manager</title>
+    <link rel="stylesheet" href="styles.css">
+    <script defer src="script.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Atletenbeheer</h1>
+        <nav>
+            <ul>
+                <li><a href="manager.html">Manager</a></li>
+                <li><a href="training.html">Training</a></li>
+                <li><a href="scouting.html">Scouten</a></li>
+                <li><a href="#" onclick="logout()">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="athlete-section">
+            <h2>Jouw Atleten</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Naam</th>
+                        <th>Sport</th>
+                        <th>Eigenschappen</th>
+                        <th>Acties</th>
+                    </tr>
+                </thead>
+                <tbody id="athlete-list">
+                    <!-- Atleten worden hier ingeladen -->
+                </tbody>
+            </table>
+        </section>
+    </main>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            let user = JSON.parse(localStorage.getItem("loggedInUser"));
+            if (!user) {
+                window.location.href = "login.html";
+                return;
+            }
+            
+            let athletes = JSON.parse(localStorage.getItem("athletes")) || [];
+            let userAthletes = athletes.filter(a => a.country === user.assignedCountry);
+            let athleteList = document.getElementById("athlete-list");
+
+            if (userAthletes.length === 0) {
+                athleteList.innerHTML = "<tr><td colspan='4'>Geen atleten gevonden.</td></tr>";
+            } else {
+                userAthletes.forEach(athlete => {
+                    let row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${athlete.name}</td>
+                        <td>${athlete.sport}</td>
+                        <td>Snelheid: ${athlete.speed}, Kracht: ${athlete.strength}</td>
+                        <td><button onclick="removeAthlete('${athlete.name}')">Ontslaan</button></td>
+                    `;
+                    athleteList.appendChild(row);
+                });
+            }
+        });
+        
+        function removeAthlete(name) {
+            let athletes = JSON.parse(localStorage.getItem("athletes")) || [];
+            let updatedAthletes = athletes.filter(a => a.name !== name);
+            localStorage.setItem("athletes", JSON.stringify(updatedAthletes));
+            location.reload();
+        }
+    </script>
+</body>
+</html>
