@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wedstrijd Voorbereiding - Multisport Manager</title>
+    <link rel="stylesheet" href="styles.css">
+    <script defer src="script.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Wedstrijd Voorbereiding</h1>
+        <nav>
+            <ul>
+                <li><a href="manager.html">Terug naar Manager</a></li>
+                <li><a href="#" onclick="logout()">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="preparation-section">
+            <h2>Tactieken Instellen</h2>
+            <p>Selecteer een sport en stel de tactiek in voor je atleten.</p>
+            
+            <label for="sport-select">Kies een sport:</label>
+            <select id="sport-select">
+                <option value="Atletiek">Atletiek</option>
+                <option value="Zwemmen">Zwemmen</option>
+                <option value="Wielrennen">Wielrennen</option>
+                <option value="Gymnastiek">Gymnastiek</option>
+            </select>
+
+            <label for="tactiek-select">Kies een tactiek:</label>
+            <select id="tactiek-select">
+                <option value="Aanvallend">Aanvallend</option>
+                <option value="Defensief">Defensief</option>
+                <option value="Gebalanceerd">Gebalanceerd</option>
+            </select>
+
+            <button onclick="saveTactics()">Opslaan</button>
+        </section>
+    </main>
+    
+    <script>
+        function saveTactics() {
+            let sport = document.getElementById("sport-select").value;
+            let tactiek = document.getElementById("tactiek-select").value;
+            let user = JSON.parse(localStorage.getItem("loggedInUser"));
+            if (!user) {
+                window.location.href = "login.html";
+                return;
+            }
+            
+            let tactics = JSON.parse(localStorage.getItem("tactics")) || {};
+            tactics[user.managerName] = tactics[user.managerName] || {};
+            tactics[user.managerName][sport] = tactiek;
+            localStorage.setItem("tactics", JSON.stringify(tactics));
+            alert("Tactiek opgeslagen voor " + sport + ": " + tactiek);
+        }
+    </script>
+</body>
+</html>
