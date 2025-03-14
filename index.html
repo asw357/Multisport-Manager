@@ -16,7 +16,15 @@
                 <li><a href="register.html">Register</a></li>
                 <li><a href="login.html">Login</a></li>
                 <li><a href="contact.html">Contact</a></li>
-                <li><a href="tutorial.html">Tutorial</a></li>
+                <li class="hidden" id="manager-link"><a href="manager.html">Manager</a></li>
+                <li class="hidden" id="athlete-link"><a href="atleten.html">Atletenbeheer</a></li>
+                <li class="hidden" id="training-link"><a href="training.html">Training</a></li>
+                <li class="hidden" id="scouting-link"><a href="scouting.html">Scouten</a></li>
+                <li class="hidden" id="tactics-link"><a href="wedstrijdvoorbereiding.html">Wedstrijd Voorbereiding</a></li>
+                <li class="hidden" id="editions-link"><a href="edities.html">Edities</a></li>
+                <li class="hidden" id="news-link"><a href="news.html">Nieuws</a></li>
+                <li class="hidden" id="admin-link"><a href="admin.html">Admin</a></li>
+                <li class="hidden" id="logout-link"><a href="#" onclick="logout()">Logout</a></li>
             </ul>
         </nav>
     </header>
@@ -27,5 +35,14 @@
             <p>Manage your national team, train athletes, scout for new talent, and compete in global sports competitions.</p>
         </section>
     </main>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            let user = JSON.parse(localStorage.getItem("loggedInUser"));
+            if (user) {
+                document.querySelectorAll(".hidden").forEach(el => el.style.display = "inline");
+            }
+        });
+    </script>
 </body>
 </html>
