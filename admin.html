@@ -63,13 +63,18 @@
 
         <section class="admin-section">
             <h2>Beheer Starterslijst</h2>
-            <label for="starter-name">Naam Atleet:</label>
-            <input type="text" id="starter-name" placeholder="Naam atleet">
             <label for="starter-sport">Sport:</label>
             <input type="text" id="starter-sport" placeholder="Sport">
-            <label for="starter-country">Land:</label>
-            <input type="text" id="starter-country" placeholder="Land">
-            <button onclick="addStarterAthlete()">Toevoegen</button>
+            <label for="starter-event">Onderdeel:</label>
+            <input type="text" id="starter-event" placeholder="Onderdeel">
+            <label for="starter-gender">Geslacht:</label>
+            <select id="starter-gender">
+                <option value="M">Mannen</option>
+                <option value="V">Vrouwen</option>
+            </select>
+            <label for="starter-amount">Aantal atleten:</label>
+            <input type="number" id="starter-amount" placeholder="Aantal atleten">
+            <button onclick="addStarterAthletes()">Toevoegen</button>
             <ul id="starter-list"></ul>
         </section>
     </main>
@@ -88,39 +93,18 @@
             loadStarterList();
         });
         
-        function setAthleteLimit() {
-            let sport = document.getElementById("sport-name").value;
-            let event = document.getElementById("event-name").value;
-            let gender = document.getElementById("gender").value;
-            let limit = document.getElementById("limit").value;
-            
-            if (sport && event && limit) {
-                let limits = JSON.parse(localStorage.getItem("athleteLimits")) || [];
-                limits.push({ sport, event, gender, limit });
-                localStorage.setItem("athleteLimits", JSON.stringify(limits));
-                loadAthleteLimits();
-            }
-        }
-
-        function loadAthleteLimits() {
-            let limits = JSON.parse(localStorage.getItem("athleteLimits")) || [];
-            let limitList = document.getElementById("athlete-limits");
-            limitList.innerHTML = "";
-            limits.forEach(l => {
-                let li = document.createElement("li");
-                li.innerText = `${l.sport} - ${l.event} (${l.gender}): Max ${l.limit}`;
-                limitList.appendChild(li);
-            });
-        }
-
-        function addStarterAthlete() {
-            let name = document.getElementById("starter-name").value;
+        function addStarterAthletes() {
             let sport = document.getElementById("starter-sport").value;
-            let country = document.getElementById("starter-country").value;
+            let event = document.getElementById("starter-event").value;
+            let gender = document.getElementById("starter-gender").value;
+            let amount = parseInt(document.getElementById("starter-amount").value);
             
-            if (name && sport && country) {
+            if (sport && event && amount > 0) {
                 let starters = JSON.parse(localStorage.getItem("starterAthletes")) || [];
-                starters.push({ name, sport, country });
+                for (let i = 0; i < amount; i++) {
+                    let generatedName = `Atleet-${sport}-${event}-${i + 1}`;
+                    starters.push({ name: generatedName, sport, event, gender });
+                }
                 localStorage.setItem("starterAthletes", JSON.stringify(starters));
                 loadStarterList();
             }
@@ -132,7 +116,7 @@
             starterList.innerHTML = "";
             starters.forEach(s => {
                 let li = document.createElement("li");
-                li.innerText = `${s.name} - ${s.sport} (${s.country})`;
+                li.innerText = `${s.name} - ${s.sport} (${s.event}, ${s.gender})`;
                 starterList.appendChild(li);
             });
         }
