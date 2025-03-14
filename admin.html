@@ -38,12 +38,17 @@
             <input type="number" id="mp-value" placeholder="Voer MP waarde in">
             <button onclick="updateMP()">Opslaan</button>
         </section>
+
+        <section class="admin-section">
+            <h2>Beheer Inactieve Spelers</h2>
+            <button onclick="removeInactiveUsers()">Verwijder inactieve spelers</button>
+        </section>
     </main>
     
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             let user = JSON.parse(localStorage.getItem("loggedInUser"));
-            if (!user || user.email !== "wilcoboesveld12@hotmail.com") {
+            if (!user || user.email !== "admin@multisport.com") {
                 window.location.href = "index.html";
                 return;
             }
@@ -77,11 +82,26 @@
             let users = JSON.parse(localStorage.getItem("users")) || [];
             let userList = document.getElementById("user-list");
             userList.innerHTML = "";
-            users.forEach(user => {
+            users.forEach((user, index) => {
                 let li = document.createElement("li");
-                li.innerText = `${user.managerName} - ${user.assignedCountry}`;
+                li.innerHTML = `${user.managerName} - ${user.assignedCountry} <button onclick="removeUser(${index})">Verwijderen</button>`;
                 userList.appendChild(li);
             });
+        }
+        
+        function removeUser(index) {
+            let users = JSON.parse(localStorage.getItem("users")) || [];
+            users.splice(index, 1);
+            localStorage.setItem("users", JSON.stringify(users));
+            loadUsers();
+        }
+        
+        function removeInactiveUsers() {
+            let users = JSON.parse(localStorage.getItem("users")) || [];
+            let activeUsers = users.filter(user => user.lastActive && Date.now() - user.lastActive < 30 * 24 * 60 * 60 * 1000);
+            localStorage.setItem("users", JSON.stringify(activeUsers));
+            alert("Inactieve spelers verwijderd!");
+            loadUsers();
         }
         
         function updateMP() {
