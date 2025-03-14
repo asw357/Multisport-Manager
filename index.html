@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Multisport Manager</title>
+    <title>Multisport Manager</title>
     <link rel="stylesheet" href="styles.css">
     <script defer src="script.js"></script>
 </head>
@@ -11,42 +11,30 @@
     <header>
         <h1>Multisport Manager</h1>
         <nav>
-            <ul>
+            <ul id="nav-links">
                 <li><a href="index.html">Home</a></li>
+                <li><a href="#" id="tutorial-link">Tutorial</a></li>
                 <li><a href="register.html">Register</a></li>
                 <li><a href="login.html">Login</a></li>
                 <li><a href="contact.html">Contact</a></li>
             </ul>
         </nav>
     </header>
-
+    
     <main>
-        <section class="login-section">
-            <h2>Login to Your Account</h2>
-            <form id="login-form" class="form-container">
-                <input type="email" id="login-email" placeholder="Enter your Email" required>
-                <input type="password" id="login-password" placeholder="Enter your Password" required>
-                <button type="submit">Login</button>
-            </form>
-            <p id="login-message"></p>
+        <section class="welcome-section">
+            <h2>Welcome to Multisport Manager!</h2>
+            <p>Manage your national team, train athletes, scout for new talent, and compete in global sports competitions.</p>
         </section>
     </main>
 
-    <script>
-        document.getElementById("login-form").addEventListener("submit", function(event) {
-            event.preventDefault();
-            let email = document.getElementById("login-email").value;
-            let password = document.getElementById("login-password").value;
-            
-            let userData = JSON.parse(localStorage.getItem("user"));
-            if (userData && userData.email === email && userData.password === password) {
-                localStorage.setItem("loggedInUser", JSON.stringify(userData));
-                document.getElementById("login-message").innerText = `Welcome back, ${userData.managerName}!`;
-                setTimeout(() => { window.location.href = "manager.html"; }, 2000);
-            } else {
-                document.getElementById("login-message").innerText = "Invalid email or password. Try again.";
-            }
-        });
-    </script>
+    <!-- Modal for Tutorial -->
+    <div id="tutorial-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeTutorial()">&times;</span>
+            <h2>Game Tutorial</h2>
+            <p>Welcome to Multisport Manager! Here’s how to get started...</p>
+        </div>
+    </div>
 </body>
 </html>
