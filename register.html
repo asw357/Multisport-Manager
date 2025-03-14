@@ -31,14 +31,14 @@
     </header>
     
     <main>
-        <section>
+        <section class="welcome-section">
             <h2>Welcome to Multisport Manager!</h2>
             <p>Manage your national team, train athletes, scout for new talent, and compete in global sports competitions.</p>
         </section>
         
-        <section>
+        <section class="register-section">
             <h3>Register to Get Started</h3>
-            <form id="register-form">
+            <form id="register-form" class="form-container">
                 <input type="text" id="manager-name" placeholder="Enter your Manager Name" required>
                 <input type="email" id="email" placeholder="Enter your Email" required>
                 <input type="password" id="password" placeholder="Enter your Password" required>
@@ -68,8 +68,14 @@
                 let assignedCountry = assignNextAvailableCountry();
                 let userData = { managerName, email, password, assignedCountry };
                 localStorage.setItem("user", JSON.stringify(userData));
+                localStorage.setItem("loggedInUser", JSON.stringify(userData));
+                
                 document.getElementById("register-message").innerText = `Welcome, ${managerName}! You have been assigned to ${assignedCountry}.`;
-                setTimeout(() => { window.location.href = "manager.html"; }, 2000);
+                
+                setTimeout(() => { 
+                    checkLoginStatus(); 
+                    window.location.href = "manager.html"; 
+                }, 2000);
             }
         });
         
@@ -80,6 +86,13 @@
             usedCountries.push(availableCountry);
             localStorage.setItem("usedCountries", JSON.stringify(usedCountries));
             return availableCountry;
+        }
+
+        function checkLoginStatus() {
+            let user = JSON.parse(localStorage.getItem("loggedInUser"));
+            if (user) {
+                document.querySelectorAll(".hidden").forEach(el => el.style.display = "inline");
+            }
         }
     </script>
 </body>
