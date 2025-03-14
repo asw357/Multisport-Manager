@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multisport Manager</title>
+    <link rel="stylesheet" href="styles.css">
+    <script defer src="script.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Multisport Manager</h1>
+        <nav>
+            <ul id="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="#" id="tutorial-link">Tutorial</a></li>
+                <li><a href="register.html">Register</a></li>
+                <li><a href="login.html">Login</a></li>
+                <li><a href="contact.html">Contact</a></li>
+                <li class="hidden" id="manager-link"><a href="manager.html">Manager</a></li>
+                <li class="hidden" id="athlete-link"><a href="atleten.html">Atletenbeheer</a></li>
+                <li class="hidden" id="training-link"><a href="training.html">Training</a></li>
+                <li class="hidden" id="scouting-link"><a href="scouting.html">Scouten</a></li>
+                <li class="hidden" id="tactics-link"><a href="tactieken.html">Tactieken</a></li>
+                <li class="hidden" id="editions-link"><a href="edities.html">Edities</a></li>
+                <li class="hidden" id="news-link"><a href="news.html">Nieuws</a></li>
+                <li class="hidden" id="admin-link"><a href="admin.html">Admin</a></li>
+                <li class="hidden" id="logout-link"><a href="#" onclick="logout()">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+    
+    <main>
+        <section>
+            <h2>Welcome to Multisport Manager!</h2>
+            <p>Manage your national team, train athletes, scout for new talent, and compete in global sports competitions.</p>
+        </section>
+    </main>
+
+    <!-- Modal for Tutorial -->
+    <div id="tutorial-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeTutorial()">&times;</span>
+            <h2>Game Tutorial</h2>
+            <p>Welcome to Multisport Manager! Here’s how to get started...</p>
+        </div>
+    </div>
+
+</body>
+</html>
