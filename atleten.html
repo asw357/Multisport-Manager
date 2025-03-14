@@ -13,6 +13,8 @@
         <nav>
             <ul>
                 <li><a href="manager.html">Terug naar Manager</a></li>
+                <li><a href="training.html">Training</a></li>
+                <li><a href="scouting.html">Scouten</a></li>
                 <li><a href="#" onclick="logout()">Logout</a></li>
             </ul>
         </nav>
@@ -26,6 +28,8 @@
                     <tr>
                         <th>Naam</th>
                         <th>Sport</th>
+                        <th>Onderdeel</th>
+                        <th>Geslacht</th>
                         <th>Eigenschappen</th>
                         <th>Acties</th>
                     </tr>
@@ -34,14 +38,6 @@
                     <!-- Atleten worden hier ingeladen -->
                 </tbody>
             </table>
-        </section>
-
-        <section class="links-section">
-            <h3>Atleetbeheer</h3>
-            <ul>
-                <li><a href="training.html">Training</a></li>
-                <li><a href="scouting.html">Scouten</a></li>
-            </ul>
         </section>
     </main>
     
@@ -58,13 +54,15 @@
             let athleteList = document.getElementById("athlete-list");
 
             if (userAthletes.length === 0) {
-                athleteList.innerHTML = "<tr><td colspan='4'>Geen atleten gevonden.</td></tr>";
+                athleteList.innerHTML = "<tr><td colspan='6'>Geen atleten gevonden.</td></tr>";
             } else {
                 userAthletes.forEach(athlete => {
                     let row = document.createElement("tr");
                     row.innerHTML = `
                         <td>${athlete.name}</td>
                         <td>${athlete.sport}</td>
+                        <td>${athlete.event}</td>
+                        <td>${athlete.gender}</td>
                         <td>Snelheid: ${athlete.speed}, Kracht: ${athlete.strength}</td>
                         <td><button onclick="removeAthlete('${athlete.name}')">Ontslaan</button></td>
                     `;
