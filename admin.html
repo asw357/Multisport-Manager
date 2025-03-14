@@ -43,73 +43,98 @@
             <h2>Beheer Inactieve Spelers</h2>
             <button onclick="removeInactiveUsers()">Verwijder inactieve spelers</button>
         </section>
+
+        <section class="admin-section">
+            <h2>Instellen Atletenbeheer Limieten</h2>
+            <label for="sport-name">Sport:</label>
+            <input type="text" id="sport-name" placeholder="Voer een sport in">
+            <label for="event-name">Onderdeel:</label>
+            <input type="text" id="event-name" placeholder="Voer een onderdeel in">
+            <label for="gender">Geslacht:</label>
+            <select id="gender">
+                <option value="M">Mannen</option>
+                <option value="V">Vrouwen</option>
+            </select>
+            <label for="limit">Max. aantal atleten:</label>
+            <input type="number" id="limit" placeholder="Aantal atleten">
+            <button onclick="setAthleteLimit()">Opslaan</button>
+            <ul id="athlete-limits"></ul>
+        </section>
+
+        <section class="admin-section">
+            <h2>Beheer Starterslijst</h2>
+            <label for="starter-name">Naam Atleet:</label>
+            <input type="text" id="starter-name" placeholder="Naam atleet">
+            <label for="starter-sport">Sport:</label>
+            <input type="text" id="starter-sport" placeholder="Sport">
+            <label for="starter-country">Land:</label>
+            <input type="text" id="starter-country" placeholder="Land">
+            <button onclick="addStarterAthlete()">Toevoegen</button>
+            <ul id="starter-list"></ul>
+        </section>
     </main>
     
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             let user = JSON.parse(localStorage.getItem("loggedInUser"));
-            if (!user || user.email !== "wilcoboesveld12@hotmail.com") {
+            if (!user || user.email !== "admin@multisport.com") {
                 window.location.href = "index.html";
                 return;
             }
             
             loadCountries();
             loadUsers();
+            loadAthleteLimits();
+            loadStarterList();
         });
         
-        function addCountry() {
-            let country = document.getElementById("new-country").value;
-            if (country) {
-                let countries = JSON.parse(localStorage.getItem("countries")) || [];
-                countries.push(country);
-                localStorage.setItem("countries", JSON.stringify(countries));
-                loadCountries();
+        function setAthleteLimit() {
+            let sport = document.getElementById("sport-name").value;
+            let event = document.getElementById("event-name").value;
+            let gender = document.getElementById("gender").value;
+            let limit = document.getElementById("limit").value;
+            
+            if (sport && event && limit) {
+                let limits = JSON.parse(localStorage.getItem("athleteLimits")) || [];
+                limits.push({ sport, event, gender, limit });
+                localStorage.setItem("athleteLimits", JSON.stringify(limits));
+                loadAthleteLimits();
             }
         }
 
-        function loadCountries() {
-            let countries = JSON.parse(localStorage.getItem("countries")) || [];
-            let countryList = document.getElementById("country-list");
-            countryList.innerHTML = "";
-            countries.forEach(c => {
+        function loadAthleteLimits() {
+            let limits = JSON.parse(localStorage.getItem("athleteLimits")) || [];
+            let limitList = document.getElementById("athlete-limits");
+            limitList.innerHTML = "";
+            limits.forEach(l => {
                 let li = document.createElement("li");
-                li.innerText = c;
-                countryList.appendChild(li);
+                li.innerText = `${l.sport} - ${l.event} (${l.gender}): Max ${l.limit}`;
+                limitList.appendChild(li);
             });
         }
 
-        function loadUsers() {
-            let users = JSON.parse(localStorage.getItem("users")) || [];
-            let userList = document.getElementById("user-list");
-            userList.innerHTML = "";
-            users.forEach((user, index) => {
-                let li = document.createElement("li");
-                li.innerHTML = `${user.managerName} - ${user.assignedCountry} <button onclick="removeUser(${index})">Verwijderen</button>`;
-                userList.appendChild(li);
-            });
-        }
-        
-        function removeUser(index) {
-            let users = JSON.parse(localStorage.getItem("users")) || [];
-            users.splice(index, 1);
-            localStorage.setItem("users", JSON.stringify(users));
-            loadUsers();
-        }
-        
-        function removeInactiveUsers() {
-            let users = JSON.parse(localStorage.getItem("users")) || [];
-            let activeUsers = users.filter(user => user.lastActive && Date.now() - user.lastActive < 30 * 24 * 60 * 60 * 1000);
-            localStorage.setItem("users", JSON.stringify(activeUsers));
-            alert("Inactieve spelers verwijderd!");
-            loadUsers();
-        }
-        
-        function updateMP() {
-            let newMP = document.getElementById("mp-value").value;
-            if (newMP) {
-                localStorage.setItem("medalPointsRule", newMP);
-                alert("Medal Points waarde bijgewerkt!");
+        function addStarterAthlete() {
+            let name = document.getElementById("starter-name").value;
+            let sport = document.getElementById("starter-sport").value;
+            let country = document.getElementById("starter-country").value;
+            
+            if (name && sport && country) {
+                let starters = JSON.parse(localStorage.getItem("starterAthletes")) || [];
+                starters.push({ name, sport, country });
+                localStorage.setItem("starterAthletes", JSON.stringify(starters));
+                loadStarterList();
             }
+        }
+
+        function loadStarterList() {
+            let starters = JSON.parse(localStorage.getItem("starterAthletes")) || [];
+            let starterList = document.getElementById("starter-list");
+            starterList.innerHTML = "";
+            starters.forEach(s => {
+                let li = document.createElement("li");
+                li.innerText = `${s.name} - ${s.sport} (${s.country})`;
+                starterList.appendChild(li);
+            });
         }
     </script>
 </body>
