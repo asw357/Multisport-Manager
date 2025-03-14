@@ -3,41 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multisport Manager</title>
+    <title>Registratie - Multisport Manager</title>
     <link rel="stylesheet" href="styles.css">
     <script defer src="script.js"></script>
 </head>
 <body>
     <header>
-        <h1>Multisport Manager</h1>
+        <h1>Registreren</h1>
         <nav>
-            <ul id="nav-links">
+            <ul>
                 <li><a href="index.html">Home</a></li>
-                <li><a href="register.html">Register</a></li>
                 <li><a href="login.html">Login</a></li>
                 <li><a href="contact.html">Contact</a></li>
             </ul>
         </nav>
     </header>
-    
+
     <main>
-        <section class="welcome-section">
-            <h2>Welcome to Multisport Manager!</h2>
-            <p>Manage your national team, train athletes, scout for new talent, and compete in global sports competitions.</p>
-        </section>
-        
         <section class="register-section">
-            <h3>Register to Get Started</h3>
+            <h3>Maak een account aan</h3>
             <form id="register-form" class="form-container">
-                <input type="text" id="manager-name" placeholder="Enter your Manager Name" required>
-                <input type="email" id="email" placeholder="Enter your Email" required>
-                <input type="password" id="password" placeholder="Enter your Password" required>
-                <button type="submit">Register</button>
+                <input type="text" id="manager-name" placeholder="Manager Naam" required>
+                <input type="email" id="email" placeholder="E-mail" required>
+                <input type="password" id="password" placeholder="Wachtwoord" required>
+                <button type="submit">Registreer</button>
             </form>
             <p id="register-message"></p>
         </section>
     </main>
-    
+
     <script>
         document.getElementById("register-form").addEventListener("submit", function(event) {
             event.preventDefault();
@@ -51,21 +45,40 @@
                 localStorage.setItem("user", JSON.stringify(userData));
                 localStorage.setItem("loggedInUser", JSON.stringify(userData));
                 
-                document.getElementById("register-message").innerText = `Welcome, ${managerName}! You have been assigned to ${assignedCountry}.`;
+                // Koppel starterslijst atleten aan gebruiker
+                assignStarterAthletes(userData);
                 
-                setTimeout(() => { 
-                    window.location.href = "manager.html"; 
-                }, 2000);
+                document.getElementById("register-message").innerText = `Welkom, ${managerName}! Je hebt het land ${assignedCountry} gekregen.`;
+                
+                setTimeout(() => { window.location.href = "manager.html"; }, 2000);
             }
         });
         
         function assignNextAvailableCountry() {
-            const countries = ["Australie", "Bulgarije", "Chili", "Denemarken", "Ijsland", "Duitsland", "Frankrijk", "Griekenland"];
+            const countries = JSON.parse(localStorage.getItem("countries")) || ["Australie", "Bulgarije", "Chili", "Denemarken", "Ijsland", "Duitsland", "Frankrijk", "Griekenland"];
             let usedCountries = JSON.parse(localStorage.getItem("usedCountries")) || [];
-            let availableCountry = countries.find(c => !usedCountries.includes(c)) || "No Country Available";
+            let availableCountry = countries.find(c => !usedCountries.includes(c)) || "Geen beschikbaar land";
             usedCountries.push(availableCountry);
             localStorage.setItem("usedCountries", JSON.stringify(usedCountries));
             return availableCountry;
+        }
+        
+        function assignStarterAthletes(user) {
+            let starters = JSON.parse(localStorage.getItem("starterAthletes")) || [];
+            let userAthletes = JSON.parse(localStorage.getItem("athletes")) || [];
+            
+            starters.forEach(athlete => {
+                userAthletes.push({
+                    name: athlete.name,
+                    sport: athlete.sport,
+                    event: athlete.event,
+                    gender: athlete.gender,
+                    country: user.assignedCountry,
+                    speed: Math.floor(Math.random() * 10) + 1,
+                    strength: Math.floor(Math.random() * 10) + 1
+                });
+            });
+            localStorage.setItem("athletes", JSON.stringify(userAthletes));
         }
     </script>
 </body>
