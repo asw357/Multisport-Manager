@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Multisport Manager</title>
+    <link rel="stylesheet" href="styles.css">
+    <script defer src="script.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Admin Panel</h1>
+        <nav>
+            <ul>
+                <li><a href="manager.html">Terug naar Manager</a></li>
+                <li><a href="#" onclick="logout()">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="admin-section">
+            <h2>Beheer Landenlijst</h2>
+            <label for="new-country">Nieuw Land:</label>
+            <input type="text" id="new-country" placeholder="Voer een land in">
+            <button onclick="addCountry()">Toevoegen</button>
+            <ul id="country-list"></ul>
+        </section>
+
+        <section class="admin-section">
+            <h2>Beheer Gebruikers</h2>
+            <ul id="user-list"></ul>
+        </section>
+
+        <section class="admin-section">
+            <h2>Pas Medal Points Regels Aan</h2>
+            <label for="mp-value">Nieuwe MP Waarde:</label>
+            <input type="number" id="mp-value" placeholder="Voer MP waarde in">
+            <button onclick="updateMP()">Opslaan</button>
+        </section>
+    </main>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            let user = JSON.parse(localStorage.getItem("loggedInUser"));
+            if (!user || user.email !== "wilcoboesveld12@hotmail.com") {
+                window.location.href = "index.html";
+                return;
+            }
+            
+            loadCountries();
+            loadUsers();
+        });
+        
+        function addCountry() {
+            let country = document.getElementById("new-country").value;
+            if (country) {
+                let countries = JSON.parse(localStorage.getItem("countries")) || [];
+                countries.push(country);
+                localStorage.setItem("countries", JSON.stringify(countries));
+                loadCountries();
+            }
+        }
+
+        function loadCountries() {
+            let countries = JSON.parse(localStorage.getItem("countries")) || [];
+            let countryList = document.getElementById("country-list");
+            countryList.innerHTML = "";
+            countries.forEach(c => {
+                let li = document.createElement("li");
+                li.innerText = c;
+                countryList.appendChild(li);
+            });
+        }
+
+        function loadUsers() {
+            let users = JSON.parse(localStorage.getItem("users")) || [];
+            let userList = document.getElementById("user-list");
+            userList.innerHTML = "";
+            users.forEach(user => {
+                let li = document.createElement("li");
+                li.innerText = `${user.managerName} - ${user.assignedCountry}`;
+                userList.appendChild(li);
+            });
+        }
+        
+        function updateMP() {
+            let newMP = document.getElementById("mp-value").value;
+            if (newMP) {
+                localStorage.setItem("medalPointsRule", newMP);
+                alert("Medal Points waarde bijgewerkt!");
+            }
+        }
+    </script>
+</body>
+</html>
