@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manager Dashboard - Multisport Manager</title>
+    <link rel="stylesheet" href="styles.css">
+    <script defer src="script.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Manager Dashboard</h1>
+        <nav>
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="atleten.html">Atletenbeheer</a></li>
+                <li><a href="training.html">Training</a></li>
+                <li><a href="scouting.html">Scouten</a></li>
+                <li><a href="tactieken.html">Tactieken</a></li>
+                <li><a href="edities.html">Edities</a></li>
+                <li><a href="news.html">Nieuws</a></li>
+                <li><a href="#" onclick="logout()">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="dashboard-section">
+            <h2>Welcome, <span id="manager-name"></span></h2>
+            <p>Country: <span id="manager-country"></span></p>
+            <p>Medal Points: <span id="medal-points">0</span></p>
+        </section>
+
+        <section class="stats-section">
+            <h3>Statistics</h3>
+            <p>Number of Athletes: <span id="athlete-count">0</span></p>
+            <p>Current Edition: <span id="current-edition">Zomer editie 1</span></p>
+        </section>
+    </main>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            let user = JSON.parse(localStorage.getItem("loggedInUser"));
+            if (!user) {
+                window.location.href = "login.html";
+            } else {
+                document.getElementById("manager-name").innerText = user.managerName;
+                document.getElementById("manager-country").innerText = user.assignedCountry;
+                document.getElementById("medal-points").innerText = localStorage.getItem("medalPoints") || 0;
+            }
+        });
+    </script>
+</body>
+</html>
