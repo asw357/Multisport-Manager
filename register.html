@@ -39,7 +39,9 @@
         <section>
             <h3>Register to Get Started</h3>
             <form id="register-form">
-                <input type="text" id="username" placeholder="Enter your username" required>
+                <input type="text" id="manager-name" placeholder="Enter your Manager Name" required>
+                <input type="email" id="email" placeholder="Enter your Email" required>
+                <input type="password" id="password" placeholder="Enter your Password" required>
                 <button type="submit">Register</button>
             </form>
             <p id="register-message"></p>
@@ -58,18 +60,26 @@
     <script>
         document.getElementById("register-form").addEventListener("submit", function(event) {
             event.preventDefault();
-            let username = document.getElementById("username").value;
-            if (username) {
-                let assignedCountry = assignRandomCountry();
-                localStorage.setItem("user", JSON.stringify({ username, assignedCountry }));
-                document.getElementById("register-message").innerText = `Welcome, ${username}! You have been assigned to ${assignedCountry}.`;
+            let managerName = document.getElementById("manager-name").value;
+            let email = document.getElementById("email").value;
+            let password = document.getElementById("password").value;
+            
+            if (managerName && email && password) {
+                let assignedCountry = assignNextAvailableCountry();
+                let userData = { managerName, email, password, assignedCountry };
+                localStorage.setItem("user", JSON.stringify(userData));
+                document.getElementById("register-message").innerText = `Welcome, ${managerName}! You have been assigned to ${assignedCountry}.`;
                 setTimeout(() => { window.location.href = "manager.html"; }, 2000);
             }
         });
         
-        function assignRandomCountry() {
+        function assignNextAvailableCountry() {
             const countries = ["Australie", "Bulgarije", "Chili", "Denemarken", "Ijsland", "Duitsland", "Frankrijk", "Griekenland"];
-            return countries[Math.floor(Math.random() * countries.length)];
+            let usedCountries = JSON.parse(localStorage.getItem("usedCountries")) || [];
+            let availableCountry = countries.find(c => !usedCountries.includes(c)) || "No Country Available";
+            usedCountries.push(availableCountry);
+            localStorage.setItem("usedCountries", JSON.stringify(usedCountries));
+            return availableCountry;
         }
     </script>
 </body>
