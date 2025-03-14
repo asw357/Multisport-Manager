@@ -3,114 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel - Multisport Manager</title>
+    <title>Multisport Manager</title>
     <link rel="stylesheet" href="styles.css">
     <script defer src="script.js"></script>
 </head>
 <body>
     <header>
-        <h1>Admin Panel</h1>
+        <h1>Multisport Manager</h1>
         <nav>
-            <ul>
-                <li><a href="manager.html">Terug naar Manager</a></li>
-                <li><a href="#" onclick="logout()">Logout</a></li>
+            <ul id="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="register.html">Register</a></li>
+                <li><a href="login.html">Login</a></li>
+                <li><a href="contact.html">Contact</a></li>
+                <li class="hidden" id="manager-link"><a href="manager.html">Manager</a></li>
+                <li class="hidden" id="athlete-link"><a href="atleten.html">Atletenbeheer</a></li>
+                <li class="hidden" id="training-link"><a href="training.html">Training</a></li>
+                <li class="hidden" id="scouting-link"><a href="scouting.html">Scouten</a></li>
+                <li class="hidden" id="tactics-link"><a href="wedstrijdvoorbereiding.html">Wedstrijd Voorbereiding</a></li>
+                <li class="hidden" id="editions-link"><a href="edities.html">Edities</a></li>
+                <li class="hidden" id="news-link"><a href="news.html">Nieuws</a></li>
+                <li class="hidden" id="admin-link"><a href="admin.html">Admin</a></li>
+                <li class="hidden" id="logout-link"><a href="#" onclick="logout()">Logout</a></li>
             </ul>
         </nav>
     </header>
-
+    
     <main>
-        <section class="admin-section">
-            <h2>Beheer Landenlijst</h2>
-            <label for="new-country">Nieuw Land:</label>
-            <input type="text" id="new-country" placeholder="Voer een land in">
-            <button onclick="addCountry()">Toevoegen</button>
-            <ul id="country-list"></ul>
-        </section>
-
-        <section class="admin-section">
-            <h2>Beheer Gebruikers</h2>
-            <ul id="user-list"></ul>
-        </section>
-
-        <section class="admin-section">
-            <h2>Pas Medal Points Regels Aan</h2>
-            <label for="mp-value">Nieuwe MP Waarde:</label>
-            <input type="number" id="mp-value" placeholder="Voer MP waarde in">
-            <button onclick="updateMP()">Opslaan</button>
-        </section>
-
-        <section class="admin-section">
-            <h2>Beheer Inactieve Spelers</h2>
-            <button onclick="removeInactiveUsers()">Verwijder inactieve spelers</button>
+        <section class="welcome-section">
+            <h2>Welcome to Multisport Manager!</h2>
+            <p>Manage your national team, train athletes, scout for new talent, and compete in global sports competitions.</p>
         </section>
     </main>
     
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             let user = JSON.parse(localStorage.getItem("loggedInUser"));
-            if (!user || user.email !== "admin@multisport.com") {
-                window.location.href = "index.html";
-                return;
+            if (user) {
+                document.querySelectorAll(".hidden").forEach(el => el.style.display = "inline");
             }
-            
-            loadCountries();
-            loadUsers();
         });
-        
-        function addCountry() {
-            let country = document.getElementById("new-country").value;
-            if (country) {
-                let countries = JSON.parse(localStorage.getItem("countries")) || [];
-                countries.push(country);
-                localStorage.setItem("countries", JSON.stringify(countries));
-                loadCountries();
-            }
-        }
-
-        function loadCountries() {
-            let countries = JSON.parse(localStorage.getItem("countries")) || [];
-            let countryList = document.getElementById("country-list");
-            countryList.innerHTML = "";
-            countries.forEach(c => {
-                let li = document.createElement("li");
-                li.innerText = c;
-                countryList.appendChild(li);
-            });
-        }
-
-        function loadUsers() {
-            let users = JSON.parse(localStorage.getItem("users")) || [];
-            let userList = document.getElementById("user-list");
-            userList.innerHTML = "";
-            users.forEach((user, index) => {
-                let li = document.createElement("li");
-                li.innerHTML = `${user.managerName} - ${user.assignedCountry} <button onclick="removeUser(${index})">Verwijderen</button>`;
-                userList.appendChild(li);
-            });
-        }
-        
-        function removeUser(index) {
-            let users = JSON.parse(localStorage.getItem("users")) || [];
-            users.splice(index, 1);
-            localStorage.setItem("users", JSON.stringify(users));
-            loadUsers();
-        }
-        
-        function removeInactiveUsers() {
-            let users = JSON.parse(localStorage.getItem("users")) || [];
-            let activeUsers = users.filter(user => user.lastActive && Date.now() - user.lastActive < 30 * 24 * 60 * 60 * 1000);
-            localStorage.setItem("users", JSON.stringify(activeUsers));
-            alert("Inactieve spelers verwijderd!");
-            loadUsers();
-        }
-        
-        function updateMP() {
-            let newMP = document.getElementById("mp-value").value;
-            if (newMP) {
-                localStorage.setItem("medalPointsRule", newMP);
-                alert("Medal Points waarde bijgewerkt!");
-            }
-        }
     </script>
 </body>
 </html>
