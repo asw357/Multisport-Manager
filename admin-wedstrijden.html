@@ -23,10 +23,11 @@
     <main>
         <section>
             <h2>Bewerk Wedstrijden per Editie</h2>
-            <p>Selecteer een editie om het schema te beheren.</p>
+            <p>Selecteer een editie om het schema te beheren. (Op dit moment werkt dit nog niet zonder backend)</p>
             <label for="editie-select">Kies een Editie:</label>
-            <select id="editie-select" onchange="loadSchedule()">
-                <!-- Dynamisch geladen edities -->
+            <select id="editie-select">
+                <option value="1">Editie 1 (Voorbeeld)</option>
+                <option value="2">Editie 2 (Voorbeeld)</option>
             </select>
         </section>
         
@@ -40,121 +41,32 @@
                         <th>Sport</th>
                         <th>Onderdeel</th>
                         <th>Locatie</th>
-                        <th>Acties</th>
                     </tr>
                 </thead>
-                <tbody id="schedule-list">
-                    <!-- Dynamisch geladen wedstrijden -->
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>08:30</td>
+                        <td>Atletiek</td>
+                        <td>100m sprint</td>
+                        <td>Hoofd Stadion</td>
+                    </tr>
+                    <tr>
+                        <td>1</td>
+                        <td>10:00</td>
+                        <td>Zwemmen</td>
+                        <td>200m vrije slag</td>
+                        <td>Zwemcentrum</td>
+                    </tr>
                 </tbody>
             </table>
-        </section>
-
-        <section>
-            <h2>Wedstrijd Toevoegen</h2>
-            <form id="add-match-form">
-                <label for="day">Dag:</label>
-                <input type="number" id="day" name="day" required>
-
-                <label for="time">Tijd:</label>
-                <input type="time" id="time" name="time" required>
-
-                <label for="sport">Sport:</label>
-                <input type="text" id="sport" name="sport" required>
-
-                <label for="event">Onderdeel:</label>
-                <input type="text" id="event" name="event" required>
-
-                <label for="location">Locatie:</label>
-                <input type="text" id="location" name="location" required>
-
-                <button type="submit">➕ Toevoegen</button>
-            </form>
         </section>
     </main>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            loadEditions();
-        });
-
-        function loadEditions() {
-            fetch('https://your-project.replit.app/editions')
-                .then(response => response.json())
-                .then(editions => {
-                    const select = document.getElementById("editie-select");
-                    select.innerHTML = "";
-                    editions.forEach(edition => {
-                        const option = document.createElement("option");
-                        option.value = edition.id;
-                        option.textContent = edition.name;
-                        select.appendChild(option);
-                    });
-                    if (editions.length > 0) {
-                        loadSchedule();
-                    }
-                })
-                .catch(error => console.error("Fout bij laden edities:", error));
+        function logout() {
+            alert("Uitloggen werkt nog niet zonder backend.");
         }
-
-        function loadSchedule() {
-            const editionId = document.getElementById("editie-select").value;
-            if (!editionId) return;
-            fetch(`https://your-project.replit.app/schedule/${editionId}`)
-                .then(response => response.json())
-                .then(schedule => {
-                    const tbody = document.getElementById("schedule-list");
-                    tbody.innerHTML = "";
-                    schedule.forEach(match => {
-                        let row = document.createElement("tr");
-                        row.innerHTML = `
-                            <td>${match.day}</td>
-                            <td>${match.time}</td>
-                            <td>${match.sport}</td>
-                            <td>${match.event}</td>
-                            <td>${match.location}</td>
-                            <td>
-                                <button onclick="deleteMatch(${match.id})">🗑️ Verwijderen</button>
-                            </td>
-                        `;
-                        tbody.appendChild(row);
-                    });
-                })
-                .catch(error => console.error("Fout bij laden schema:", error));
-        }
-        function deleteMatch(matchId) {
-            if (confirm("Weet je zeker dat je deze wedstrijd wilt verwijderen?")) {
-                fetch(`https://your-project.replit.app/schedule/${matchId}`, { method: "DELETE" })
-                    .then(response => response.json())
-                    .then(() => {
-                        loadSchedule();
-                    })
-                    .catch(error => alert("Fout bij verwijderen: " + error));
-            }
-        }
-
-        document.getElementById("add-match-form").addEventListener("submit", function(event) {
-            event.preventDefault();
-            const editionId = document.getElementById("editie-select").value;
-            const matchData = {
-                day: document.getElementById("day").value,
-                time: document.getElementById("time").value,
-                sport: document.getElementById("sport").value,
-                event: document.getElementById("event").value,
-                location: document.getElementById("location").value
-            };
-
-            fetch(`https://your-project.replit.app/schedule/${editionId}`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(matchData)
-            })
-            .then(response => response.json())
-            .then(() => {
-                document.getElementById("add-match-form").reset();
-                loadSchedule();
-            })
-            .catch(error => alert("Fout bij toevoegen: " + error));
-        });
     </script>
 </body>
 </html>
