@@ -59,9 +59,9 @@
             let editions = JSON.parse(localStorage.getItem("editions")) || [];
             let select = document.getElementById("editie-select");
             select.innerHTML = "";
-            editions.forEach((edition, index) => {
+            editions.forEach(edition => {
                 let option = document.createElement("option");
-                option.value = index;
+                option.value = edition.id;
                 option.textContent = edition.name;
                 select.appendChild(option);
             });
