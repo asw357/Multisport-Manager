@@ -29,8 +29,10 @@
                         <th>Tijd</th>
                         <th>Sport</th>
                         <th>Onderdeel</th>
+                        <th>Geslacht</th>
                         <th>Ronde</th>
                         <th>Locatie</th>
+                        <th>Max Atleten</th>
                         <th>Acties</th>
                     </tr>
                 </thead>
@@ -42,8 +44,75 @@
     </main>
 
     <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            loadMatches();
+        });
+
+        function loadMatches() {
+            let matches = JSON.parse(localStorage.getItem("matches")) || [];
+            let matchList = document.getElementById("match-list");
+            matchList.innerHTML = "";
+            
+            matches.forEach((match, index) => {
+                let row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${match.day}</td>
+                    <td>${match.time}</td>
+                    <td>${match.sport}</td>
+                    <td>${match.event}</td>
+                    <td>${match.gender}</td>
+                    <td>${match.round}</td>
+                    <td>${match.location}</td>
+                    <td>${match.maxAthletes}</td>
+                    <td>
+                        <button onclick="editMatch(${index})">Bewerken</button>
+                        <button onclick="deleteMatch(${index})">Verwijderen</button>
+                    </td>
+                `;
+                matchList.appendChild(row);
+            });
+        }
+
         function addMatch() {
-            // Hier komt de functie om een nieuwe wedstrijd toe te voegen
+            let day = prompt("Dag (bijv. Dag 1):");
+            let time = prompt("Tijd (bijv. 08:30):");
+            let sport = prompt("Sport:");
+            let event = prompt("Onderdeel:");
+            let gender = prompt("Geslacht (Mannen, Vrouwen, Gemengd):");
+            let round = prompt("Ronde (bijv. Kwalificatie, Finale):");
+            let location = prompt("Locatie:");
+            let maxAthletes = parseInt(prompt("Maximaal aantal atleten:"));
+            
+            if (day && time && sport && event && gender && round && location && maxAthletes) {
+                let newMatch = { day, time, sport, event, gender, round, location, maxAthletes };
+                
+                let matches = JSON.parse(localStorage.getItem("matches")) || [];
+                matches.push(newMatch);
+                localStorage.setItem("matches", JSON.stringify(matches));
+                loadMatches();
+            }
+        }
+
+        function deleteMatch(index) {
+            if (confirm("Weet je zeker dat je deze wedstrijd wilt verwijderen?")) {
+                let matches = JSON.parse(localStorage.getItem("matches")) || [];
+                matches.splice(index, 1);
+                localStorage.setItem("matches", JSON.stringify(matches));
+                loadMatches();
+            }
+        }
+
+        function editMatch(index) {
+            let matches = JSON.parse(localStorage.getItem("matches")) || [];
+            let match = matches[index];
+            
+            let newTime = prompt("Nieuwe tijd:", match.time);
+            let newMaxAthletes = prompt("Nieuw max aantal atleten:", match.maxAthletes);
+            if (newTime) match.time = newTime;
+            if (newMaxAthletes) match.maxAthletes = parseInt(newMaxAthletes);
+            
+            localStorage.setItem("matches", JSON.stringify(matches));
+            loadMatches();
         }
     </script>
 </body>
