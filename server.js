@@ -17,71 +17,48 @@ function writeData(file, data) {
     fs.writeFileSync(`./backend/data/${file}.json`, JSON.stringify(data, null, 2));
 }
 
-// API om gebruikers te laden
-app.get('/users', (req, res) => {
-    res.json(readData('users'));
+// API om edities op te halen
+app.get('/editions', (req, res) => {
+    res.json(readData('editions'));
 });
 
-// API om atleten te laden
-app.get('/athletes', (req, res) => {
-    res.json(readData('athletes'));
+// API om een nieuwe editie toe te voegen
+app.post('/editions', (req, res) => {
+    let editions = readData('editions');
+    const newEdition = { id: editions.length + 1, name: req.body.name };
+    editions.push(newEdition);
+    writeData('editions', editions);
+    res.status(201).json(newEdition);
+});
+// API om alle wedstrijden voor een editie op te halen
+app.get('/schedule/:editionId', (req, res) => {
+    let schedules = readData('schedule');
+    let editionSchedule = schedules.filter(match => match.editionId == req.params.editionId);
+    res.json(editionSchedule);
 });
 
-// API om resultaten te laden
-app.get('/results', (req, res) => {
-    res.json(readData('results'));
+// API om een wedstrijd toe te voegen aan een editie
+app.post('/schedule/:editionId', (req, res) => {
+    let schedules = readData('schedule');
+    const newMatch = {
+        id: schedules.length + 1,
+        editionId: parseInt(req.params.editionId),
+        day: req.body.day,
+        time: req.body.time,
+        sport: req.body.sport,
+        event: req.body.event,
+        location: req.body.location
+    };
+    schedules.push(newMatch);
+    writeData('schedule', schedules);
+    res.status(201).json(newMatch);
 });
-
-// API om medal points te laden
-app.get('/mp', (req, res) => {
-    res.json(readData('mp'));
-});
-
-// API om landen te laden
-app.get('/countries', (req, res) => {
-    res.json(readData('countries'));
-});
-
-// API om een nieuwe gebruiker toe te voegen
-app.post('/users', (req, res) => {
-    let users = readData('users');
-    users.push(req.body);
-    writeData('users', users);
-    res.status(201).json({ message: 'Gebruiker toegevoegd' });
-});
-
-// API om een atleet bij te werken
-app.put('/athletes/:id', (req, res) => {
-    let athletes = readData('athletes');
-    let index = athletes.findIndex(a => a.id === req.params.id);
-    if (index !== -1) {
-        athletes[index] = req.body;
-        writeData('athletes', athletes);
-        res.json({ message: 'Atleet bijgewerkt' });
-    } else {
-        res.status(404).json({ error: 'Atleet niet gevonden' });
-    }
-});
-
-// API om een wedstrijdresultaat toe te voegen
-app.post('/results', (req, res) => {
-    let results = readData('results');
-    results.push(req.body);
-    writeData('results', results);
-    res.status(201).json({ message: 'Resultaat toegevoegd' });
-});
-
-// API om medal points bij te werken
-app.put('/mp/:userId', (req, res) => {
-    let mp = readData('mp');
-    let index = mp.findIndex(m => m.userId === req.params.userId);
-    if (index !== -1) {
-        mp[index].points = req.body.points;
-        writeData('mp', mp);
-        res.json({ message: 'Medal Points bijgewerkt' });
-    } else {
-        res.status(404).json({ error: 'Gebruiker niet gevonden' });
-    }
+// API om een wedstrijd te verwijderen
+app.delete('/schedule/:matchId', (req, res) => {
+    let schedules = readData('schedule');
+    schedules = schedules.filter(match => match.id != req.params.matchId);
+    writeData('schedule', schedules);
+    res.json({ message: 'Wedstrijd verwijderd' });
 });
 
 // API om alle data te resetten
@@ -90,6 +67,8 @@ app.post('/reset', (req, res) => {
     writeData('athletes', []);
     writeData('results', []);
     writeData('mp', []);
+    writeData('editions', []);
+    writeData('schedule', []);
     res.json({ message: 'Alle data is gereset!' });
 });
 
