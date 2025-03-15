@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Gebruikersbeheer - Multisport Manager</title>
+    <link rel="stylesheet" href="styles.css">
+    <script defer src="script.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Gebruikersbeheer</h1>
+        <nav>
+            <ul>
+                <li><a href="admin.html">Terug naar Admin</a></li>
+                <li><a href="#" onclick="logout()">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section>
+            <h2>Gebruikers Overzicht</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Naam</th>
+                        <th>Email</th>
+                        <th>Land</th>
+                        <th>Acties</th>
+                    </tr>
+                </thead>
+                <tbody id="user-list">
+                    <!-- Gebruikers worden hier geladen -->
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <script>
+        function loadUsers() {
+            // Hier komt de functie om gebruikers te laden
+        }
+    </script>
+</body>
+</html>
