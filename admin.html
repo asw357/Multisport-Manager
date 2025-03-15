@@ -41,16 +41,7 @@
 
     <script>
         function resetData() {
-            if (confirm("Weet je zeker dat je alle data wilt resetten? Dit kan niet ongedaan worden!")) {
-                fetch('http://localhost:3000/reset', { method: 'POST' })
-                    .then(response => response.json())
-                    .then(data => {
-                        document.getElementById("reset-message").textContent = data.message;
-                    })
-                    .catch(error => {
-                        alert("Fout bij resetten: " + error);
-                    });
-            }
+            alert("De resetfunctie werkt nog niet zonder backend.");
         }
     </script>
 </body>
