@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Atletenbeheer - Multisport Manager</title>
+    <link rel="stylesheet" href="styles.css">
+    <script defer src="script.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Atletenbeheer</h1>
+        <nav>
+            <ul>
+                <li><a href="admin.html">Terug naar Admin</a></li>
+                <li><a href="#" onclick="logout()">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section>
+            <h2>Atleten Overzicht</h2>
+            <button onclick="addAthlete()">Nieuwe Atleet Toevoegen</button>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Naam</th>
+                        <th>Sport</th>
+                        <th>Land</th>
+                        <th>Leeftijd</th>
+                        <th>Eigenschappen</th>
+                        <th>Acties</th>
+                    </tr>
+                </thead>
+                <tbody id="athlete-list">
+                    <!-- Atleten worden hier geladen -->
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <script>
+        function addAthlete() {
+            // Hier komt de functie om een nieuwe atleet toe te voegen
+        }
+    </script>
+</body>
+</html>
