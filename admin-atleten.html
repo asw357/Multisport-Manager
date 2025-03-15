@@ -21,12 +21,14 @@
     <main>
         <section>
             <h2>Atleten Overzicht</h2>
+            <input type="text" id="search-athlete" placeholder="Zoek op naam..." onkeyup="searchAthlete()">
             <button onclick="addAthlete()">Nieuwe Atleet Toevoegen</button>
             <table>
                 <thead>
                     <tr>
                         <th>Naam</th>
                         <th>Sport</th>
+                        <th>Onderdeel</th>
                         <th>Land</th>
                         <th>Leeftijd</th>
                         <th>Eigenschappen</th>
@@ -41,8 +43,93 @@
     </main>
 
     <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            loadAthletes();
+        });
+
+        function loadAthletes() {
+            let athletes = JSON.parse(localStorage.getItem("athletes")) || [];
+            let athleteList = document.getElementById("athlete-list");
+            athleteList.innerHTML = "";
+            
+            athletes.forEach((athlete, index) => {
+                let row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${athlete.name}</td>
+                    <td>${athlete.sport}</td>
+                    <td>${athlete.event}</td>
+                    <td>${athlete.country}</td>
+                    <td>${athlete.age}</td>
+                    <td>${athlete.attributes.map(attr => `${attr.name}: ${attr.value}`).join(", ")}</td>
+                    <td>
+                        <button onclick="editAthlete(${index})">Bewerken</button>
+                        <button onclick="deleteAthlete(${index})">Verwijderen</button>
+                    </td>
+                `;
+                athleteList.appendChild(row);
+            });
+        }
+
+        function searchAthlete() {
+            let input = document.getElementById("search-athlete").value.toLowerCase();
+            let rows = document.querySelectorAll("#athlete-list tr");
+            
+            rows.forEach(row => {
+                let name = row.cells[0].innerText.toLowerCase();
+                row.style.display = name.includes(input) ? "" : "none";
+            });
+        }
+
         function addAthlete() {
-            // Hier komt de functie om een nieuwe atleet toe te voegen
+            let name = prompt("Naam van de atleet:");
+            let sport = prompt("Sport:");
+            let event = prompt("Onderdeel:");
+            let country = prompt("Land:");
+            let age = parseInt(prompt("Leeftijd:"));
+            
+            if (name && sport && event && country && age) {
+                let newAthlete = {
+                    name,
+                    sport,
+                    event,
+                    country,
+                    age,
+                    attributes: []
+                };
+                
+                let athletes = JSON.parse(localStorage.getItem("athletes")) || [];
+                athletes.push(newAthlete);
+                localStorage.setItem("athletes", JSON.stringify(athletes));
+                loadAthletes();
+            }
+        }
+
+        function deleteAthlete(index) {
+            if (confirm("Weet je zeker dat je deze atleet wilt verwijderen?")) {
+                let athletes = JSON.parse(localStorage.getItem("athletes")) || [];
+                athletes.splice(index, 1);
+                localStorage.setItem("athletes", JSON.stringify(athletes));
+                loadAthletes();
+            }
+        }
+
+        function editAthlete(index) {
+            let athletes = JSON.parse(localStorage.getItem("athletes")) || [];
+            let athlete = athletes[index];
+            
+            let newAge = prompt("Nieuwe leeftijd:", athlete.age);
+            if (newAge) athlete.age = parseInt(newAge);
+            
+            let newAttributes = prompt("Nieuwe eigenschappen (naam: waarde, gescheiden door komma's):", athlete.attributes.map(attr => `${attr.name}: ${attr.value}`).join(", "));
+            if (newAttributes) {
+                athlete.attributes = newAttributes.split(",").map(attr => {
+                    let [name, value] = attr.split(":");
+                    return { name: name.trim(), value: parseInt(value.trim()) };
+                });
+            }
+            
+            localStorage.setItem("athletes", JSON.stringify(athletes));
+            loadAthletes();
         }
     </script>
 </body>
