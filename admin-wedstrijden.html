@@ -39,6 +39,7 @@
                         <th>Tijd</th>
                         <th>Sport</th>
                         <th>Onderdeel</th>
+                        <th>Ronde</th>
                         <th>Locatie</th>
                         <th>Acties</th>
                     </tr>
@@ -63,6 +64,9 @@
                 
                 <label for="event">Onderdeel:</label>
                 <input type="text" id="event" name="event" required>
+                
+                <label for="round">Ronde:</label>
+                <input type="text" id="round" name="round" required>
                 
                 <label for="location">Locatie:</label>
                 <input type="text" id="location" name="location" required>
@@ -104,6 +108,7 @@
                     <td>${match.time}</td>
                     <td>${match.sport}</td>
                     <td>${match.event}</td>
+                    <td>${match.round}</td>
                     <td>${match.location}</td>
                     <td>
                         <button onclick="deleteMatch(${editionIndex}, ${index})">🗑️ Verwijderen</button>
@@ -124,6 +129,7 @@
                 time: document.getElementById("time").value,
                 sport: document.getElementById("sport").value,
                 event: document.getElementById("event").value,
+                round: document.getElementById("round").value,
                 location: document.getElementById("location").value
             };
             schedules[editionIndex].push(newMatch);
