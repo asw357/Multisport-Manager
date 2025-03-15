@@ -41,18 +41,19 @@
             event.preventDefault();
             let users = JSON.parse(localStorage.getItem("users")) || [];
             let athletes = JSON.parse(localStorage.getItem("athletes")) || [];
+            let country = assignCountry();
             
             let newUser = {
                 managerName: document.getElementById("manager-name").value,
                 email: document.getElementById("email").value,
                 password: document.getElementById("password").value,
-                country: assignCountry(),
+                country: country,
                 athletes: JSON.parse(JSON.stringify(athletes)) // Kopie van standaard atletenlijst
             };
             
             users.push(newUser);
             localStorage.setItem("users", JSON.stringify(users));
-            alert("Registratie voltooid! Je standaard atleten zijn toegevoegd.");
+            alert("Registratie voltooid! Je land is: " + country);
             window.location.href = "login.html";
         });
 
