@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mijn Statistieken - Multisport Manager</title>
+    <link rel="stylesheet" href="styles.css">
+    <script defer src="script.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Mijn Statistieken</h1>
+        <nav>
+            <ul>
+                <li><a href="manager.html">Terug naar Manager</a></li>
+                <li><a href="#" onclick="logout()">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section>
+            <h2>Overzicht van Prestaties</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Editie</th>
+                        <th>Sport</th>
+                        <th>Onderdeel</th>
+                        <th>Plaats</th>
+                        <th>Medaille</th>
+                    </tr>
+                </thead>
+                <tbody id="stats-list">
+                    <!-- Statistieken worden hier geladen -->
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            loadStats();
+        });
+
+        function loadStats() {
+            let user = JSON.parse(localStorage.getItem("loggedInUser"));
+            if (!user) {
+                window.location.href = "login.html";
+                return;
+            }
+            
+            let stats = JSON.parse(localStorage.getItem("userStats")) || [];
+            let userStats = stats.filter(stat => stat.managerName === user.managerName);
+            let statsList = document.getElementById("stats-list");
+            statsList.innerHTML = "";
+            
+            userStats.forEach(stat => {
+                let row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${stat.edition}</td>
+                    <td>${stat.sport}</td>
+                    <td>${stat.event}</td>
+                    <td>${stat.place}</td>
+                    <td>${stat.medal ? stat.medal : "Geen"}</td>
+                `;
+                statsList.appendChild(row);
+            });
+        }
+    </script>
+</body>
+</html>
