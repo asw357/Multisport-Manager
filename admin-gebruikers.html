@@ -27,6 +27,7 @@
                         <th>Naam</th>
                         <th>Email</th>
                         <th>Land</th>
+                        <th>Laatste Inlog</th>
                         <th>Acties</th>
                     </tr>
                 </thead>
@@ -34,12 +35,52 @@
                     <!-- Gebruikers worden hier geladen -->
                 </tbody>
             </table>
+            <button onclick="removeInactiveUsers()">Inactieve Spelers Verwijderen</button>
         </section>
     </main>
 
     <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            loadUsers();
+        });
+
         function loadUsers() {
-            // Hier komt de functie om gebruikers te laden
+            let users = JSON.parse(localStorage.getItem("users")) || [];
+            let userList = document.getElementById("user-list");
+            userList.innerHTML = "";
+            
+            users.forEach((user, index) => {
+                let row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${user.managerName}</td>
+                    <td>${user.email}</td>
+                    <td>${user.assignedCountry}</td>
+                    <td>${user.lastActive ? new Date(user.lastActive).toLocaleDateString() : "Nooit"}</td>
+                    <td>
+                        <button onclick="deleteUser(${index})">Verwijderen</button>
+                    </td>
+                `;
+                userList.appendChild(row);
+            });
+        }
+
+        function deleteUser(index) {
+            if (confirm("Weet je zeker dat je deze gebruiker wilt verwijderen?")) {
+                let users = JSON.parse(localStorage.getItem("users")) || [];
+                users.splice(index, 1);
+                localStorage.setItem("users", JSON.stringify(users));
+                loadUsers();
+            }
+        }
+
+        function removeInactiveUsers() {
+            let users = JSON.parse(localStorage.getItem("users")) || [];
+            let now = Date.now();
+            let activeUsers = users.filter(user => user.lastActive && (now - user.lastActive) < (30 * 24 * 60 * 60 * 1000));
+            
+            localStorage.setItem("users", JSON.stringify(activeUsers));
+            alert("Inactieve spelers zijn verwijderd!");
+            loadUsers();
         }
     </script>
 </body>
