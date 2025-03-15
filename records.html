@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Records - Multisport Manager</title>
+    <link rel="stylesheet" href="styles.css">
+    <script defer src="script.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Records</h1>
+        <nav>
+            <ul>
+                <li><a href="manager.html">Terug naar Manager</a></li>
+                <li><a href="#" onclick="logout()">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section>
+            <h2>Multi Records (MR)</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Sport</th>
+                        <th>Onderdeel</th>
+                        <th>Record</th>
+                        <th>Atleet</th>
+                        <th>Land</th>
+                        <th>Editie</th>
+                    </tr>
+                </thead>
+                <tbody id="mr-list">
+                    <!-- Multi Records worden hier geladen -->
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h2>Nationale Records (NR)</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Land</th>
+                        <th>Sport</th>
+                        <th>Onderdeel</th>
+                        <th>Record</th>
+                        <th>Atleet</th>
+                        <th>Editie</th>
+                    </tr>
+                </thead>
+                <tbody id="nr-list">
+                    <!-- Nationale Records worden hier geladen -->
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            loadRecords();
+        });
+
+        function loadRecords() {
+            let mrRecords = JSON.parse(localStorage.getItem("multiRecords")) || [];
+            let nrRecords = JSON.parse(localStorage.getItem("nationalRecords")) || [];
+            let mrList = document.getElementById("mr-list");
+            let nrList = document.getElementById("nr-list");
+            
+            mrList.innerHTML = "";
+            mrRecords.forEach(record => {
+                let row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${record.sport}</td>
+                    <td>${record.event}</td>
+                    <td>${record.value}</td>
+                    <td>${record.athlete}</td>
+                    <td>${record.country}</td>
+                    <td>${record.edition}</td>
+                `;
+                mrList.appendChild(row);
+            });
+            
+            nrList.innerHTML = "";
+            nrRecords.forEach(record => {
+                let row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${record.country}</td>
+                    <td>${record.sport}</td>
+                    <td>${record.event}</td>
+                    <td>${record.value}</td>
+                    <td>${record.athlete}</td>
+                    <td>${record.edition}</td>
+                `;
+                nrList.appendChild(row);
+            });
+        }
+    </script>
+</body>
+</html>
