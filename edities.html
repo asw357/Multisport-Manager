@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edities - Multisport Manager</title>
+    <link rel="stylesheet" href="styles.css">
+    <script defer src="script.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Overzicht van Edities</h1>
+        <nav>
+            <ul>
+                <li><a href="manager.html">Terug naar Manager</a></li>
+                <li><a href="#" onclick="logout()">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section>
+            <h2>Alle Edities</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Naam</th>
+                        <th>Startdatum</th>
+                        <th>Locatie</th>
+                        <th>Gastland</th>
+                        <th>Bekijk</th>
+                    </tr>
+                </thead>
+                <tbody id="edition-list">
+                    <!-- Edities worden hier geladen -->
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            loadEditions();
+        });
+
+        function loadEditions() {
+            let editions = JSON.parse(localStorage.getItem("editions")) || [];
+            let editionList = document.getElementById("edition-list");
+            editionList.innerHTML = "";
+            
+            editions.forEach(edition => {
+                let row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${edition.name}</td>
+                    <td>${edition.startDate}</td>
+                    <td>${edition.location}</td>
+                    <td>${edition.hostCountry}</td>
+                    <td><a href="editie-detail.html?edition=${edition.name}">🔍 Bekijk</a></td>
+                `;
+                editionList.appendChild(row);
+            });
+        }
+    </script>
+</body>
+</html>
