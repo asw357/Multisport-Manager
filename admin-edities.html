@@ -28,6 +28,7 @@
                     <tr>
                         <th>Naam</th>
                         <th>Locatie</th>
+                        <th>Startdatum</th>
                         <th>Acties</th>
                     </tr>
                 </thead>
@@ -36,6 +37,7 @@
                 </tbody>
             </table>
         </section>
+
         <section>
             <h2>Nieuwe Editie Toevoegen</h2>
             <form id="add-edition-form">
@@ -44,6 +46,9 @@
                 
                 <label for="edition-location">Locatie:</label>
                 <input type="text" id="edition-location" name="edition-location" required>
+                
+                <label for="edition-startdate">Startdatum:</label>
+                <input type="date" id="edition-startdate" name="edition-startdate" required>
                 
                 <button type="submit">➕ Toevoegen</button>
             </form>
@@ -56,48 +61,16 @@
         });
 
         function loadEditions() {
-            let editions = JSON.parse(localStorage.getItem("editions")) || [
-                { name: "Zomer Editie 1", location: "Athene (Griekenland)" },
-                { name: "Zomer Editie 2", location: "Parijs (Frankrijk)" },
-                { name: "Zomer Editie 3", location: "St. Louis (Verenigde Staten)" },
-                { name: "Zomer Editie 4", location: "Londen (Verenigd Koninkrijk)" },
-                { name: "Zomer Editie 5", location: "Stockholm (Zweden)" },
-                { name: "Zomer Editie 6", location: "Antwerpen (België)" },
-                { name: "Zomer Editie 7", location: "Parijs (Frankrijk)" },
-                { name: "Zomer Editie 8", location: "Amsterdam (Nederland)" },
-                { name: "Zomer Editie 9", location: "Los Angeles (Verenigde Staten)" },
-                { name: "Zomer Editie 10", location: "Berlijn (Duitsland)" },
-                { name: "Zomer Editie 11", location: "Londen (Verenigd Koninkrijk)" },
-                { name: "Zomer Editie 12", location: "Helsinki (Finland)" },
-                { name: "Zomer Editie 13", location: "Melbourne (Australië)" },
-                { name: "Zomer Editie 14", location: "Rome (Italië)" },
-                { name: "Zomer Editie 15", location: "Tokio (Japan)" },
-                { name: "Zomer Editie 16", location: "Mexico-Stad (Mexico)" },
-                { name: "Zomer Editie 17", location: "München (Duitsland)" },
-                { name: "Zomer Editie 18", location: "Montreal (Canada)" },
-                { name: "Zomer Editie 19", location: "Moskou (Rusland)" },
-                { name: "Zomer Editie 20", location: "Los Angeles (Verenigde Staten)" },
-                { name: "Zomer Editie 21", location: "Seoel (Zuid-Korea)" },
-                { name: "Zomer Editie 22", location: "Barcelona (Spanje)" },
-                { name: "Zomer Editie 23", location: "Atlanta (Verenigde Staten)" },
-                { name: "Zomer Editie 24", location: "Sydney (Australië)" },
-                { name: "Zomer Editie 25", location: "Athene (Griekenland)" },
-                { name: "Zomer Editie 26", location: "Peking (China)" },
-                { name: "Zomer Editie 27", location: "Londen (Verenigd Koninkrijk)" },
-                { name: "Zomer Editie 28", location: "Rio de Janeiro (Brazilië)" },
-                { name: "Zomer Editie 29", location: "Tokio (Japan)" },
-                { name: "Zomer Editie 30", location: "Parijs (Frankrijk)" },
-                { name: "Zomer Editie 31", location: "Los Angeles (Verenigde Staten)" }
-            ];
-
+            let editions = JSON.parse(localStorage.getItem("editions")) || [];
             let tbody = document.getElementById("edition-list");
             tbody.innerHTML = "";
-
+            
             editions.forEach((edition, index) => {
                 let row = document.createElement("tr");
                 row.innerHTML = `
                     <td>${edition.name}</td>
                     <td>${edition.location}</td>
+                    <td>${edition.startdate ? edition.startdate : 'Niet ingesteld'}</td>
                     <td>
                         <button onclick="editEdition(${index})">✏️ Wijzigen</button>
                         <button onclick="deleteEdition(${index})">🗑️ Verwijderen</button>
@@ -105,9 +78,22 @@
                 `;
                 tbody.appendChild(row);
             });
-
-            localStorage.setItem("editions", JSON.stringify(editions));
         }
+
+        document.getElementById("add-edition-form").addEventListener("submit", function(event) {
+            event.preventDefault();
+            let editions = JSON.parse(localStorage.getItem("editions")) || [];
+            let newEdition = {
+                name: document.getElementById("edition-name").value,
+                location: document.getElementById("edition-location").value,
+                startdate: document.getElementById("edition-startdate").value
+            };
+            editions.push(newEdition);
+            localStorage.setItem("editions", JSON.stringify(editions));
+            this.reset();
+            loadEditions();
+        });
+
         function deleteEdition(index) {
             if (confirm("Weet je zeker dat je deze editie wilt verwijderen?")) {
                 let editions = JSON.parse(localStorage.getItem("editions")) || [];
@@ -121,27 +107,16 @@
             let editions = JSON.parse(localStorage.getItem("editions")) || [];
             let newName = prompt("Nieuwe naam voor de editie:", editions[index].name);
             let newLocation = prompt("Nieuwe locatie voor de editie:", editions[index].location);
+            let newStartDate = prompt("Nieuwe startdatum (YYYY-MM-DD):", editions[index].startdate);
 
-            if (newName && newLocation) {
+            if (newName && newLocation && newStartDate) {
                 editions[index].name = newName;
                 editions[index].location = newLocation;
+                editions[index].startdate = newStartDate;
                 localStorage.setItem("editions", JSON.stringify(editions));
                 loadEditions();
             }
         }
-
-        document.getElementById("add-edition-form").addEventListener("submit", function(event) {
-            event.preventDefault();
-            let editions = JSON.parse(localStorage.getItem("editions")) || [];
-            let newEdition = {
-                name: document.getElementById("edition-name").value,
-                location: document.getElementById("edition-location").value
-            };
-            editions.push(newEdition);
-            localStorage.setItem("editions", JSON.stringify(editions));
-            this.reset();
-            loadEditions();
-        });
     </script>
 </body>
 </html>
