@@ -34,6 +34,27 @@
                 <li><a href="admin-gebruikers.html">👤 Gebruikersbeheer</a></li>
             </ul>
         </section>
+        
+        <section>
+            <h2>Beheer Opties</h2>
+            <button onclick="resetData()" style="background-color: red; color: white; padding: 10px; border: none; cursor: pointer;">🔄 Reset Data</button>
+            <p id="reset-message" style="color: green;"></p>
+        </section>
     </main>
+
+    <script>
+        function resetData() {
+            if (confirm("Weet je zeker dat je alle data wilt resetten? Dit kan niet ongedaan worden!")) {
+                fetch('http://localhost:3000/reset', { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById("reset-message").textContent = data.message;
+                    })
+                    .catch(error => {
+                        alert("Fout bij resetten: " + error);
+                    });
+            }
+        }
+    </script>
 </body>
 </html>
