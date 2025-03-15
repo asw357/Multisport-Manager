@@ -9,67 +9,118 @@
 </head>
 <body>
     <header>
-        <h1>Welcome to Multisport Manager</h1>
+        <h1 id="title">Welcome to Multisport Manager</h1>
         <nav>
             <ul>
-                <li><a href="#" onclick="switchLanguage('en')">🇬🇧 English</a> | <a href="#" onclick="switchLanguage('nl')">🇳🇱 Nederlands</a></li>
-                <li><a href="register.html">Register</a></li>
-                <li><a href="login.html">Login</a></li>
-                <li><a href="contact.html">Contact</a></li>
+                <li>
+                    🌍 <a href="#" onclick="switchLanguage('en')">🇬🇧 English</a> | 
+                    <a href="#" onclick="switchLanguage('nl')">🇳🇱 Nederlands</a> | 
+                    <a href="#" onclick="switchLanguage('de')">🇩🇪 Deutsch</a> | 
+                    <a href="#" onclick="switchLanguage('fr')">🇫🇷 Français</a>
+                </li>
+                <li><a href="register.html" id="register">Register</a></li>
+                <li><a href="login.html" id="login">Login</a></li>
+                <li><a href="contact.html" id="contact">Contact</a></li>
             </ul>
         </nav>
     </header>
 
     <main>
         <section class="hero">
-            <h2>About the Game</h2>
-            <p>Multisport Manager is a strategic online multiplayer game where you take control of a national sports team. Compete in various editions, train your athletes, and manage your strategy to win medals!</p>
+            <h2 id="about-title">About the Game</h2>
+            <p id="about-text">Multisport Manager is a strategic online multiplayer game where you take control of a national sports team. Compete in various editions, train your athletes, and manage your strategy to win medals!</p>
         </section>
 
         <section class="features">
-            <h2>Game Features</h2>
+            <h2 id="features-title">Game Features</h2>
             <ul>
-                <li>🌍 Manage a national sports team.</li>
-                <li>🏅 Compete in multiple sports and events.</li>
-                <li>📊 Train and scout new athletes.</li>
-                <li>🎯 Set tactics and strategies.</li>
-                <li>🏆 Earn Medal Points and climb the rankings.</li>
+                <li id="feature1">🌍 Manage a national sports team.</li>
+                <li id="feature2">🏅 Compete in multiple sports and events.</li>
+                <li id="feature3">📊 Train and scout new athletes.</li>
+                <li id="feature4">🎯 Set tactics and strategies.</li>
+                <li id="feature5">🏆 Earn Medal Points and climb the rankings.</li>
             </ul>
         </section>
 
         <section class="stats">
-            <h2>Current Player Statistics</h2>
+            <h2 id="stats-title">Current Player Statistics</h2>
             <p>🏆 <span id="player-count">Loading...</span> players competing worldwide!</p>
             <p>🌍 <span id="country-count">Loading...</span> countries available!</p>
         </section>
 
-        <section class="start">
-            <h2>Start Playing</h2>
-            <p>New players can <a href="register.html">register here</a>. Already have an account? <a href="login.html">Log in now</a> and start managing your team!</p>
-        </section>
-
         <section class="learn-more">
-            <h2>Learn More</h2>
-            <p>📖 Read the <a href="tutorial.html">Tutorial</a> to understand how the game works.</p>
-            <p>📜 Check the <a href="rules.html">Game Rules</a> to learn the official guidelines.</p>
+            <h2 id="learn-title">Learn More</h2>
+            <p>📖 <a href="tutorial.html" id="tutorial">Read the Tutorial</a></p>
+            <p>📜 <a href="rules.html" id="rules">Check the Game Rules</a></p>
         </section>
     </main>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            loadStats();
-        });
-
-        function loadStats() {
-            let users = JSON.parse(localStorage.getItem("users")) || [];
-            let countries = JSON.parse(localStorage.getItem("countries")) || [];
-            document.getElementById("player-count").textContent = users.length;
-            document.getElementById("country-count").textContent = countries.length;
-        }
+        const translations = {
+            en: {
+                title: "Welcome to Multisport Manager",
+                register: "Register",
+                login: "Login",
+                contact: "Contact",
+                aboutTitle: "About the Game",
+                aboutText: "Multisport Manager is a strategic online multiplayer game where you take control of a national sports team. Compete in various editions, train your athletes, and manage your strategy to win medals!",
+                featuresTitle: "Game Features",
+                feature1: "🌍 Manage a national sports team.",
+                feature2: "🏅 Compete in multiple sports and events.",
+                feature3: "📊 Train and scout new athletes.",
+                feature4: "🎯 Set tactics and strategies.",
+                feature5: "🏆 Earn Medal Points and climb the rankings.",
+                statsTitle: "Current Player Statistics",
+                learnTitle: "Learn More",
+                tutorial: "Read the Tutorial",
+                rules: "Check the Game Rules"
+            },
+            nl: {
+                title: "Welkom bij Multisport Manager",
+                register: "Registreren",
+                login: "Inloggen",
+                contact: "Contact",
+                aboutTitle: "Over het spel",
+                aboutText: "Multisport Manager is een strategisch online multiplayer spel waarin je de controle krijgt over een nationaal sportteam. Neem deel aan verschillende edities, train je atleten en beheer je strategie om medailles te winnen!",
+                featuresTitle: "Spelkenmerken",
+                feature1: "🌍 Beheer een nationaal sportteam.",
+                feature2: "🏅 Neem deel aan verschillende sporten en evenementen.",
+                feature3: "📊 Train en scout nieuwe atleten.",
+                feature4: "🎯 Stel tactieken en strategieën in.",
+                feature5: "🏆 Verdien Medal Points en klim in de ranglijst.",
+                statsTitle: "Huidige spelersstatistieken",
+                learnTitle: "Meer leren",
+                tutorial: "Lees de tutorial",
+                rules: "Bekijk de spelregels"
+            }
+        };
 
         function switchLanguage(lang) {
-            alert("Language switching is not yet implemented.");
+            if (translations[lang]) {
+                localStorage.setItem("language", lang);
+                document.getElementById("title").textContent = translations[lang].title;
+                document.getElementById("register").textContent = translations[lang].register;
+                document.getElementById("login").textContent = translations[lang].login;
+                document.getElementById("contact").textContent = translations[lang].contact;
+                document.getElementById("about-title").textContent = translations[lang].aboutTitle;
+                document.getElementById("about-text").textContent = translations[lang].aboutText;
+                document.getElementById("features-title").textContent = translations[lang].featuresTitle;
+                document.getElementById("feature1").textContent = translations[lang].feature1;
+                document.getElementById("feature2").textContent = translations[lang].feature2;
+                document.getElementById("feature3").textContent = translations[lang].feature3;
+                document.getElementById("feature4").textContent = translations[lang].feature4;
+                document.getElementById("feature5").textContent = translations[lang].feature5;
+                document.getElementById("stats-title").textContent = translations[lang].statsTitle;
+                document.getElementById("learn-title").textContent = translations[lang].learnTitle;
+                document.getElementById("tutorial").textContent = translations[lang].tutorial;
+                document.getElementById("rules").textContent = translations[lang].rules;
+            }
         }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const savedLang = localStorage.getItem("language") || "en";
+            switchLanguage(savedLang);
+        });
     </script>
 </body>
 </html>
