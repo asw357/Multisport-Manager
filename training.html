@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Training - Multisport Manager</title>
+    <link rel="stylesheet" href="styles.css">
+    <script defer src="script.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Training</h1>
+        <nav>
+            <ul>
+                <li><a href="manager.html">Terug naar Manager</a></li>
+                <li><a href="#" onclick="logout()">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section>
+            <h2>Train je atleten</h2>
+            <p>Kies een atleet om te trainen en verbeter hun vaardigheden.</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Naam</th>
+                        <th>Sport</th>
+                        <th>Onderdeel</th>
+                        <th>Eigenschappen</th>
+                        <th>MP Kosten</th>
+                        <th>Train</th>
+                    </tr>
+                </thead>
+                <tbody id="athlete-list">
+                    <!-- Atleten worden hier geladen -->
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            loadAthletesForTraining();
+        });
+
+        function loadAthletesForTraining() {
+            let user = JSON.parse(localStorage.getItem("loggedInUser"));
+            if (!user) {
+                window.location.href = "login.html";
+                return;
+            }
+            
+            let athletes = JSON.parse(localStorage.getItem("athletes")) || [];
+            let userAthletes = athletes.filter(a => a.owner === user.managerName);
+            let athleteList = document.getElementById("athlete-list");
+            athleteList.innerHTML = "";
+            
+            userAthletes.forEach((athlete, index) => {
+                let row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${athlete.name}</td>
+                    <td>${athlete.sport}</td>
+                    <td>${athlete.event}</td>
+                    <td>${athlete.attributes.map(attr => `${attr.name}: ${attr.value}`).join(", ")}</td>
+                    <td>50 MP</td>
+                    <td><button onclick="trainAthlete(${index})">Train</button></td>
+                `;
+                athleteList.appendChild(row);
+            });
+        }
+
+        function trainAthlete(index) {
+            let athletes = JSON.parse(localStorage.getItem("athletes")) || [];
+            let user = JSON.parse(localStorage.getItem("loggedInUser"));
+            let mp = parseInt(localStorage.getItem("userMP")) || 0;
+            
+            if (mp < 50) {
+                alert("Je hebt niet genoeg Medal Points om te trainen.");
+                return;
+            }
+            
+            let athlete = athletes[index];
+            athlete.attributes.forEach(attr => attr.value += 1);
+            
+            localStorage.setItem("athletes", JSON.stringify(athletes));
+            localStorage.setItem("userMP", mp - 50);
+            
+            alert(`${athlete.name} heeft succesvol getraind!`);
+            loadAthletesForTraining();
+        }
+    </script>
+</body>
+</html>
