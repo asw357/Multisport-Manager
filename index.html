@@ -5,12 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Multisport Manager - Home</title>
     <link rel="stylesheet" href="styles.css">
+    <script defer src="script.js"></script>
 </head>
 <body>
     <header>
         <h1>Welcome to Multisport Manager</h1>
         <nav>
             <ul>
+                <li><a href="#" onclick="switchLanguage('en')">🇬🇧 English</a> | <a href="#" onclick="switchLanguage('nl')">🇳🇱 Nederlands</a></li>
                 <li><a href="register.html">Register</a></li>
                 <li><a href="login.html">Login</a></li>
                 <li><a href="contact.html">Contact</a></li>
@@ -19,12 +21,12 @@
     </header>
 
     <main>
-        <section>
+        <section class="hero">
             <h2>About the Game</h2>
             <p>Multisport Manager is a strategic online multiplayer game where you take control of a national sports team. Compete in various editions, train your athletes, and manage your strategy to win medals!</p>
         </section>
 
-        <section>
+        <section class="features">
             <h2>Game Features</h2>
             <ul>
                 <li>🌍 Manage a national sports team.</li>
@@ -35,16 +37,39 @@
             </ul>
         </section>
 
-        <section>
+        <section class="stats">
+            <h2>Current Player Statistics</h2>
+            <p>🏆 <span id="player-count">Loading...</span> players competing worldwide!</p>
+            <p>🌍 <span id="country-count">Loading...</span> countries available!</p>
+        </section>
+
+        <section class="start">
             <h2>Start Playing</h2>
             <p>New players can <a href="register.html">register here</a>. Already have an account? <a href="login.html">Log in now</a> and start managing your team!</p>
         </section>
 
-        <section>
+        <section class="learn-more">
             <h2>Learn More</h2>
             <p>📖 Read the <a href="tutorial.html">Tutorial</a> to understand how the game works.</p>
             <p>📜 Check the <a href="rules.html">Game Rules</a> to learn the official guidelines.</p>
         </section>
     </main>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            loadStats();
+        });
+
+        function loadStats() {
+            let users = JSON.parse(localStorage.getItem("users")) || [];
+            let countries = JSON.parse(localStorage.getItem("countries")) || [];
+            document.getElementById("player-count").textContent = users.length;
+            document.getElementById("country-count").textContent = countries.length;
+        }
+
+        function switchLanguage(lang) {
+            alert("Language switching is not yet implemented.");
+        }
+    </script>
 </body>
 </html>
