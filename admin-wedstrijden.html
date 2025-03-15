@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="nl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Wedstrijdbeheer - Multisport Manager</title>
+    <title>Wedstrijdbeheer - Multisport Manager</title>
     <link rel="stylesheet" href="styles.css">
     <script defer src="script.js"></script>
 </head>
@@ -13,6 +13,8 @@
         <nav>
             <ul>
                 <li><a href="admin.html">Terug naar Admin</a></li>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="manager.html">Manager Pagina</a></li>
                 <li><a href="#" onclick="logout()">Logout</a></li>
             </ul>
         </nav>
@@ -20,8 +22,16 @@
 
     <main>
         <section>
-            <h2>Wedstrijdschema Beheer</h2>
-            <button onclick="addMatch()">Nieuwe Wedstrijd Toevoegen</button>
+            <h2>Selecteer een Editie</h2>
+            <label for="editieSelect">Kies een editie:</label>
+            <select id="editieSelect" onchange="loadEditionSchedule()">
+                <!-- Dynamisch geladen edities -->
+            </select>
+        </section>
+        
+        <section id="wedstrijdschema">
+            <h2>Wedstrijdschema</h2>
+            <button onclick="addMatch()">➕ Voeg een wedstrijd toe</button>
             <table>
                 <thead>
                     <tr>
@@ -29,15 +39,13 @@
                         <th>Tijd</th>
                         <th>Sport</th>
                         <th>Onderdeel</th>
-                        <th>Geslacht</th>
                         <th>Ronde</th>
                         <th>Locatie</th>
-                        <th>Max Atleten</th>
                         <th>Acties</th>
                     </tr>
                 </thead>
-                <tbody id="match-list">
-                    <!-- Wedstrijden worden hier geladen -->
+                <tbody id="scheduleTable">
+                    <!-- Dynamisch geladen schema -->
                 </tbody>
             </table>
         </section>
@@ -45,74 +53,67 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            loadMatches();
+            loadEditions();
         });
 
-        function loadMatches() {
-            let matches = JSON.parse(localStorage.getItem("matches")) || [];
-            let matchList = document.getElementById("match-list");
-            matchList.innerHTML = "";
-            
-            matches.forEach((match, index) => {
-                let row = document.createElement("tr");
-                row.innerHTML = `
-                    <td>${match.day}</td>
-                    <td>${match.time}</td>
-                    <td>${match.sport}</td>
-                    <td>${match.event}</td>
-                    <td>${match.gender}</td>
-                    <td>${match.round}</td>
-                    <td>${match.location}</td>
-                    <td>${match.maxAthletes}</td>
-                    <td>
-                        <button onclick="editMatch(${index})">Bewerken</button>
-                        <button onclick="deleteMatch(${index})">Verwijderen</button>
-                    </td>
-                `;
-                matchList.appendChild(row);
-            });
+        function loadEditions() {
+            fetch('http://localhost:3000/editions')
+                .then(response => response.json())
+                .then(editions => {
+                    let select = document.getElementById("editieSelect");
+                    editions.forEach(edition => {
+                        let option = document.createElement("option");
+                        option.value = edition.id;
+                        option.textContent = edition.name;
+                        select.appendChild(option);
+                    });
+                })
+                .catch(error => console.error("Fout bij laden van edities:", error));
+        }
+
+        function loadEditionSchedule() {
+            let editionId = document.getElementById("editieSelect").value;
+            fetch(`http://localhost:3000/schedule/${editionId}`)
+                .then(response => response.json())
+                .then(schedule => {
+                    let table = document.getElementById("scheduleTable");
+                    table.innerHTML = "";
+                    schedule.forEach(match => {
+                        let row = document.createElement("tr");
+                        row.innerHTML = `
+                            <td>${match.day}</td>
+                            <td>${match.time}</td>
+                            <td>${match.sport}</td>
+                            <td>${match.event}</td>
+                            <td>${match.round}</td>
+                            <td>${match.location}</td>
+                            <td><button onclick="deleteMatch(${match.id})">❌ Verwijder</button></td>
+                        `;
+                        table.appendChild(row);
+                    });
+                })
+                .catch(error => console.error("Fout bij laden van schema:", error));
         }
 
         function addMatch() {
-            let day = prompt("Dag (bijv. Dag 1):");
-            let time = prompt("Tijd (bijv. 08:30):");
-            let sport = prompt("Sport:");
-            let event = prompt("Onderdeel:");
-            let gender = prompt("Geslacht (Mannen, Vrouwen, Gemengd):");
-            let round = prompt("Ronde (bijv. Kwalificatie, Finale):");
-            let location = prompt("Locatie:");
-            let maxAthletes = parseInt(prompt("Maximaal aantal atleten:"));
-            
-            if (day && time && sport && event && gender && round && location && maxAthletes) {
-                let newMatch = { day, time, sport, event, gender, round, location, maxAthletes };
-                
-                let matches = JSON.parse(localStorage.getItem("matches")) || [];
-                matches.push(newMatch);
-                localStorage.setItem("matches", JSON.stringify(matches));
-                loadMatches();
-            }
-        }
+            let editionId = document.getElementById("editieSelect").value;
+            let newMatch = {
+                day: prompt("Dag nummer:"),
+                time: prompt("Tijd (hh:mm):"),
+                sport: prompt("Sport:"),
+                event: prompt("Onderdeel:"),
+                round: prompt("Ronde:"),
+                location: prompt("Locatie:")
+            };
 
-        function deleteMatch(index) {
-            if (confirm("Weet je zeker dat je deze wedstrijd wilt verwijderen?")) {
-                let matches = JSON.parse(localStorage.getItem("matches")) || [];
-                matches.splice(index, 1);
-                localStorage.setItem("matches", JSON.stringify(matches));
-                loadMatches();
-            }
-        }
-
-        function editMatch(index) {
-            let matches = JSON.parse(localStorage.getItem("matches")) || [];
-            let match = matches[index];
-            
-            let newTime = prompt("Nieuwe tijd:", match.time);
-            let newMaxAthletes = prompt("Nieuw max aantal atleten:", match.maxAthletes);
-            if (newTime) match.time = newTime;
-            if (newMaxAthletes) match.maxAthletes = parseInt(newMaxAthletes);
-            
-            localStorage.setItem("matches", JSON.stringify(matches));
-            loadMatches();
+            fetch(`http://localhost:3000/schedule/${editionId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newMatch)
+            })
+            .then(response => response.json())
+            .then(() => loadEditionSchedule())
+            .catch(error => console.error("Fout bij toevoegen van wedstrijd:", error));
         }
     </script>
 </body>
