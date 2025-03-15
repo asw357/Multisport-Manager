@@ -1,50 +1,54 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="nl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manager Dashboard - Multisport Manager</title>
+    <title>Manager Pagina - Multisport Manager</title>
     <link rel="stylesheet" href="styles.css">
     <script defer src="script.js"></script>
 </head>
 <body>
     <header>
-        <h1>Manager Dashboard</h1>
+        <h1>Manager Pagina</h1>
         <nav>
             <ul>
                 <li><a href="index.html">Home</a></li>
-                <li><a href="#" onclick="logout()">Logout</a></li>
+                <li><a href="logout.html" onclick="logout()">Logout</a></li>
             </ul>
         </nav>
     </header>
 
     <main>
-        <section class="dashboard-section">
-            <h2>Welcome, <span id="manager-name"></span></h2>
-            <p>Country: <span id="manager-country"></span></p>
-            <p>Medal Points: <span id="medal-points">0</span></p>
-        </section>
-
-        <section class="links-section">
-            <h3>Manage Your Team</h3>
+        <section>
+            <h2>Welkom, <span id="manager-name">Manager</span>!</h2>
+            <p>Hier kun je je atleten beheren, strategieën aanpassen en prestaties volgen.</p>
             <ul>
                 <li><a href="atleten.html">Atletenbeheer</a></li>
-                <li><a href="wedstrijdvoorbereiding.html">Wedstrijd Voorbereiding</a></li>
+                <li><a href="training.html">Training</a></li>
+                <li><a href="scouting.html">Scouten</a></li>
+                <li><a href="tactieken.html">Tactieken</a></li>
+                <li><a href="edities.html">Edities</a></li>
+                <li><a href="news.html">Nieuws</a></li>
             </ul>
         </section>
     </main>
-    
+
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             let user = JSON.parse(localStorage.getItem("loggedInUser"));
             if (!user) {
+                alert("Je moet ingelogd zijn om de managerpagina te bekijken.");
                 window.location.href = "login.html";
             } else {
-                document.getElementById("manager-name").innerText = user.managerName;
-                document.getElementById("manager-country").innerText = user.assignedCountry;
-                document.getElementById("medal-points").innerText = localStorage.getItem("medalPoints") || 0;
+                document.getElementById("manager-name").textContent = user.managerName;
             }
         });
+
+        function logout() {
+            localStorage.removeItem("loggedInUser");
+            alert("Je bent uitgelogd.");
+            window.location.href = "index.html";
+        }
     </script>
 </body>
 </html>
