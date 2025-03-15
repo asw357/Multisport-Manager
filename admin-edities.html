@@ -1,18 +1,19 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="nl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Editiebeheer - Multisport Manager</title>
+    <title>Admin Panel - Multisport Manager</title>
     <link rel="stylesheet" href="styles.css">
     <script defer src="script.js"></script>
 </head>
 <body>
     <header>
-        <h1>Editiebeheer</h1>
+        <h1>Admin Panel</h1>
         <nav>
             <ul>
-                <li><a href="admin.html">Terug naar Admin</a></li>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="manager.html">Manager Pagina</a></li>
                 <li><a href="#" onclick="logout()">Logout</a></li>
             </ul>
         </nav>
@@ -20,91 +21,54 @@
 
     <main>
         <section>
-            <h2>Editie Overzicht</h2>
-            <button onclick="addEdition()">Nieuwe Editie Toevoegen</button>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Naam</th>
-                        <th>Startdatum</th>
-                        <th>Locatie</th>
-                        <th>Gastland</th>
-                        <th>Acties</th>
-                    </tr>
-                </thead>
-                <tbody id="edition-list">
-                    <!-- Edities worden hier geladen -->
-                </tbody>
-            </table>
+            <h2>Welkom, Admin!</h2>
+            <p>Gebruik de onderstaande links om de verschillende onderdelen van het spel te beheren.</p>
+            <ul>
+                <li><a href="admin-edities.html">📅 Editiebeheer</a></li>
+                <li><a href="admin-wedstrijden.html">🏆 Wedstrijdbeheer</a></li>
+                <li><a href="admin-atleten.html">🏃 Atletenbeheer</a></li>
+                <li><a href="admin-mp.html">🎖 MP Beheer</a></li>
+                <li><a href="admin-gebruikers.html">👤 Gebruikersbeheer</a></li>
+            </ul>
+        </section>
+        
+        <section>
+            <h2>Editiebeheer</h2>
+            <label for="editie-select">Geselecteerde Editie:</label>
+            <select id="editie-select">
+                <option value="1">Zomer Editie 1: Athene (Griekenland)</option>
+                <option value="2">Zomer Editie 2: Parijs (Frankrijk)</option>
+                <option value="3">Zomer Editie 3: St. Louis (Verenigde Staten)</option>
+                <option value="4">Zomer Editie 4: Londen (Verenigd Koninkrijk)</option>
+                <option value="5">Zomer Editie 5: Stockholm (Zweden)</option>
+                <option value="6">Zomer Editie 6: Antwerpen (België)</option>
+                <option value="7">Zomer Editie 7: Parijs (Frankrijk)</option>
+                <option value="8">Zomer Editie 8: Amsterdam (Nederland)</option>
+                <option value="9">Zomer Editie 9: Los Angeles (Verenigde Staten)</option>
+                <option value="10">Zomer Editie 10: Berlijn (Duitsland)</option>
+                <option value="11">Zomer Editie 11: Londen (Verenigd Koninkrijk)</option>
+                <option value="12">Zomer Editie 12: Helsinki (Finland)</option>
+                <option value="13">Zomer Editie 13: Melbourne (Australië)</option>
+                <option value="14">Zomer Editie 14: Rome (Italië)</option>
+                <option value="15">Zomer Editie 15: Tokio (Japan)</option>
+                <option value="16">Zomer Editie 16: Mexico-Stad (Mexico)</option>
+                <option value="17">Zomer Editie 17: München (Duitsland)</option>
+                <option value="18">Zomer Editie 18: Montreal (Canada)</option>
+                <option value="19">Zomer Editie 19: Moskou (Rusland)</option>
+                <option value="20">Zomer Editie 20: Los Angeles (Verenigde Staten)</option>
+                <option value="21">Zomer Editie 21: Seoel (Zuid-Korea)</option>
+                <option value="22">Zomer Editie 22: Barcelona (Spanje)</option>
+                <option value="23">Zomer Editie 23: Atlanta (Verenigde Staten)</option>
+                <option value="24">Zomer Editie 24: Sydney (Australië)</option>
+                <option value="25">Zomer Editie 25: Athene (Griekenland)</option>
+                <option value="26">Zomer Editie 26: Peking (China)</option>
+                <option value="27">Zomer Editie 27: Londen (Verenigd Koninkrijk)</option>
+                <option value="28">Zomer Editie 28: Rio de Janeiro (Brazilië)</option>
+                <option value="29">Zomer Editie 29: Tokio (Japan)</option>
+                <option value="30">Zomer Editie 30: Parijs (Frankrijk)</option>
+                <option value="31">Zomer Editie 31: Los Angeles (Verenigde Staten)</option>
+            </select>
         </section>
     </main>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            loadEditions();
-        });
-
-        function loadEditions() {
-            let editions = JSON.parse(localStorage.getItem("editions")) || [];
-            let editionList = document.getElementById("edition-list");
-            editionList.innerHTML = "";
-            
-            editions.forEach((edition, index) => {
-                let row = document.createElement("tr");
-                row.innerHTML = `
-                    <td>${edition.name}</td>
-                    <td>${edition.startDate}</td>
-                    <td>${edition.location}</td>
-                    <td>${edition.hostCountry}</td>
-                    <td>
-                        <button onclick="editEdition(${index})">Bewerken</button>
-                        <button onclick="deleteEdition(${index})">Verwijderen</button>
-                    </td>
-                `;
-                editionList.appendChild(row);
-            });
-        }
-
-        function addEdition() {
-            let name = prompt("Naam van de Editie (bijv. Zomer Editie 1):");
-            let startDate = prompt("Startdatum (YYYY-MM-DD):");
-            let location = prompt("Locatie (bijv. Athene, Griekenland):");
-            let hostCountry = prompt("Gastland:");
-            
-            if (name && startDate && location && hostCountry) {
-                let newEdition = { name, startDate, location, hostCountry };
-                
-                let editions = JSON.parse(localStorage.getItem("editions")) || [];
-                editions.push(newEdition);
-                localStorage.setItem("editions", JSON.stringify(editions));
-                loadEditions();
-            }
-        }
-
-        function deleteEdition(index) {
-            if (confirm("Weet je zeker dat je deze editie wilt verwijderen?")) {
-                let editions = JSON.parse(localStorage.getItem("editions")) || [];
-                editions.splice(index, 1);
-                localStorage.setItem("editions", JSON.stringify(editions));
-                loadEditions();
-            }
-        }
-
-        function editEdition(index) {
-            let editions = JSON.parse(localStorage.getItem("editions")) || [];
-            let edition = editions[index];
-            
-            let newStartDate = prompt("Nieuwe startdatum (YYYY-MM-DD):", edition.startDate);
-            let newLocation = prompt("Nieuwe locatie:", edition.location);
-            let newHostCountry = prompt("Nieuw gastland:", edition.hostCountry);
-            
-            if (newStartDate) edition.startDate = newStartDate;
-            if (newLocation) edition.location = newLocation;
-            if (newHostCountry) edition.hostCountry = newHostCountry;
-            
-            localStorage.setItem("editions", JSON.stringify(editions));
-            loadEditions();
-        }
-    </script>
 </body>
 </html>
