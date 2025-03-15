@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tactieken - Multisport Manager</title>
+    <link rel="stylesheet" href="styles.css">
+    <script defer src="script.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Tactieken</h1>
+        <nav>
+            <ul>
+                <li><a href="manager.html">Terug naar Manager</a></li>
+                <li><a href="#" onclick="logout()">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section>
+            <h2>Stel je tactieken in</h2>
+            <p>Selecteer een sport en onderdeel en pas je tactiek aan.</p>
+            <label for="sport-select">Sport:</label>
+            <select id="sport-select">
+                <option value="Atletiek">Atletiek</option>
+                <option value="Zwemmen">Zwemmen</option>
+                <option value="Voetbal">Voetbal</option>
+                <option value="Wielrennen">Wielrennen</option>
+            </select>
+            
+            <label for="event-select">Onderdeel:</label>
+            <input type="text" id="event-select" placeholder="Bijv. 100m sprint">
+            
+            <label for="strategy-select">Tactiek:</label>
+            <select id="strategy-select">
+                <option value="Aanvallend">Aanvallend</option>
+                <option value="Verdedigend">Verdedigend</option>
+                <option value="Gebalanceerd">Gebalanceerd</option>
+            </select>
+            
+            <button onclick="saveStrategy()">Opslaan</button>
+            
+            <h3>Jouw Tactieken</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Sport</th>
+                        <th>Onderdeel</th>
+                        <th>Tactiek</th>
+                        <th>Wijzigen</th>
+                    </tr>
+                </thead>
+                <tbody id="strategy-list">
+                    <!-- Tactieken worden hier geladen -->
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            loadStrategies();
+        });
+
+        function saveStrategy() {
+            let user = JSON.parse(localStorage.getItem("loggedInUser"));
+            if (!user) {
+                window.location.href = "login.html";
+                return;
+            }
+            
+            let sport = document.getElementById("sport-select").value;
+            let event = document.getElementById("event-select").value;
+            let strategy = document.getElementById("strategy-select").value;
+            
+            if (!event) {
+                alert("Voer een onderdeel in om een tactiek op te slaan.");
+                return;
+            }
+            
+            let strategies = JSON.parse(localStorage.getItem("strategies")) || [];
+            let existingStrategy = strategies.find(s => s.manager === user.managerName && s.sport === sport && s.event === event);
+            
+            if (existingStrategy) {
+                existingStrategy.strategy = strategy;
+            } else {
+                strategies.push({ manager: user.managerName, sport, event, strategy });
+            }
+            
+            localStorage.setItem("strategies", JSON.stringify(strategies));
+            loadStrategies();
+        }
+
+        function loadStrategies() {
+            let user = JSON.parse(localStorage.getItem("loggedInUser"));
+            if (!user) {
+                window.location.href = "login.html";
+                return;
+            }
+            
+            let strategies = JSON.parse(localStorage.getItem("strategies")) || [];
+            let userStrategies = strategies.filter(s => s.manager === user.managerName);
+            let strategyList = document.getElementById("strategy-list");
+            strategyList.innerHTML = "";
+            
+            userStrategies.forEach(strategy => {
+                let row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${strategy.sport}</td>
+                    <td>${strategy.event}</td>
+                    <td>${strategy.strategy}</td>
+                    <td><button onclick="editStrategy('${strategy.sport}', '${strategy.event}')">Wijzigen</button></td>
+                `;
+                strategyList.appendChild(row);
+            });
+        }
+
+        function editStrategy(sport, event) {
+            let newStrategy = prompt("Nieuwe tactiek (Aanvallend, Verdedigend, Gebalanceerd):");
+            if (!newStrategy) return;
+            
+            let strategies = JSON.parse(localStorage.getItem("strategies")) || [];
+            let strategy = strategies.find(s => s.sport === sport && s.event === event);
+            
+            if (strategy) {
+                strategy.strategy = newStrategy;
+                localStorage.setItem("strategies", JSON.stringify(strategies));
+                loadStrategies();
+            }
+        }
+    </script>
+</body>
+</html>
