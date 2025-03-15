@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medaille Spiegel - Multisport Manager</title>
+    <link rel="stylesheet" href="styles.css">
+    <script defer src="script.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Medaille Spiegel</h1>
+        <nav>
+            <ul>
+                <li><a href="manager.html">Terug naar Manager</a></li>
+                <li><a href="#" onclick="logout()">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section>
+            <h2>Medailleklassement</h2>
+            <label for="edition-select">Selecteer een editie:</label>
+            <select id="edition-select" onchange="loadMedalTable()">
+                <!-- Edities worden hier geladen -->
+            </select>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Land</th>
+                        <th>🥇 Goud</th>
+                        <th>🥈 Zilver</th>
+                        <th>🥉 Brons</th>
+                        <th>Totaal</th>
+                    </tr>
+                </thead>
+                <tbody id="medal-table">
+                    <!-- Medaille spiegel wordt hier geladen -->
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            loadEditions();
+        });
+
+        function loadEditions() {
+            let editions = JSON.parse(localStorage.getItem("editions")) || [];
+            let editionSelect = document.getElementById("edition-select");
+            editionSelect.innerHTML = "";
+            
+            editions.forEach(edition => {
+                let option = document.createElement("option");
+                option.value = edition.name;
+                option.textContent = edition.name;
+                editionSelect.appendChild(option);
+            });
+            
+            loadMedalTable();
+        }
+
+        function loadMedalTable() {
+            let selectedEdition = document.getElementById("edition-select").value;
+            let medals = JSON.parse(localStorage.getItem("medalTable")) || {};
+            let medalTable = medals[selectedEdition] || [];
+            let medalBody = document.getElementById("medal-table");
+            medalBody.innerHTML = "";
+            
+            medalTable.sort((a, b) => (b.gold - a.gold) || (b.silver - a.silver) || (b.bronze - a.bronze));
+            
+            medalTable.forEach(entry => {
+                let row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${entry.country}</td>
+                    <td>${entry.gold}</td>
+                    <td>${entry.silver}</td>
+                    <td>${entry.bronze}</td>
+                    <td>${entry.total}</td>
+                `;
+                medalBody.appendChild(row);
+            });
+        }
+    </script>
+</body>
+</html>
