@@ -50,25 +50,9 @@
         </section>
 
         <section>
-            <h2>Wedstrijd Toevoegen</h2>
-            <form id="add-match-form">
-                <label for="day">Dag:</label>
-                <input type="number" id="day" name="day" required>
-
-                <label for="time">Tijd:</label>
-                <input type="time" id="time" name="time" required>
-
-                <label for="sport">Sport:</label>
-                <input type="text" id="sport" name="sport" required>
-
-                <label for="event">Onderdeel:</label>
-                <input type="text" id="event" name="event" required>
-
-                <label for="location">Locatie:</label>
-                <input type="text" id="location" name="location" required>
-
-                <button type="submit">➕ Toevoegen</button>
-            </form>
+            <h2>Speciale Ceremonies</h2>
+            <button onclick="addCeremony('Opening')">➕ Voeg Openingsceremonie toe</button>
+            <button onclick="addCeremony('Sluiting')">➕ Voeg Sluitingsceremonie toe</button>
         </section>
     </main>
 
@@ -77,29 +61,21 @@
             loadEditions();
         });
 
-        function loadEditions() {
-            const editions = [
-                "Zomer Editie 1: Athene (Griekenland)", "Zomer Editie 2: Parijs (Frankrijk)", "Zomer Editie 3: St. Louis (Verenigde Staten)",
-                "Zomer Editie 4: Londen (Verenigd Koninkrijk)", "Zomer Editie 5: Stockholm (Zweden)", "Zomer Editie 6: Antwerpen (België)",
-                "Zomer Editie 7: Parijs (Frankrijk)", "Zomer Editie 8: Amsterdam (Nederland)", "Zomer Editie 9: Los Angeles (Verenigde Staten)",
-                "Zomer Editie 10: Berlijn (Duitsland)", "Zomer Editie 11: Londen (Verenigd Koninkrijk)", "Zomer Editie 12: Helsinki (Finland)",
-                "Zomer Editie 13: Melbourne (Australië)", "Zomer Editie 14: Rome (Italië)", "Zomer Editie 15: Tokio (Japan)",
-                "Zomer Editie 16: Mexico-Stad (Mexico)", "Zomer Editie 17: München (Duitsland)", "Zomer Editie 18: Montreal (Canada)",
-                "Zomer Editie 19: Moskou (Rusland)", "Zomer Editie 20: Los Angeles (Verenigde Staten)", "Zomer Editie 21: Seoel (Zuid-Korea)",
-                "Zomer Editie 22: Barcelona (Spanje)", "Zomer Editie 23: Atlanta (Verenigde Staten)", "Zomer Editie 24: Sydney (Australië)",
-                "Zomer Editie 25: Athene (Griekenland)", "Zomer Editie 26: Peking (China)", "Zomer Editie 27: Londen (Verenigd Koninkrijk)",
-                "Zomer Editie 28: Rio de Janeiro (Brazilië)", "Zomer Editie 29: Tokio (Japan)", "Zomer Editie 30: Parijs (Frankrijk)",
-                "Zomer Editie 31: Los Angeles (Verenigde Staten)"
-            ];
-            
-            const select = document.getElementById("editie-select");
-            select.innerHTML = "";
-            editions.forEach((edition, index) => {
-                const option = document.createElement("option");
-                option.value = index + 1;
-                option.textContent = edition;
-                select.appendChild(option);
+        function addCeremony(type) {
+            const editionId = document.getElementById("editie-select").value;
+            if (!editionId) {
+                alert("Selecteer eerst een editie!");
+                return;
+            }
+            let ceremonies = JSON.parse(localStorage.getItem("ceremonies")) || [];
+            ceremonies.push({
+                editionId: editionId,
+                type: type,
+                time: type === "Opening" ? "18:00" : "20:00",
+                location: "Hoofd Stadion"
             });
+            localStorage.setItem("ceremonies", JSON.stringify(ceremonies));
+            alert(type + " toegevoegd!");
         }
     </script>
 </body>
