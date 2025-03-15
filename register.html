@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="nl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,72 +13,57 @@
         <nav>
             <ul>
                 <li><a href="index.html">Home</a></li>
-                <li><a href="login.html">Login</a></li>
-                <li><a href="contact.html">Contact</a></li>
+                <li><a href="login.html">Inloggen</a></li>
             </ul>
         </nav>
     </header>
 
     <main>
-        <section class="register-section">
-            <h3>Maak een account aan</h3>
-            <form id="register-form" class="form-container">
-                <input type="text" id="manager-name" placeholder="Manager Naam" required>
-                <input type="email" id="email" placeholder="E-mail" required>
-                <input type="password" id="password" placeholder="Wachtwoord" required>
-                <button type="submit">Registreer</button>
+        <section>
+            <h2>Maak een account aan</h2>
+            <form id="register-form">
+                <label for="manager-name">Manager Naam:</label>
+                <input type="text" id="manager-name" name="manager-name" required>
+                
+                <label for="email">E-mail:</label>
+                <input type="email" id="email" name="email" required>
+                
+                <label for="password">Wachtwoord:</label>
+                <input type="password" id="password" name="password" required>
+                
+                <button type="submit">Registreren</button>
             </form>
-            <p id="register-message"></p>
         </section>
     </main>
 
     <script>
         document.getElementById("register-form").addEventListener("submit", function(event) {
             event.preventDefault();
-            let managerName = document.getElementById("manager-name").value;
-            let email = document.getElementById("email").value;
-            let password = document.getElementById("password").value;
+            let users = JSON.parse(localStorage.getItem("users")) || [];
+            let athletes = JSON.parse(localStorage.getItem("athletes")) || [];
             
-            if (managerName && email && password) {
-                let assignedCountry = assignNextAvailableCountry();
-                let userData = { managerName, email, password, assignedCountry };
-                localStorage.setItem("user", JSON.stringify(userData));
-                localStorage.setItem("loggedInUser", JSON.stringify(userData));
-                
-                // Koppel starterslijst atleten aan gebruiker
-                assignStarterAthletes(userData);
-                
-                document.getElementById("register-message").innerText = `Welkom, ${managerName}! Je hebt het land ${assignedCountry} gekregen.`;
-                
-                setTimeout(() => { window.location.href = "manager.html"; }, 2000);
-            }
+            let newUser = {
+                managerName: document.getElementById("manager-name").value,
+                email: document.getElementById("email").value,
+                password: document.getElementById("password").value,
+                country: assignCountry(),
+                athletes: JSON.parse(JSON.stringify(athletes)) // Kopie van standaard atletenlijst
+            };
+            
+            users.push(newUser);
+            localStorage.setItem("users", JSON.stringify(users));
+            alert("Registratie voltooid! Je standaard atleten zijn toegevoegd.");
+            window.location.href = "login.html";
         });
-        
-        function assignNextAvailableCountry() {
-            const countries = JSON.parse(localStorage.getItem("countries")) || ["Australie", "Bulgarije", "Chili", "Denemarken", "Ijsland", "Duitsland", "Frankrijk", "Griekenland"];
-            let usedCountries = JSON.parse(localStorage.getItem("usedCountries")) || [];
-            let availableCountry = countries.find(c => !usedCountries.includes(c)) || "Geen beschikbaar land";
-            usedCountries.push(availableCountry);
-            localStorage.setItem("usedCountries", JSON.stringify(usedCountries));
-            return availableCountry;
-        }
-        
-        function assignStarterAthletes(user) {
-            let starters = JSON.parse(localStorage.getItem("starterAthletes")) || [];
-            let userAthletes = JSON.parse(localStorage.getItem("athletes")) || [];
-            
-            starters.forEach(athlete => {
-                userAthletes.push({
-                    name: athlete.name,
-                    sport: athlete.sport,
-                    event: athlete.event,
-                    gender: athlete.gender,
-                    country: user.assignedCountry,
-                    speed: Math.floor(Math.random() * 10) + 1,
-                    strength: Math.floor(Math.random() * 10) + 1
-                });
-            });
-            localStorage.setItem("athletes", JSON.stringify(userAthletes));
+
+        function assignCountry() {
+            let countries = ["Australië", "Bulgarije", "Chili", "Denemarken", "IJsland", "Duitsland", "Frankrijk", "Griekenland"];
+            let assignedCountries = JSON.parse(localStorage.getItem("assignedCountries")) || [];
+            let availableCountries = countries.filter(c => !assignedCountries.includes(c));
+            let country = availableCountries.length > 0 ? availableCountries[0] : "Onbekend";
+            assignedCountries.push(country);
+            localStorage.setItem("assignedCountries", JSON.stringify(assignedCountries));
+            return country;
         }
     </script>
 </body>
