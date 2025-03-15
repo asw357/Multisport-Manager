@@ -1,6 +1,7 @@
 const express = require('express');
 const fs = require('fs');
 const cors = require('cors');
+
 const app = express();
 const PORT = 3000;
 
@@ -9,7 +10,11 @@ app.use(cors());
 
 // Functie om JSON-bestanden te lezen
 function readData(file) {
-    return JSON.parse(fs.readFileSync(`./backend/data/${file}.json`, 'utf8'));
+    try {
+        return JSON.parse(fs.readFileSync(`./backend/data/${file}.json`, 'utf8'));
+    } catch (error) {
+        return [];
+    }
 }
 
 // Functie om JSON-bestanden te schrijven
@@ -17,8 +22,14 @@ function writeData(file, data) {
     fs.writeFileSync(`./backend/data/${file}.json`, JSON.stringify(data, null, 2));
 }
 
+// API om te controleren of de server werkt
+app.get('/', (req, res) => {
+    res.send('Server is actief!');
+});
+
 // API om edities op te halen
 app.get('/editions', (req, res) => {
+    console.log("Edities opvragen...");
     res.json(readData('editions'));
 });
 
@@ -30,6 +41,7 @@ app.post('/editions', (req, res) => {
     writeData('editions', editions);
     res.status(201).json(newEdition);
 });
+
 // API om alle wedstrijden voor een editie op te halen
 app.get('/schedule/:editionId', (req, res) => {
     let schedules = readData('schedule');
@@ -53,6 +65,7 @@ app.post('/schedule/:editionId', (req, res) => {
     writeData('schedule', schedules);
     res.status(201).json(newMatch);
 });
+
 // API om een wedstrijd te verwijderen
 app.delete('/schedule/:matchId', (req, res) => {
     let schedules = readData('schedule');
@@ -72,6 +85,7 @@ app.post('/reset', (req, res) => {
     res.json({ message: 'Alle data is gereset!' });
 });
 
+// Start de server en log de Replit URL
 app.listen(PORT, () => {
-    console.log(`Server draait op http://localhost:${PORT}`);
+    console.log(`Server draait op https://your-project.replit.app`);
 });
