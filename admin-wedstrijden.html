@@ -90,7 +90,8 @@
                         select.appendChild(option);
                     });
                     loadSchedule();
-                });
+                })
+                .catch(error => console.error("Fout bij laden edities:", error));
         }
 
         function loadSchedule() {
@@ -114,8 +115,10 @@
                         `;
                         tbody.appendChild(row);
                     });
-                });
+                })
+                .catch(error => console.error("Fout bij laden schema:", error));
         }
+
         function deleteMatch(matchId) {
             if (confirm("Weet je zeker dat je deze wedstrijd wilt verwijderen?")) {
                 fetch(`http://localhost:3000/schedule/${matchId}`, { method: "DELETE" })
