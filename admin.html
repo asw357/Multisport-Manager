@@ -12,114 +12,21 @@
         <h1>Admin Panel</h1>
         <nav>
             <ul>
-                <li><a href="manager.html">Terug naar Manager</a></li>
+                <li><a href="admin-edities.html">Editiebeheer</a></li>
+                <li><a href="admin-wedstrijden.html">Wedstrijdbeheer</a></li>
+                <li><a href="admin-atleten.html">Atletenbeheer</a></li>
+                <li><a href="admin-mp.html">MP Beheer</a></li>
+                <li><a href="admin-gebruikers.html">Gebruikersbeheer</a></li>
                 <li><a href="#" onclick="logout()">Logout</a></li>
             </ul>
         </nav>
     </header>
 
     <main>
-        <section class="admin-section">
-            <h2>Beheer Landenlijst</h2>
-            <label for="new-country">Nieuw Land:</label>
-            <input type="text" id="new-country" placeholder="Voer een land in">
-            <button onclick="addCountry()">Toevoegen</button>
-            <ul id="country-list"></ul>
-        </section>
-
-        <section class="admin-section">
-            <h2>Beheer Gebruikers</h2>
-            <ul id="user-list"></ul>
-        </section>
-
-        <section class="admin-section">
-            <h2>Pas Medal Points Regels Aan</h2>
-            <label for="mp-value">Nieuwe MP Waarde:</label>
-            <input type="number" id="mp-value" placeholder="Voer MP waarde in">
-            <button onclick="updateMP()">Opslaan</button>
-        </section>
-
-        <section class="admin-section">
-            <h2>Beheer Inactieve Spelers</h2>
-            <button onclick="removeInactiveUsers()">Verwijder inactieve spelers</button>
-        </section>
-
-        <section class="admin-section">
-            <h2>Instellen Atletenbeheer Limieten</h2>
-            <label for="sport-name">Sport:</label>
-            <input type="text" id="sport-name" placeholder="Voer een sport in">
-            <label for="event-name">Onderdeel:</label>
-            <input type="text" id="event-name" placeholder="Voer een onderdeel in">
-            <label for="gender">Geslacht:</label>
-            <select id="gender">
-                <option value="M">Mannen</option>
-                <option value="V">Vrouwen</option>
-            </select>
-            <label for="limit">Max. aantal atleten:</label>
-            <input type="number" id="limit" placeholder="Aantal atleten">
-            <button onclick="setAthleteLimit()">Opslaan</button>
-            <ul id="athlete-limits"></ul>
-        </section>
-
-        <section class="admin-section">
-            <h2>Beheer Starterslijst</h2>
-            <label for="starter-sport">Sport:</label>
-            <input type="text" id="starter-sport" placeholder="Sport">
-            <label for="starter-event">Onderdeel:</label>
-            <input type="text" id="starter-event" placeholder="Onderdeel">
-            <label for="starter-gender">Geslacht:</label>
-            <select id="starter-gender">
-                <option value="M">Mannen</option>
-                <option value="V">Vrouwen</option>
-            </select>
-            <label for="starter-amount">Aantal atleten:</label>
-            <input type="number" id="starter-amount" placeholder="Aantal atleten">
-            <button onclick="addStarterAthletes()">Toevoegen</button>
-            <ul id="starter-list"></ul>
+        <section>
+            <h2>Welkom, Admin!</h2>
+            <p>Gebruik de bovenstaande links om de verschillende onderdelen van het spel te beheren.</p>
         </section>
     </main>
-    
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            let user = JSON.parse(localStorage.getItem("loggedInUser"));
-            if (!user || user.email !== "wilcoboesveld12@hotmail.com") {
-                window.location.href = "index.html";
-                return;
-            }
-            
-            loadCountries();
-            loadUsers();
-            loadAthleteLimits();
-            loadStarterList();
-        });
-        
-        function addStarterAthletes() {
-            let sport = document.getElementById("starter-sport").value;
-            let event = document.getElementById("starter-event").value;
-            let gender = document.getElementById("starter-gender").value;
-            let amount = parseInt(document.getElementById("starter-amount").value);
-            
-            if (sport && event && amount > 0) {
-                let starters = JSON.parse(localStorage.getItem("starterAthletes")) || [];
-                for (let i = 0; i < amount; i++) {
-                    let generatedName = `Atleet-${sport}-${event}-${i + 1}`;
-                    starters.push({ name: generatedName, sport, event, gender });
-                }
-                localStorage.setItem("starterAthletes", JSON.stringify(starters));
-                loadStarterList();
-            }
-        }
-
-        function loadStarterList() {
-            let starters = JSON.parse(localStorage.getItem("starterAthletes")) || [];
-            let starterList = document.getElementById("starter-list");
-            starterList.innerHTML = "";
-            starters.forEach(s => {
-                let li = document.createElement("li");
-                li.innerText = `${s.name} - ${s.sport} (${s.event}, ${s.gender})`;
-                starterList.appendChild(li);
-            });
-        }
-    </script>
 </body>
 </html>
