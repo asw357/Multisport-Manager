@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scouting - Multisport Manager</title>
+    <link rel="stylesheet" href="styles.css">
+    <script defer src="script.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Scouting</h1>
+        <nav>
+            <ul>
+                <li><a href="manager.html">Terug naar Manager</a></li>
+                <li><a href="#" onclick="logout()">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section>
+            <h2>Zoek naar nieuwe atleten</h2>
+            <p>Selecteer een sport en onderdeel om mogelijke nieuwe atleten te vinden.</p>
+            <label for="sport-select">Sport:</label>
+            <select id="sport-select">
+                <option value="Atletiek">Atletiek</option>
+                <option value="Zwemmen">Zwemmen</option>
+                <option value="Voetbal">Voetbal</option>
+                <option value="Wielrennen">Wielrennen</option>
+            </select>
+            
+            <label for="event-select">Onderdeel:</label>
+            <input type="text" id="event-select" placeholder="Bijv. 100m sprint">
+            
+            <button onclick="scoutAthletes()">Scouten (100 MP)</button>
+            
+            <h3>Gescoute Atleten</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Naam</th>
+                        <th>Sport</th>
+                        <th>Onderdeel</th>
+                        <th>Eigenschappen</th>
+                        <th>Toevoegen</th>
+                    </tr>
+                </thead>
+                <tbody id="scouted-list">
+                    <!-- Gescoute atleten worden hier geladen -->
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <script>
+        function scoutAthletes() {
+            let user = JSON.parse(localStorage.getItem("loggedInUser"));
+            if (!user) {
+                window.location.href = "login.html";
+                return;
+            }
+            
+            let mp = parseInt(localStorage.getItem("userMP")) || 0;
+            if (mp < 100) {
+                alert("Je hebt niet genoeg Medal Points om te scouten.");
+                return;
+            }
+            
+            let sport = document.getElementById("sport-select").value;
+            let event = document.getElementById("event-select").value;
+            
+            if (!event) {
+                alert("Voer een onderdeel in om te scouten.");
+                return;
+            }
+            
+            let newAthletes = [];
+            for (let i = 0; i < 5; i++) {
+                let randomAthlete = {
+                    name: "Atleet " + (Math.floor(Math.random() * 1000)),
+                    sport: sport,
+                    event: event,
+                    attributes: [
+                        { name: "Snelheid", value: Math.floor(Math.random() * 100) },
+                        { name: "Kracht", value: Math.floor(Math.random() * 100) }
+                    ]
+                };
+                newAthletes.push(randomAthlete);
+            }
+            
+            localStorage.setItem("scoutedAthletes", JSON.stringify(newAthletes));
+            localStorage.setItem("userMP", mp - 100);
+            displayScoutedAthletes();
+        }
+
+        function displayScoutedAthletes() {
+            let scouted = JSON.parse(localStorage.getItem("scoutedAthletes")) || [];
+            let scoutedList = document.getElementById("scouted-list");
+            scoutedList.innerHTML = "";
+            
+            scouted.forEach((athlete, index) => {
+                let row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${athlete.name}</td>
+                    <td>${athlete.sport}</td>
+                    <td>${athlete.event}</td>
+                    <td>${athlete.attributes.map(attr => `${attr.name}: ${attr.value}`).join(", ")}</td>
+                    <td><button onclick="addAthlete(${index})">Toevoegen</button></td>
+                `;
+                scoutedList.appendChild(row);
+            });
+        }
+
+        function addAthlete(index) {
+            let user = JSON.parse(localStorage.getItem("loggedInUser"));
+            let athletes = JSON.parse(localStorage.getItem("athletes")) || [];
+            let scouted = JSON.parse(localStorage.getItem("scoutedAthletes")) || [];
+            
+            let newAthlete = scouted[index];
+            newAthlete.owner = user.managerName;
+            athletes.push(newAthlete);
+            
+            scouted.splice(index, 1);
+            localStorage.setItem("athletes", JSON.stringify(athletes));
+            localStorage.setItem("scoutedAthletes", JSON.stringify(scouted));
+            displayScoutedAthletes();
+            alert(`${newAthlete.name} is toegevoegd aan je team!`);
+        }
+    </script>
+</body>
+</html>
