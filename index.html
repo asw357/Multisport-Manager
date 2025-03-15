@@ -56,80 +56,78 @@
     </main>
 
     <script>
-        const translations = {
-            en: {
-                title: "Welcome to Multisport Manager",
-                register: "Register",
-                login: "Login",
-                contact: "Contact",
-                aboutTitle: "About the Game",
-                aboutText: "Multisport Manager is a strategic online multiplayer game where you take control of a national sports team. Compete in various editions, train your athletes, and manage your strategy to win medals!",
-                featuresTitle: "Game Features",
-                feature1: "🌍 Manage a national sports team.",
-                feature2: "🏅 Compete in multiple sports and events.",
-                feature3: "📊 Train and scout new athletes.",
-                feature4: "🎯 Set tactics and strategies.",
-                feature5: "🏆 Earn Medal Points and climb the rankings.",
-                statsTitle: "Current Player Statistics",
-                learnTitle: "Learn More",
-                tutorial: "Read the Tutorial",
-                rules: "Check the Game Rules"
-            },
-            nl: {
-                title: "Welkom bij Multisport Manager",
-                register: "Registreren",
-                login: "Inloggen",
-                contact: "Contact",
-                aboutTitle: "Over het spel",
-                aboutText: "Multisport Manager is een strategisch online multiplayer spel waarin je de controle krijgt over een nationaal sportteam. Neem deel aan verschillende edities, train je atleten en beheer je strategie om medailles te winnen!",
-                featuresTitle: "Spelkenmerken",
-                feature1: "🌍 Beheer een nationaal sportteam.",
-                feature2: "🏅 Neem deel aan verschillende sporten en evenementen.",
-                feature3: "📊 Train en scout nieuwe atleten.",
-                feature4: "🎯 Stel tactieken en strategieën in.",
-                feature5: "🏆 Verdien Medal Points en klim in de ranglijst.",
-                statsTitle: "Huidige spelersstatistieken",
-                learnTitle: "Meer leren",
-                tutorial: "Lees de tutorial",
-                rules: "Bekijk de spelregels"
-            },
-            de: {
-                title: "Willkommen bei Multisport Manager",
-                register: "Registrieren",
-                login: "Anmelden",
-                contact: "Kontakt",
-                aboutTitle: "Über das Spiel",
-                aboutText: "Multisport Manager ist ein strategisches Online-Multiplayer-Spiel, in dem Sie die Kontrolle über ein nationales Sportteam übernehmen. Treten Sie in verschiedenen Editionen an, trainieren Sie Ihre Athleten und verwalten Sie Ihre Strategie, um Medaillen zu gewinnen!",
-                featuresTitle: "Spielmerkmale",
-                feature1: "🌍 Verwalten Sie ein nationales Sportteam.",
-                feature2: "🏅 Treten Sie in mehreren Sportarten und Veranstaltungen an.",
-                feature3: "📊 Trainieren und scouten Sie neue Athleten.",
-                feature4: "🎯 Setzen Sie Taktiken und Strategien ein.",
-                feature5: "🏆 Verdienen Sie Medaillenpunkte und steigen Sie in der Rangliste auf.",
-                statsTitle: "Aktuelle Spielerstatistiken",
-                learnTitle: "Mehr erfahren",
-                tutorial: "Lies das Tutorial",
-                rules: "Überprüfe die Spielregeln"
-            },
-            fr: {
-                title: "Bienvenue sur Multisport Manager",
-                register: "S'inscrire",
-                login: "Connexion",
-                contact: "Contact",
-                aboutTitle: "À propos du jeu",
-                aboutText: "Multisport Manager est un jeu multijoueur en ligne stratégique où vous prenez le contrôle d'une équipe nationale de sport. Participez à différentes éditions, entraînez vos athlètes et gérez votre stratégie pour gagner des médailles!",
-                featuresTitle: "Caractéristiques du jeu",
-                feature1: "🌍 Gérez une équipe nationale de sport.",
-                feature2: "🏅 Participez à plusieurs sports et événements.",
-                feature3: "📊 Entraînez et recrutez de nouveaux athlètes.",
-                feature4: "🎯 Définissez des tactiques et stratégies.",
-                feature5: "🏆 Gagnez des points de médaille et grimpez dans le classement.",
-                statsTitle: "Statistiques actuelles des joueurs",
-                learnTitle: "En savoir plus",
-                tutorial: "Lire le tutoriel",
-                rules: "Consulter les règles du jeu"
+        function switchLanguage(lang) {
+            const translations = {
+                en: {
+                    title: "Welcome to Multisport Manager",
+                    register: "Register",
+                    login: "Login",
+                    contact: "Contact",
+                    aboutTitle: "About the Game",
+                    aboutText: "Multisport Manager is a strategic online multiplayer game where you take control of a national sports team. Compete in various editions, train your athletes, and manage your strategy to win medals!",
+                    featuresTitle: "Game Features",
+                    feature1: "🌍 Manage a national sports team.",
+                    feature2: "🏅 Compete in multiple sports and events.",
+                    feature3: "📊 Train and scout new athletes.",
+                    feature4: "🎯 Set tactics and strategies.",
+                    feature5: "🏆 Earn Medal Points and climb the rankings.",
+                    statsTitle: "Current Player Statistics",
+                    learnTitle: "Learn More",
+                    tutorial: "Read the Tutorial",
+                    rules: "Check the Game Rules"
+                },
+                nl: {
+                    title: "Welkom bij Multisport Manager",
+                    register: "Registreren",
+                    login: "Inloggen",
+                    contact: "Contact",
+                    aboutTitle: "Over het spel",
+                    aboutText: "Multisport Manager is een strategisch online multiplayer spel waarin je de controle krijgt over een nationaal sportteam. Neem deel aan verschillende edities, train je atleten en beheer je strategie om medailles te winnen!",
+                    featuresTitle: "Spelkenmerken",
+                    feature1: "🌍 Beheer een nationaal sportteam.",
+                    feature2: "🏅 Neem deel aan verschillende sporten en evenementen.",
+                    feature3: "📊 Train en scout nieuwe atleten.",
+                    feature4: "🎯 Stel tactieken en strategieën in.",
+                    feature5: "🏆 Verdien Medal Points en klim in de ranglijst.",
+                    statsTitle: "Huidige spelersstatistieken",
+                    learnTitle: "Meer leren",
+                    tutorial: "Lees de tutorial",
+                    rules: "Bekijk de spelregels"
+                },
+                de: {
+                    title: "Willkommen bei Multisport Manager",
+                    register: "Registrieren",
+                    login: "Anmelden",
+                    contact: "Kontakt",
+                    aboutTitle: "Über das Spiel",
+                    aboutText: "Multisport Manager ist ein strategisches Online-Multiplayer-Spiel, in dem Sie die Kontrolle über ein nationales Sportteam übernehmen. Treten Sie in verschiedenen Editionen an, trainieren Sie Ihre Athleten und verwalten Sie Ihre Strategie, um Medaillen zu gewinnen!",
+                    featuresTitle: "Spielmerkmale",
+                    feature1: "🌍 Verwalten Sie ein nationales Sportteam.",
+                    feature2: "🏅 Treten Sie in mehreren Sportarten und Veranstaltungen an.",
+                    feature3: "📊 Trainieren und scouten Sie neue Athleten.",
+                    feature4: "🎯 Setzen Sie Taktiken und Strategien ein.",
+                    feature5: "🏆 Verdienen Sie Medaillenpunkte und steigen Sie in der Rangliste auf.",
+                    statsTitle: "Aktuelle Spielerstatistiken",
+                    learnTitle: "Mehr erfahren",
+                    tutorial: "Lies das Tutorial",
+                    rules: "Überprüfe die Spielregeln"
+                }
+            };
+
+            if (translations[lang]) {
+                localStorage.setItem("language", lang);
+                Object.keys(translations[lang]).forEach(id => {
+                    if (document.getElementById(id)) {
+                        document.getElementById(id).textContent = translations[lang][id];
+                    }
+                });
             }
-        };
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const savedLang = localStorage.getItem("language") || "en";
+            switchLanguage(savedLang);
+        });
     </script>
 </body>
 </html>
