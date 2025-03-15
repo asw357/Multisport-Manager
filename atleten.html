@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="nl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,8 +12,9 @@
         <h1>Atletenbeheer</h1>
         <nav>
             <ul>
-                <li><a href="manager.html">Terug naar Manager</a></li>
-                <li><a href="#" onclick="logout()">Logout</a></li>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="manager.html">Manager Pagina</a></li>
+                <li><a href="logout.html" onclick="logout()">Logout</a></li>
             </ul>
         </nav>
     </header>
@@ -26,63 +27,61 @@
                     <tr>
                         <th>Naam</th>
                         <th>Sport</th>
+                        <th>Geslacht</th>
                         <th>Onderdeel</th>
-                        <th>Leeftijd</th>
-                        <th>Eigenschappen</th>
-                        <th>Acties</th>
                     </tr>
                 </thead>
                 <tbody id="athlete-list">
-                    <!-- Atleten worden hier geladen -->
+                    <!-- Dynamisch geladen atleten -->
                 </tbody>
             </table>
-        </section>
-        
-        <section style="margin-top: 20px; text-align: center;">
-            <a href="training.html" style="display: inline-block; margin-right: 10px; padding: 10px; background-color: #007BFF; color: white; text-decoration: none; border-radius: 5px;">🏋️ Ga naar Training</a>
-            <a href="scouting.html" style="display: inline-block; padding: 10px; background-color: #28A745; color: white; text-decoration: none; border-radius: 5px;">🔍 Ga naar Scouten</a>
         </section>
     </main>
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            loadAthletes();
-        });
-
-        function loadAthletes() {
             let user = JSON.parse(localStorage.getItem("loggedInUser"));
             if (!user) {
+                alert("Je moet ingelogd zijn om je atleten te bekijken.");
                 window.location.href = "login.html";
-                return;
+            } else {
+                loadAthletes(user);
             }
-            
-            let athletes = JSON.parse(localStorage.getItem("athletes")) || [];
-            let userAthletes = athletes.filter(a => a.owner === user.managerName);
+        });
+
+        function loadAthletes(user) {
             let athleteList = document.getElementById("athlete-list");
             athleteList.innerHTML = "";
             
-            userAthletes.forEach((athlete, index) => {
+            user.athletes.forEach((athlete, index) => {
                 let row = document.createElement("tr");
+                let athleteName = generateAthleteName(user.country);
                 row.innerHTML = `
-                    <td>${athlete.name}</td>
+                    <td>${athleteName}</td>
                     <td>${athlete.sport}</td>
+                    <td>${athlete.gender}</td>
                     <td>${athlete.event}</td>
-                    <td>${athlete.age}</td>
-                    <td>${athlete.attributes.map(attr => `${attr.name}: ${attr.value}`).join(", ")}</td>
-                    <td>
-                        <button onclick="deleteAthlete(${index})">Ontslaan</button>
-                    </td>
                 `;
                 athleteList.appendChild(row);
             });
         }
 
-        function deleteAthlete(index) {
-            if (confirm("Weet je zeker dat je deze atleet wilt verwijderen?")) {
-                let athletes = JSON.parse(localStorage.getItem("athletes")) || [];
-                athletes.splice(index, 1);
-                localStorage.setItem("athletes", JSON.stringify(athletes));
-                loadAthletes();
+        function generateAthleteName(country) {
+            const names = {
+                "Australië": ["Jack Thompson", "Liam O'Connor", "Emily Foster"],
+                "Bulgarije": ["Ivan Petrov", "Georgi Dimitrov", "Maria Ivanova"],
+                "Chili": ["Diego Fernández", "Santiago Rojas", "Valentina Castillo"],
+                "Denemarken": ["Anders Jensen", "Mikkel Hansen", "Freja Nielsen"],
+                "IJsland": ["Einar Sigurdsson", "Olafur Björnsson", "Katrín Jónsdóttir"],
+                "Duitsland": ["Max Müller", "Felix Schneider", "Hanna Lehmann"],
+                "Frankrijk": ["Louis Dupont", "Antoine Girard", "Camille Moreau"],
+                "Griekenland": ["Nikos Papadopoulos", "Andreas Georgiou", "Elena Konstantinou"]
+            };
+            
+            if (names[country]) {
+                return names[country][Math.floor(Math.random() * names[country].length)];
+            } else {
+                return "Onbekende Atleet";
             }
         }
     </script>
