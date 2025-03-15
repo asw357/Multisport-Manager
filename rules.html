@@ -9,26 +9,104 @@
 </head>
 <body>
     <header>
-        <h1 id="rules-title">Game Rules</h1>
+        <h1 id="title">Game Rules</h1>
         <nav>
             <ul>
-                <li><a href="index.html" id="home-link">Back to Homepage</a></li>
+                <li>
+                    🌍 <a href="#" onclick="switchLanguage('en')">🇬🇧 English</a> | 
+                    <a href="#" onclick="switchLanguage('nl')">🇳🇱 Nederlands</a> | 
+                    <a href="#" onclick="switchLanguage('de')">🇩🇪 Deutsch</a> | 
+                    <a href="#" onclick="switchLanguage('fr')">🇫🇷 Français</a>
+                </li>
+                <li><a href="index.html" id="home">Home</a></li>
             </ul>
         </nav>
     </header>
 
     <main>
         <section>
-            <h2 id="general-rules">General Rules</h2>
-            <p id="rules-text">Multisport Manager is an online multiplayer game where players manage a national sports team. The following rules apply:</p>
+            <h2 id="rules-title">General Rules</h2>
+            <p id="rules-text">Multisport Manager is a fair-play game. Players must respect the competition and avoid cheating or exploiting bugs.</p>
+        </section>
+
+        <section>
+            <h2 id="gameplay-title">Gameplay Rules</h2>
             <ul>
-                <li id="rule1">Respect other players and follow fair play principles.</li>
-                <li id="rule2">Each player is assigned a country at random upon registration.</li>
-                <li id="rule3">Medal Points (MP) are used for training and scouting new athletes.</li>
-                <li id="rule4">Inactive accounts (30+ days) may be removed.</li>
-                <li id="rule5">Admins have the right to adjust MP values and competition schedules.</li>
+                <li id="rule1">🏅 Each player represents a country and manages their national team.</li>
+                <li id="rule2">🎯 Training and scouting require Medal Points (MP).</li>
+                <li id="rule3">📊 All results are based on fair-play simulations.</li>
+                <li id="rule4">🚫 Cheating, exploiting, or match-fixing is prohibited.</li>
             </ul>
         </section>
     </main>
+
+    <script>
+        const translations = {
+            en: {
+                title: "Game Rules",
+                home: "Home",
+                rulesTitle: "General Rules",
+                rulesText: "Multisport Manager is a fair-play game. Players must respect the competition and avoid cheating or exploiting bugs.",
+                gameplayTitle: "Gameplay Rules",
+                rule1: "🏅 Each player represents a country and manages their national team.",
+                rule2: "🎯 Training and scouting require Medal Points (MP).",
+                rule3: "📊 All results are based on fair-play simulations.",
+                rule4: "🚫 Cheating, exploiting, or match-fixing is prohibited."
+            },
+            nl: {
+                title: "Spelregels",
+                home: "Home",
+                rulesTitle: "Algemene Regels",
+                rulesText: "Multisport Manager is een fair-play spel. Spelers moeten de competitie respecteren en mogen geen bugs misbruiken of vals spelen.",
+                gameplayTitle: "Spelregels",
+                rule1: "🏅 Elke speler vertegenwoordigt een land en beheert hun nationale team.",
+                rule2: "🎯 Training en scouting vereisen Medal Points (MP).",
+                rule3: "📊 Alle resultaten zijn gebaseerd op eerlijke simulaties.",
+                rule4: "🚫 Vals spelen, exploitgebruik of matchfixing is verboden."
+            },
+            de: {
+                title: "Spielregeln",
+                home: "Startseite",
+                rulesTitle: "Allgemeine Regeln",
+                rulesText: "Multisport Manager ist ein Fair-Play-Spiel. Spieler müssen den Wettbewerb respektieren und dürfen keine Fehler ausnutzen oder betrügen.",
+                gameplayTitle: "Spielregeln",
+                rule1: "🏅 Jeder Spieler vertritt ein Land und verwaltet sein nationales Team.",
+                rule2: "🎯 Training und Scouting erfordern Medal Points (MP).",
+                rule3: "📊 Alle Ergebnisse basieren auf fairen Simulationen.",
+                rule4: "🚫 Betrug, Exploit-Nutzung oder Spielmanipulation ist verboten."
+            },
+            fr: {
+                title: "Règles du jeu",
+                home: "Accueil",
+                rulesTitle: "Règles générales",
+                rulesText: "Multisport Manager est un jeu fair-play. Les joueurs doivent respecter la compétition et ne pas tricher ou exploiter des bugs.",
+                gameplayTitle: "Règles du jeu",
+                rule1: "🏅 Chaque joueur représente un pays et gère son équipe nationale.",
+                rule2: "🎯 L'entraînement et le recrutement nécessitent des Medal Points (MP).",
+                rule3: "📊 Tous les résultats sont basés sur des simulations équitables.",
+                rule4: "🚫 La tricherie, l'exploitation de bugs ou la manipulation de matchs est interdite."
+            }
+        };
+
+        function switchLanguage(lang) {
+            if (translations[lang]) {
+                localStorage.setItem("language", lang);
+                document.getElementById("title").textContent = translations[lang].title;
+                document.getElementById("home").textContent = translations[lang].home;
+                document.getElementById("rules-title").textContent = translations[lang].rulesTitle;
+                document.getElementById("rules-text").textContent = translations[lang].rulesText;
+                document.getElementById("gameplay-title").textContent = translations[lang].gameplayTitle;
+                document.getElementById("rule1").textContent = translations[lang].rule1;
+                document.getElementById("rule2").textContent = translations[lang].rule2;
+                document.getElementById("rule3").textContent = translations[lang].rule3;
+                document.getElementById("rule4").textContent = translations[lang].rule4;
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const savedLang = localStorage.getItem("language") || "en";
+            switchLanguage(savedLang);
+        });
+    </script>
 </body>
 </html>
