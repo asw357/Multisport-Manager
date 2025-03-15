@@ -84,6 +84,15 @@ app.put('/mp/:userId', (req, res) => {
     }
 });
 
+// API om alle data te resetten
+app.post('/reset', (req, res) => {
+    writeData('users', []);
+    writeData('athletes', []);
+    writeData('results', []);
+    writeData('mp', []);
+    res.json({ message: 'Alle data is gereset!' });
+});
+
 app.listen(PORT, () => {
     console.log(`Server draait op http://localhost:${PORT}`);
 });
