@@ -35,11 +35,131 @@
                 </tbody>
             </table>
         </section>
+
+        <section>
+            <h2>MP Kosten Aanpassen</h2>
+            <button onclick="addMPCost()">Nieuwe MP Kosten Toevoegen</button>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Actie</th>
+                        <th>MP Kosten</th>
+                        <th>Acties</th>
+                    </tr>
+                </thead>
+                <tbody id="mp-cost-list">
+                    <!-- MP Kosten worden hier geladen -->
+                </tbody>
+            </table>
+        </section>
     </main>
 
     <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            loadMPRules();
+            loadMPCosts();
+        });
+
+        function loadMPRules() {
+            let rules = JSON.parse(localStorage.getItem("mpRules")) || [];
+            let ruleList = document.getElementById("mp-rule-list");
+            ruleList.innerHTML = "";
+            
+            rules.forEach((rule, index) => {
+                let row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${rule.name}</td>
+                    <td>${rule.value}</td>
+                    <td>
+                        <button onclick="editMPRule(${index})">Bewerken</button>
+                        <button onclick="deleteMPRule(${index})">Verwijderen</button>
+                    </td>
+                `;
+                ruleList.appendChild(row);
+            });
+        }
+
         function addMPRule() {
-            // Hier komt de functie om een nieuwe MP regel toe te voegen
+            let name = prompt("Naam van de MP regel:");
+            let value = parseInt(prompt("MP Waarde:"));
+            
+            if (name && value) {
+                let rules = JSON.parse(localStorage.getItem("mpRules")) || [];
+                rules.push({ name, value });
+                localStorage.setItem("mpRules", JSON.stringify(rules));
+                loadMPRules();
+            }
+        }
+
+        function deleteMPRule(index) {
+            if (confirm("Weet je zeker dat je deze regel wilt verwijderen?")) {
+                let rules = JSON.parse(localStorage.getItem("mpRules")) || [];
+                rules.splice(index, 1);
+                localStorage.setItem("mpRules", JSON.stringify(rules));
+                loadMPRules();
+            }
+        }
+
+        function editMPRule(index) {
+            let rules = JSON.parse(localStorage.getItem("mpRules")) || [];
+            let rule = rules[index];
+            
+            let newValue = prompt("Nieuwe MP Waarde:", rule.value);
+            if (newValue) rule.value = parseInt(newValue);
+            
+            localStorage.setItem("mpRules", JSON.stringify(rules));
+            loadMPRules();
+        }
+
+        function loadMPCosts() {
+            let costs = JSON.parse(localStorage.getItem("mpCosts")) || [];
+            let costList = document.getElementById("mp-cost-list");
+            costList.innerHTML = "";
+            
+            costs.forEach((cost, index) => {
+                let row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${cost.name}</td>
+                    <td>${cost.value}</td>
+                    <td>
+                        <button onclick="editMPCost(${index})">Bewerken</button>
+                        <button onclick="deleteMPCost(${index})">Verwijderen</button>
+                    </td>
+                `;
+                costList.appendChild(row);
+            });
+        }
+
+        function addMPCost() {
+            let name = prompt("Naam van de MP kost:");
+            let value = parseInt(prompt("MP Kosten:"));
+            
+            if (name && value) {
+                let costs = JSON.parse(localStorage.getItem("mpCosts")) || [];
+                costs.push({ name, value });
+                localStorage.setItem("mpCosts", JSON.stringify(costs));
+                loadMPCosts();
+            }
+        }
+
+        function deleteMPCost(index) {
+            if (confirm("Weet je zeker dat je deze MP kost wilt verwijderen?")) {
+                let costs = JSON.parse(localStorage.getItem("mpCosts")) || [];
+                costs.splice(index, 1);
+                localStorage.setItem("mpCosts", JSON.stringify(costs));
+                loadMPCosts();
+            }
+        }
+
+        function editMPCost(index) {
+            let costs = JSON.parse(localStorage.getItem("mpCosts")) || [];
+            let cost = costs[index];
+            
+            let newValue = prompt("Nieuwe MP Kosten:", cost.value);
+            if (newValue) cost.value = parseInt(newValue);
+            
+            localStorage.setItem("mpCosts", JSON.stringify(costs));
+            loadMPCosts();
         }
     </script>
 </body>
