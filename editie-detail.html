@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editie Detail - Multisport Manager</title>
+    <link rel="stylesheet" href="styles.css">
+    <script defer src="script.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Editie Details</h1>
+        <nav>
+            <ul>
+                <li><a href="edities.html">Terug naar Edities</a></li>
+                <li><a href="#" onclick="logout()">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section>
+            <h2 id="edition-name"></h2>
+            <p><strong>Startdatum:</strong> <span id="edition-date"></span></p>
+            <p><strong>Locatie:</strong> <span id="edition-location"></span></p>
+            <p><strong>Gastland:</strong> <span id="edition-host"></span></p>
+        </section>
+
+        <section>
+            <h2>Wedstrijdschema</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Dag</th>
+                        <th>Tijd</th>
+                        <th>Sport</th>
+                        <th>Onderdeel</th>
+                        <th>Locatie</th>
+                    </tr>
+                </thead>
+                <tbody id="match-list">
+                    <!-- Wedstrijden worden hier geladen -->
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            loadEditionDetails();
+        });
+
+        function loadEditionDetails() {
+            const params = new URLSearchParams(window.location.search);
+            const editionName = params.get("edition");
+            if (!editionName) {
+                window.location.href = "edities.html";
+                return;
+            }
+            
+            let editions = JSON.parse(localStorage.getItem("editions")) || [];
+            let matches = JSON.parse(localStorage.getItem("matches")) || [];
+            let edition = editions.find(e => e.name === editionName);
+            let matchList = document.getElementById("match-list");
+            
+            if (edition) {
+                document.getElementById("edition-name").textContent = edition.name;
+                document.getElementById("edition-date").textContent = edition.startDate;
+                document.getElementById("edition-location").textContent = edition.location;
+                document.getElementById("edition-host").textContent = edition.hostCountry;
+            }
+            
+            let editionMatches = matches.filter(m => m.edition === editionName);
+            matchList.innerHTML = "";
+            editionMatches.forEach(match => {
+                let row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${match.day}</td>
+                    <td>${match.time}</td>
+                    <td>${match.sport}</td>
+                    <td>${match.event}</td>
+                    <td>${match.location}</td>
+                `;
+                matchList.appendChild(row);
+            });
+        }
+    </script>
+</body>
+</html>
