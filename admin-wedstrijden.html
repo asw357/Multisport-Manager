@@ -48,12 +48,6 @@
                 </tbody>
             </table>
         </section>
-
-        <section>
-            <h2>Speciale Ceremonies</h2>
-            <button onclick="addCeremony('Opening')">➕ Voeg Openingsceremonie toe</button>
-            <button onclick="addCeremony('Sluiting')">➕ Voeg Sluitingsceremonie toe</button>
-        </section>
     </main>
 
     <script>
@@ -61,21 +55,17 @@
             loadEditions();
         });
 
-        function addCeremony(type) {
-            const editionId = document.getElementById("editie-select").value;
-            if (!editionId) {
-                alert("Selecteer eerst een editie!");
-                return;
-            }
-            let ceremonies = JSON.parse(localStorage.getItem("ceremonies")) || [];
-            ceremonies.push({
-                editionId: editionId,
-                type: type,
-                time: type === "Opening" ? "18:00" : "20:00",
-                location: "Hoofd Stadion"
+        function loadEditions() {
+            let editions = JSON.parse(localStorage.getItem("editions")) || [];
+            let select = document.getElementById("editie-select");
+            select.innerHTML = "";
+            editions.forEach((edition, index) => {
+                let option = document.createElement("option");
+                option.value = index;
+                option.textContent = edition.name;
+                select.appendChild(option);
             });
-            localStorage.setItem("ceremonies", JSON.stringify(ceremonies));
-            alert(type + " toegevoegd!");
+            loadSchedule();
         }
     </script>
 </body>
