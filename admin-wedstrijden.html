@@ -48,6 +48,28 @@
                 </tbody>
             </table>
         </section>
+
+        <section>
+            <h2>Wedstrijd Toevoegen</h2>
+            <form id="add-match-form">
+                <label for="day">Dag:</label>
+                <input type="number" id="day" name="day" required>
+                
+                <label for="time">Tijd:</label>
+                <input type="time" id="time" name="time" required>
+                
+                <label for="sport">Sport:</label>
+                <input type="text" id="sport" name="sport" required>
+                
+                <label for="event">Onderdeel:</label>
+                <input type="text" id="event" name="event" required>
+                
+                <label for="location">Locatie:</label>
+                <input type="text" id="location" name="location" required>
+                
+                <button type="submit">➕ Toevoegen</button>
+            </form>
+        </section>
     </main>
 
     <script>
@@ -59,12 +81,61 @@
             let editions = JSON.parse(localStorage.getItem("editions")) || [];
             let select = document.getElementById("editie-select");
             select.innerHTML = "";
-            editions.forEach(edition => {
+            editions.forEach((edition, index) => {
                 let option = document.createElement("option");
-                option.value = edition.id;
+                option.value = index;
                 option.textContent = edition.name;
                 select.appendChild(option);
             });
+            loadSchedule();
+        }
+
+        function loadSchedule() {
+            let editionIndex = document.getElementById("editie-select").value;
+            let schedules = JSON.parse(localStorage.getItem("schedules")) || {};
+            let schedule = schedules[editionIndex] || [];
+            let tbody = document.getElementById("schedule-list");
+            tbody.innerHTML = "";
+            
+            schedule.forEach((match, index) => {
+                let row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${match.day}</td>
+                    <td>${match.time}</td>
+                    <td>${match.sport}</td>
+                    <td>${match.event}</td>
+                    <td>${match.location}</td>
+                    <td>
+                        <button onclick="deleteMatch(${editionIndex}, ${index})">🗑️ Verwijderen</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        document.getElementById("add-match-form").addEventListener("submit", function(event) {
+            event.preventDefault();
+            let editionIndex = document.getElementById("editie-select").value;
+            let schedules = JSON.parse(localStorage.getItem("schedules")) || {};
+            if (!schedules[editionIndex]) schedules[editionIndex] = [];
+            
+            let newMatch = {
+                day: document.getElementById("day").value,
+                time: document.getElementById("time").value,
+                sport: document.getElementById("sport").value,
+                event: document.getElementById("event").value,
+                location: document.getElementById("location").value
+            };
+            schedules[editionIndex].push(newMatch);
+            localStorage.setItem("schedules", JSON.stringify(schedules));
+            this.reset();
+            loadSchedule();
+        });
+
+        function deleteMatch(editionIndex, matchIndex) {
+            let schedules = JSON.parse(localStorage.getItem("schedules")) || {};
+            schedules[editionIndex].splice(matchIndex, 1);
+            localStorage.setItem("schedules", JSON.stringify(schedules));
             loadSchedule();
         }
     </script>
