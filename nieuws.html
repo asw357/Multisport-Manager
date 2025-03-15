@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nieuws - Multisport Manager</title>
+    <link rel="stylesheet" href="styles.css">
+    <script defer src="script.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Nieuws en Updates</h1>
+        <nav>
+            <ul>
+                <li><a href="manager.html">Terug naar Manager</a></li>
+                <li><a href="#" onclick="logout()">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section>
+            <h2>Laatste Nieuws</h2>
+            <ul id="news-list">
+                <!-- Nieuwsberichten worden hier geladen -->
+            </ul>
+        </section>
+    </main>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            loadNews();
+        });
+
+        function loadNews() {
+            let news = JSON.parse(localStorage.getItem("news")) || [];
+            let newsList = document.getElementById("news-list");
+            newsList.innerHTML = "";
+            
+            news.forEach(article => {
+                let listItem = document.createElement("li");
+                listItem.innerHTML = `<strong>${article.date}:</strong> ${article.title} - ${article.content}`;
+                newsList.appendChild(listItem);
+            });
+        }
+    </script>
+</body>
+</html>
