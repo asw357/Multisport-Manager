@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wedstrijden Kijken - Multisport Manager</title>
+    <link rel="stylesheet" href="styles.css">
+    <script defer src="script.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Live Wedstrijden</h1>
+        <nav>
+            <ul>
+                <li><a href="manager.html">Terug naar Manager</a></li>
+                <li><a href="#" onclick="logout()">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section>
+            <h2>Live Wedstrijd Overzicht</h2>
+            <label for="edition-select">Selecteer een editie:</label>
+            <select id="edition-select" onchange="loadLiveMatches()">
+                <!-- Edities worden hier geladen -->
+            </select>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tijd</th>
+                        <th>Sport</th>
+                        <th>Onderdeel</th>
+                        <th>Ronde</th>
+                        <th>Locatie</th>
+                        <th>Live Status</th>
+                    </tr>
+                </thead>
+                <tbody id="live-matches">
+                    <!-- Live wedstrijden worden hier geladen -->
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            loadEditions();
+        });
+
+        function loadEditions() {
+            let editions = JSON.parse(localStorage.getItem("editions")) || [];
+            let editionSelect = document.getElementById("edition-select");
+            editionSelect.innerHTML = "";
+            
+            editions.forEach(edition => {
+                let option = document.createElement("option");
+                option.value = edition.name;
+                option.textContent = edition.name;
+                editionSelect.appendChild(option);
+            });
+            
+            loadLiveMatches();
+        }
+
+        function loadLiveMatches() {
+            let selectedEdition = document.getElementById("edition-select").value;
+            let matches = JSON.parse(localStorage.getItem("matches")) || [];
+            let liveMatches = matches.filter(match => match.edition === selectedEdition);
+            let matchBody = document.getElementById("live-matches");
+            matchBody.innerHTML = "";
+            
+            liveMatches.forEach(match => {
+                let row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${match.time}</td>
+                    <td>${match.sport}</td>
+                    <td>${match.event}</td>
+                    <td>${match.round}</td>
+                    <td>${match.location}</td>
+                    <td>${match.live ? "✅ Live" : "⏳ Nog niet begonnen"}</td>
+                `;
+                matchBody.appendChild(row);
+            });
+        }
+    </script>
+</body>
+</html>
