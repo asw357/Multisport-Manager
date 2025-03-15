@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin MP Beheer - Multisport Manager</title>
+    <link rel="stylesheet" href="styles.css">
+    <script defer src="script.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Medal Points Beheer</h1>
+        <nav>
+            <ul>
+                <li><a href="admin.html">Terug naar Admin</a></li>
+                <li><a href="#" onclick="logout()">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section>
+            <h2>MP Regels Aanpassen</h2>
+            <button onclick="addMPRule()">Nieuwe MP Regel Toevoegen</button>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Regel</th>
+                        <th>MP Waarde</th>
+                        <th>Acties</th>
+                    </tr>
+                </thead>
+                <tbody id="mp-rule-list">
+                    <!-- MP Regels worden hier geladen -->
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <script>
+        function addMPRule() {
+            // Hier komt de functie om een nieuwe MP regel toe te voegen
+        }
+    </script>
+</body>
+</html>
