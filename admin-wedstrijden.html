@@ -78,7 +78,7 @@
         });
 
         function loadEditions() {
-            fetch('http://localhost:3000/editions')
+            fetch('https://your-project.replit.app/editions')
                 .then(response => response.json())
                 .then(editions => {
                     const select = document.getElementById("editie-select");
@@ -99,7 +99,7 @@
         function loadSchedule() {
             const editionId = document.getElementById("editie-select").value;
             if (!editionId) return;
-            fetch(`http://localhost:3000/schedule/${editionId}`)
+            fetch(`https://your-project.replit.app/schedule/${editionId}`)
                 .then(response => response.json())
                 .then(schedule => {
                     const tbody = document.getElementById("schedule-list");
@@ -121,6 +121,40 @@
                 })
                 .catch(error => console.error("Fout bij laden schema:", error));
         }
+        function deleteMatch(matchId) {
+            if (confirm("Weet je zeker dat je deze wedstrijd wilt verwijderen?")) {
+                fetch(`https://your-project.replit.app/schedule/${matchId}`, { method: "DELETE" })
+                    .then(response => response.json())
+                    .then(() => {
+                        loadSchedule();
+                    })
+                    .catch(error => alert("Fout bij verwijderen: " + error));
+            }
+        }
+
+        document.getElementById("add-match-form").addEventListener("submit", function(event) {
+            event.preventDefault();
+            const editionId = document.getElementById("editie-select").value;
+            const matchData = {
+                day: document.getElementById("day").value,
+                time: document.getElementById("time").value,
+                sport: document.getElementById("sport").value,
+                event: document.getElementById("event").value,
+                location: document.getElementById("location").value
+            };
+
+            fetch(`https://your-project.replit.app/schedule/${editionId}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(matchData)
+            })
+            .then(response => response.json())
+            .then(() => {
+                document.getElementById("add-match-form").reset();
+                loadSchedule();
+            })
+            .catch(error => alert("Fout bij toevoegen: " + error));
+        });
     </script>
 </body>
 </html>
