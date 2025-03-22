@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Landentoewijzing Beheren</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <h1>🌍 Landentoewijzing Beheren</h1>
+    <nav>
+      <ul>
+        <li><a href="admin.html">⬅️ Terug naar Admin Dashboard</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section>
+      <p>Pas hier de volgorde van landen aan voor toekomstige registraties.</p>
+
+      <form id="addCountryForm">
+        <input type="text" id="newCountry" placeholder="Nieuw land toevoegen" required>
+        <button type="submit">Toevoegen</button>
+      </form>
+
+      <ul id="countryList">
+        <!-- Dynamisch geladen -->
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Sport Manager Simulatie – Landenbeheer</p>
+  </footer>
+
+  <script>
+    const ADMIN_EMAIL = "wilcoboesveld12@hotmail.com";
+    const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
+    if (!loggedInUser || loggedInUser.email !== ADMIN_EMAIL) {
+      alert("Toegang geweigerd.");
+      window.location.href = "index.html";
+    }
+
+    const defaultCountries = [
+      "Australië", "Bulgarije", "Chili", "Denemarken", "IJsland", "Duitsland",
+      "Frankrijk", "Griekenland"
+    ];
+
+    function loadCountries() {
+      const list = document.getElementById("countryList");
+      list.innerHTML = "";
+
+      const queue = JSON.parse(localStorage.getItem("country_queue")) || defaultCountries;
+
+      queue.forEach((land, index) => {
+        const li = document.createElement("li");
+        li.textContent = `${index + 1}. ${land}`;
+        list.appendChild(li);
+      });
+    }
+
+    document.getElementById("addCountryForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+      const newLand = document.getElementById("newCountry").value.trim();
+      if (!newLand) return;
+
+      const queue = JSON.parse(localStorage.getItem("country_queue")) || defaultCountries;
+      queue.push(newLand);
+      localStorage.setItem("country_queue", JSON.stringify(queue));
+      document.getElementById("newCountry").value = "";
+      loadCountries();
+    });
+
+    document.addEventListener("DOMContentLoaded", loadCountries);
+  </script>
+</body>
+</html>
