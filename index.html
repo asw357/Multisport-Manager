@@ -1,16 +1,19 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Sport Manager Simulatie</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <header>
-    <h1>Welkom bij de Sport Manager Simulatie</h1>
+    <div class="topbar">
+      <h1>Welkom bij de Sport Manager Simulatie</h1>
+      <div id="userPanel" class="user-panel"></div>
+    </div>
     <nav>
-      <ul>
+      <ul id="mainNav">
         <li><a href="register.html">Registreren</a></li>
         <li><a href="login.html">Inloggen</a></li>
         <li><a href="editions.html">Edities</a></li>
@@ -41,5 +44,36 @@
 
   <script src="js/main.js"></script>
   <script src="js/language.js"></script>
+  <script>
+    const userPanel = document.getElementById("userPanel");
+    const nav = document.getElementById("mainNav");
+    const ADMIN_EMAIL = "wilcoboesveld12@hotmail.com";
+    const loggedIn = JSON.parse(localStorage.getItem("loggedInUser"));
+
+    if (loggedIn) {
+      const land = loggedIn.land || "Onbekend";
+      const vlag = `<img src="img/flags/${land.toLowerCase()}.png" alt="${land}" style="height:20px;vertical-align:middle">`;
+      const mp = loggedIn.mp || 0;
+
+      // Voeg knop toe voor Manager
+      const managerLink = document.createElement("a");
+      managerLink.href = "manager.html";
+      managerLink.textContent = "Manager Home";
+      managerLink.style.marginRight = "15px";
+
+      const info = document.createElement("span");
+      info.innerHTML = `${vlag} ${land} – MP: ${mp}`;
+
+      userPanel.appendChild(managerLink);
+      userPanel.appendChild(info);
+
+      // Voeg Admin-knop toe als e-mail klopt
+      if (loggedIn.email === ADMIN_EMAIL) {
+        const adminBtn = document.createElement("li");
+        adminBtn.innerHTML = `<a href="admin.html">Admin</a>`;
+        nav.appendChild(adminBtn);
+      }
+    }
+  </script>
 </body>
 </html>
