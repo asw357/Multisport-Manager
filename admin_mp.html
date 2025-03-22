@@ -8,7 +8,7 @@
 </head>
 <body>
   <header>
-    <h1>💰 MP-instellingen</h1>
+    <h1>💰 MP-instellingen Beheer</h1>
     <nav>
       <ul>
         <li><a href="admin.html">⬅️ Terug naar Admin Dashboard</a></li>
@@ -18,17 +18,21 @@
 
   <main>
     <section>
-      <form id="mpForm">
-        <label for="mpGoud">Goud 🥇:</label>
-        <input type="number" id="mpGoud" value="100"><br />
-        <label for="mpZilver">Zilver 🥈:</label>
-        <input type="number" id="mpZilver" value="60"><br />
-        <label for="mpBrons">Brons 🥉:</label>
-        <input type="number" id="mpBrons" value="40"><br />
-        <label for="mpTop8">Top 8:</label>
-        <input type="number" id="mpTop8" value="10"><br /><br />
-        <button type="submit">Opslaan</button>
+      <h2>Nieuwe MP-regel toevoegen</h2>
+      <form id="mpAddForm">
+        <label for="mpBeschrijving">Beschrijving:</label><br />
+        <input type="text" id="mpBeschrijving" required><br />
+        <label for="mpWaarde">Waarde (positief = inkomen, negatief = kosten):</label><br />
+        <input type="number" id="mpWaarde" required><br /><br />
+        <button type="submit">Toevoegen</button>
       </form>
+    </section>
+
+    <section>
+      <h2>Huidige MP-regels</h2>
+      <ul id="mpList">
+        <!-- MP-items komen hier -->
+      </ul>
     </section>
   </main>
 
@@ -44,29 +48,54 @@
       window.location.href = "index.html";
     }
 
-    const mpForm = document.getElementById("mpForm");
+    const mpList = document.getElementById("mpList");
+    const mpForm = document.getElementById("mpAddForm");
+
+    function loadMPRules() {
+      const regels = JSON.parse(localStorage.getItem("mp_rules")) || [];
+      mpList.innerHTML = "";
+
+      regels.forEach((regel, index) => {
+        const li = document.createElement("li");
+        li.innerHTML = `
+          <strong>${regel.beschrijving}</strong><br />
+          Waarde: <input type="number" value="${regel.waarde}" onchange="updateMPWaarde(${index}, this.value)">
+          <button onclick="verwijderMPregel(${index})" style="margin-left:10px">❌ Verwijder</button>
+        `;
+        mpList.appendChild(li);
+      });
+    }
+
+    function updateMPWaarde(index, nieuweWaarde) {
+      const regels = JSON.parse(localStorage.getItem("mp_rules")) || [];
+      regels[index].waarde = parseInt(nieuweWaarde);
+      localStorage.setItem("mp_rules", JSON.stringify(regels));
+      loadMPRules();
+    }
+
+    function verwijderMPregel(index) {
+      const regels = JSON.parse(localStorage.getItem("mp_rules")) || [];
+      if (confirm(`Weet je zeker dat je de regel "${regels[index].beschrijving}" wilt verwijderen?`)) {
+        regels.splice(index, 1);
+        localStorage.setItem("mp_rules", JSON.stringify(regels));
+        loadMPRules();
+      }
+    }
 
     mpForm.addEventListener("submit", function (e) {
       e.preventDefault();
-      const mp = {
-        goud: parseInt(document.getElementById("mpGoud").value),
-        zilver: parseInt(document.getElementById("mpZilver").value),
-        brons: parseInt(document.getElementById("mpBrons").value),
-        top8: parseInt(document.getElementById("mpTop8").value)
-      };
-      localStorage.setItem("mp_settings", JSON.stringify(mp));
-      alert("MP-instellingen opgeslagen!");
+      const beschrijving = document.getElementById("mpBeschrijving").value.trim();
+      const waarde = parseInt(document.getElementById("mpWaarde").value);
+      if (!beschrijving) return;
+
+      const regels = JSON.parse(localStorage.getItem("mp_rules")) || [];
+      regels.push({ beschrijving, waarde });
+      localStorage.setItem("mp_rules", JSON.stringify(regels));
+      mpForm.reset();
+      loadMPRules();
     });
 
-    document.addEventListener("DOMContentLoaded", function () {
-      const saved = JSON.parse(localStorage.getItem("mp_settings"));
-      if (saved) {
-        document.getElementById("mpGoud").value = saved.goud || 100;
-        document.getElementById("mpZilver").value = saved.zilver || 60;
-        document.getElementById("mpBrons").value = saved.brons || 40;
-        document.getElementById("mpTop8").value = saved.top8 || 10;
-      }
-    });
+    document.addEventListener("DOMContentLoaded", loadMPRules);
   </script>
 </body>
 </html>
