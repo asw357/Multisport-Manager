@@ -1,32 +1,36 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Adminpaneel</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <header>
-    <h1>Adminpaneel</h1>
+    <h1>Admin Beheerpagina</h1>
     <nav>
       <ul>
         <li><a href="index.html">Home</a></li>
-        <li><a href="manager.html">Manager Home</a></li>
+        <li><a href="editions.html">Edities</a></li>
+        <li><a href="logout.html">Uitloggen</a></li>
       </ul>
     </nav>
   </header>
 
   <main>
     <section>
-      <h2>Landentoewijzingslijst beheren</h2>
-      <p>Pas hier de volgorde aan waarin landen toegewezen worden aan nieuwe spelers.</p>
+      <h2>Landentoewijzing beheren</h2>
+      <p>Pas hier de volgorde van landen aan voor toekomstige registraties.</p>
+
       <form id="addCountryForm">
-        <input type="text" id="newCountry" placeholder="Nieuw land toevoegen" required />
+        <input type="text" id="newCountry" placeholder="Nieuw land toevoegen" required>
         <button type="submit">Toevoegen</button>
       </form>
 
-      <ul id="countryList"></ul>
+      <ul id="countryList">
+        <!-- Dynamisch geladen -->
+      </ul>
     </section>
   </main>
 
@@ -35,34 +39,50 @@
   </footer>
 
   <script>
-    const COUNTRY_KEY = "countryQueue";
+    const ADMIN_EMAIL = "wilcoboesveld12@hotmail.com";
 
-    function loadCountryList() {
-      const list = JSON.parse(localStorage.getItem(COUNTRY_KEY)) || [];
-      const ul = document.getElementById("countryList");
-      ul.innerHTML = "";
+    // Check of admin is ingelogd
+    const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
+    if (!loggedInUser || loggedInUser.email !== ADMIN_EMAIL) {
+      alert("Toegang geweigerd. Je bent geen admin.");
+      window.location.href = "index.html";
+    }
 
-      list.forEach((land, index) => {
+    const defaultCountries = [
+      "Australië", "Bulgarije", "Chili", "Denemarken", "IJsland", "Duitsland",
+      "Frankrijk", "Griekenland", "Hongarije", "Italië"
+    ];
+
+    // Ophalen landvolgorde uit localStorage (simuleert country_queue.json)
+    function loadCountries() {
+      const list = document.getElementById("countryList");
+      list.innerHTML = "";
+
+      const queue = JSON.parse(localStorage.getItem("country_queue")) || defaultCountries;
+
+      queue.forEach((land, index) => {
         const li = document.createElement("li");
         li.textContent = `${index + 1}. ${land}`;
-        ul.appendChild(li);
+        list.appendChild(li);
       });
     }
 
+    // Toevoegen nieuw land aan lijst
     document.getElementById("addCountryForm").addEventListener("submit", function (e) {
       e.preventDefault();
-      const newCountry = document.getElementById("newCountry").value.trim();
-      if (!newCountry) return;
+      const newLand = document.getElementById("newCountry").value.trim();
 
-      const list = JSON.parse(localStorage.getItem(COUNTRY_KEY)) || [];
-      list.push(newCountry);
-      localStorage.setItem(COUNTRY_KEY, JSON.stringify(list));
+      if (!newLand) return;
 
+      const queue = JSON.parse(localStorage.getItem("country_queue")) || defaultCountries;
+      queue.push(newLand);
+      localStorage.setItem("country_queue", JSON.stringify(queue));
       document.getElementById("newCountry").value = "";
-      loadCountryList();
+      loadCountries();
     });
 
-    document.addEventListener("DOMContentLoaded", loadCountryList);
+    // Init
+    document.addEventListener("DOMContentLoaded", loadCountries);
   </script>
 </body>
 </html>
