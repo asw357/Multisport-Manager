@@ -16,6 +16,43 @@
         <li><a href="logout.html">Uitloggen</a></li>
       </ul>
     </nav>
+    <script>
+  const user = JSON.parse(localStorage.getItem("loggedInUser"));
+  const ADMIN_EMAIL = "wilcoboesveld12@hotmail.com";
+
+  function setupAdminNavigation() {
+    const nav = document.querySelector("nav ul");
+    if (!user) {
+      // Niet ingelogd? Naar loginpagina.
+      window.location.href = "login.html";
+      return;
+    }
+
+    // Voeg knoppen toe op basis van wie is ingelogd
+    if (user.email === ADMIN_EMAIL) {
+      const extraItems = [
+        { text: "Manager Home", href: "manager.html" },
+        { text: "Admin Panel", href: "admin.html" },
+        { text: "Landenbeheer", href: "#countryList" },
+        { text: "Edities", href: "editions.html" }
+      ];
+      extraItems.forEach(item => {
+        const li = document.createElement("li");
+        const a = document.createElement("a");
+        a.href = item.href;
+        a.textContent = item.text;
+        li.appendChild(a);
+        nav.appendChild(li);
+      });
+    } else {
+      // Geen toegang voor niet-admins
+      alert("Toegang geweigerd. Je bent geen admin.");
+      window.location.href = "index.html";
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", setupAdminNavigation);
+</script>
   </header>
 
   <main>
