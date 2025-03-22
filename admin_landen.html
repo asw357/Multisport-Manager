@@ -1,40 +1,3 @@
-<!DOCTYPE html>
-<html lang="nl">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Landentoewijzing Beheren</title>
-  <link rel="stylesheet" href="css/style.css">
-</head>
-<body>
-  <header>
-    <h1>🌍 Landentoewijzing Beheren</h1>
-    <nav>
-      <ul>
-        <li><a href="admin.html">⬅️ Terug naar Admin Dashboard</a></li>
-      </ul>
-    </nav>
-  </header>
-
-  <main>
-    <section>
-      <p>Pas hier de volgorde van landen aan voor toekomstige registraties.</p>
-
-      <form id="addCountryForm">
-        <input type="text" id="newCountry" placeholder="Nieuw land toevoegen" required>
-        <button type="submit">Toevoegen</button>
-      </form>
-
-      <ul id="countryList">
-        <!-- Dynamisch geladen -->
-      </ul>
-    </section>
-  </main>
-
-  <footer>
-    <p>&copy; 2025 Sport Manager Simulatie – Landenbeheer</p>
-  </footer>
-
   <script>
     const ADMIN_EMAIL = "wilcoboesveld12@hotmail.com";
     const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
@@ -45,7 +8,7 @@
 
     const defaultCountries = [
       "Australië", "Bulgarije", "Chili", "Denemarken", "IJsland", "Duitsland",
-      "Frankrijk", "Griekenland"
+      "Frankrijk", "Griekenland", "Hongarije", "Italië"
     ];
 
     function loadCountries() {
@@ -56,9 +19,23 @@
 
       queue.forEach((land, index) => {
         const li = document.createElement("li");
-        li.textContent = `${index + 1}. ${land}`;
+        li.innerHTML = `
+          ${index + 1}. ${land}
+          <button onclick="verwijderLand(${index})" style="margin-left:10px">❌ Verwijder</button>
+        `;
         list.appendChild(li);
       });
+    }
+
+    function verwijderLand(index) {
+      const queue = JSON.parse(localStorage.getItem("country_queue")) || defaultCountries;
+      if (index >= 0 && index < queue.length) {
+        if (confirm(`Weet je zeker dat je "${queue[index]}" wilt verwijderen?`)) {
+          queue.splice(index, 1);
+          localStorage.setItem("country_queue", JSON.stringify(queue));
+          loadCountries();
+        }
+      }
     }
 
     document.getElementById("addCountryForm").addEventListener("submit", function (e) {
@@ -75,5 +52,3 @@
 
     document.addEventListener("DOMContentLoaded", loadCountries);
   </script>
-</body>
-</html>
