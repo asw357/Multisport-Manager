@@ -39,7 +39,6 @@
   <footer>
     <p>&copy; 2025 Sport Manager Simulatie – MP Beheer</p>
   </footer>
-
   <script>
     const ADMIN_EMAIL = "wilcoboesveld12@hotmail.com";
     const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
@@ -51,49 +50,47 @@
     const mpList = document.getElementById("mpList");
     const mpForm = document.getElementById("mpAddForm");
 
-    const standaardMP = [
-      { beschrijving: "Registratiebonus", waarde: 100 },
-      { beschrijving: "Deelname atleet aan editie", waarde: 5 },
-      { beschrijving: "Gastlandbonus openingsceremonie", waarde: 250 },
-      { beschrijving: "Voorronde overleven", waarde: 10 },
-      { beschrijving: "Finale bereikt", waarde: 25 },
-      { beschrijving: "Goud 🥇", waarde: 100 },
-      { beschrijving: "Zilver 🥈", waarde: 60 },
-      { beschrijving: "Brons 🥉", waarde: 40 },
-      { beschrijving: "4e plaats", waarde: 15 },
-      { beschrijving: "5e plaats", waarde: 10 },
-      { beschrijving: "Top 8", waarde: 5 },
-      { beschrijving: "Nationaal Record (NR) verbreken", waarde: 15 },
-      { beschrijving: "Multi Record (MR) verbreken", waarde: 50 },
-      { beschrijving: "Medaillespiegel 1e plaats", waarde: 150 },
-      { beschrijving: "Medaillespiegel 2e plaats", waarde: 120 },
-      { beschrijving: "Medaillespiegel 3e plaats", waarde: 100 },
-      { beschrijving: "Medaillespiegel Top 5", waarde: 75 },
-      { beschrijving: "Medaillespiegel Top 10", waarde: 50 },
-      { beschrijving: "Medaillespiegel Top 25", waarde: 35 },
-      { beschrijving: "Medaillespiegel Top 50", waarde: 20 },
-      { beschrijving: "Medaillespiegel Top 100", waarde: 10 },
-      { beschrijving: "Medaillespiegel Overige", waarde: 5 },
-      { beschrijving: "Training – Lichte", waarde: -10 },
-      { beschrijving: "Training – Normale", waarde: -20 },
-      { beschrijving: "Training – Zware", waarde: -40 },
-      { beschrijving: "Scouten – Atletenlijst", waarde: -25 },
-      { beschrijving: "Scouten – Atleet aannemen (laag)", waarde: -20 },
-      { beschrijving: "Scouten – Atleet aannemen (middel)", waarde: -30 },
-      { beschrijving: "Scouten – Atleet aannemen (hoog)", waarde: -50 },
-      { beschrijving: "Vriendschappelijke wedstrijd starten", waarde: -25 },
-      { beschrijving: "Atleet ontslaan", waarde: -100 },
-      { beschrijving: "Vervanger bij pensioen", waarde: -50 }
-    ];
-
-    function laadMPRules() {
-      if (!localStorage.getItem("mp_rules")) {
-        localStorage.setItem("mp_rules", JSON.stringify(standaardMP));
+    function loadMPRules() {
+      const bestaande = JSON.parse(localStorage.getItem("mp_rules"));
+      if (!bestaande || bestaande.length === 0) {
+        const standaard = [
+          { beschrijving: "Registratiebonus", waarde: 100 },
+          { beschrijving: "Deelname per atleet", waarde: 5 },
+          { beschrijving: "Gastlandbonus bij openingsceremonie", waarde: 250 },
+          { beschrijving: "Voorronde overleven", waarde: 10 },
+          { beschrijving: "Finale gehaald", waarde: 25 },
+          { beschrijving: "Brons 🥉", waarde: 40 },
+          { beschrijving: "Zilver 🥈", waarde: 60 },
+          { beschrijving: "Goud 🥇", waarde: 100 },
+          { beschrijving: "4e plaats", waarde: 15 },
+          { beschrijving: "5e plaats", waarde: 10 },
+          { beschrijving: "Top 8", waarde: 5 },
+          { beschrijving: "Nationaal Record (NR)", waarde: 15 },
+          { beschrijving: "Multi Record (MR)", waarde: 50 },
+          { beschrijving: "Medaillespiegel 1e plaats", waarde: 150 },
+          { beschrijving: "Medaillespiegel 2e plaats", waarde: 120 },
+          { beschrijving: "Medaillespiegel 3e plaats", waarde: 100 },
+          { beschrijving: "Medaillespiegel Top 5", waarde: 75 },
+          { beschrijving: "Medaillespiegel Top 10", waarde: 50 },
+          { beschrijving: "Medaillespiegel Top 25", waarde: 35 },
+          { beschrijving: "Medaillespiegel Top 50", waarde: 20 },
+          { beschrijving: "Medaillespiegel Top 100", waarde: 10 },
+          { beschrijving: "Medaillespiegel Overige", waarde: 5 },
+          { beschrijving: "Lichte training", waarde: -10 },
+          { beschrijving: "Normale training", waarde: -20 },
+          { beschrijving: "Zware training", waarde: -40 },
+          { beschrijving: "Scouten: 6 atleten tonen", waarde: -25 },
+          { beschrijving: "Scouten: Atleet 1", waarde: -20 },
+          { beschrijving: "Scouten: Atleet 2", waarde: -30 },
+          { beschrijving: "Scouten: Atleet 3-8", waarde: -40 },
+          { beschrijving: "Scouten: Atleet top selecties", waarde: -60 },
+          { beschrijving: "Vriendschappelijke wedstrijd", waarde: -25 },
+          { beschrijving: "Atleet ontslaan", waarde: -100 },
+          { beschrijving: "Nieuwe atleet bij pensioen", waarde: -50 }
+        ];
+        localStorage.setItem("mp_rules", JSON.stringify(standaard));
       }
-      toonMPRules();
-    }
 
-    function toonMPRules() {
       const regels = JSON.parse(localStorage.getItem("mp_rules")) || [];
       mpList.innerHTML = "";
 
@@ -112,7 +109,7 @@
       const regels = JSON.parse(localStorage.getItem("mp_rules")) || [];
       regels[index].waarde = parseInt(nieuweWaarde);
       localStorage.setItem("mp_rules", JSON.stringify(regels));
-      toonMPRules();
+      loadMPRules();
     }
 
     function verwijderMPregel(index) {
@@ -120,7 +117,7 @@
       if (confirm(`Weet je zeker dat je de regel "${regels[index].beschrijving}" wilt verwijderen?`)) {
         regels.splice(index, 1);
         localStorage.setItem("mp_rules", JSON.stringify(regels));
-        toonMPRules();
+        loadMPRules();
       }
     }
 
@@ -134,10 +131,10 @@
       regels.push({ beschrijving, waarde });
       localStorage.setItem("mp_rules", JSON.stringify(regels));
       mpForm.reset();
-      toonMPRules();
+      loadMPRules();
     });
 
-    document.addEventListener("DOMContentLoaded", laadMPRules);
+    document.addEventListener("DOMContentLoaded", loadMPRules);
   </script>
 </body>
 </html>
