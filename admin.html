@@ -50,7 +50,7 @@
 
     const defaultCountries = [
       "Australië", "Bulgarije", "Chili", "Denemarken", "IJsland", "Duitsland",
-      "Frankrijk", "Griekenland", "Hongarije", "Italië"
+      "Frankrijk", "Griekenland"
     ];
 
     // Ophalen landvolgorde uit localStorage (simuleert country_queue.json)
@@ -86,3 +86,187 @@
   </script>
 </body>
 </html>
+    <section>
+      <h2>MP-instellingen</h2>
+      <form id="mpForm">
+        <label for="mpGoud">Goud 🥇:</label>
+        <input type="number" id="mpGoud" value="100"><br />
+        <label for="mpZilver">Zilver 🥈:</label>
+        <input type="number" id="mpZilver" value="60"><br />
+        <label for="mpBrons">Brons 🥉:</label>
+        <input type="number" id="mpBrons" value="40"><br />
+        <label for="mpTop8">Top 8:</label>
+        <input type="number" id="mpTop8" value="10"><br /><br />
+        <button type="submit">Opslaan</button>
+      </form>
+    </section>
+
+    <section>
+      <h2>Limieten per Sportonderdeel</h2>
+      <form id="limietForm">
+        <label for="sportNaam">Sportonderdeel:</label>
+        <input type="text" id="sportNaam" placeholder="Bijv. Atletiek 100m"><br />
+        <label for="limietAantal">Maximaal aantal atleten:</label>
+        <input type="number" id="limietAantal"><br />
+        <button type="submit">Instellen</button>
+      </form>
+
+      <ul id="limietList">
+        <!-- Overzicht van ingestelde limieten -->
+      </ul>
+    </section>
+    <section>
+      <h2>Tactiekinstellingen</h2>
+      <form id="tacticForm">
+        <label for="tacticSport">Sportonderdeel:</label>
+        <input type="text" id="tacticSport" placeholder="Bijv. Zwemmen 200m"><br />
+        <label for="tacticNaam">Tactieknaam:</label>
+        <input type="text" id="tacticNaam" placeholder="Bijv. Explosieve start"><br />
+        <label for="tacticEffect">Effect (tekst):</label>
+        <input type="text" id="tacticEffect"><br />
+        <label for="tacticRisico">Risico op fout (%):</label>
+        <input type="number" id="tacticRisico" value="0"><br />
+        <button type="submit">Toevoegen</button>
+      </form>
+
+      <ul id="tacticList">
+        <!-- Lijst met tactieken per sport -->
+      </ul>
+    </section>
+
+    <section>
+      <h2>Weersinstellingen</h2>
+      <label>
+        <input type="checkbox" id="weatherToggle" checked />
+        Weersinvloeden inschakelen bij wedstrijden
+      </label>
+    </section>
+
+    <section>
+      <h2>Nieuwe Editie Starten</h2>
+      <form id="editieForm">
+        <label for="editieNaam">Naam van editie:</label>
+        <input type="text" id="editieNaam" placeholder="Bijv. Zomereditie 7"><br />
+        <label for="editieType">Type:</label>
+        <select id="editieType">
+          <option value="zomer">Zomer</option>
+          <option value="winter">Winter</option>
+        </select><br />
+        <label for="editieStart">Startdatum:</label>
+        <input type="date" id="editieStart"><br />
+        <button type="submit">Toevoegen</button>
+      </form>
+
+      <ul id="editieList">
+        <!-- Historiek van edities -->
+      </ul>
+    </section>
+  <script>
+    // MP-instellingen
+    const mpForm = document.getElementById("mpForm");
+    mpForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      const mp = {
+        goud: parseInt(document.getElementById("mpGoud").value),
+        zilver: parseInt(document.getElementById("mpZilver").value),
+        brons: parseInt(document.getElementById("mpBrons").value),
+        top8: parseInt(document.getElementById("mpTop8").value)
+      };
+      localStorage.setItem("mp_settings", JSON.stringify(mp));
+      alert("MP-instellingen opgeslagen!");
+    });
+
+    // Limieten
+    const limietForm = document.getElementById("limietForm");
+    const limietList = document.getElementById("limietList");
+    limietForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      const sport = document.getElementById("sportNaam").value;
+      const limiet = parseInt(document.getElementById("limietAantal").value);
+      const limieten = JSON.parse(localStorage.getItem("limieten")) || {};
+      limieten[sport] = limiet;
+      localStorage.setItem("limieten", JSON.stringify(limieten));
+      updateLimietList();
+    });
+
+    function updateLimietList() {
+      const data = JSON.parse(localStorage.getItem("limieten")) || {};
+      limietList.innerHTML = "";
+      for (const sport in data) {
+        const li = document.createElement("li");
+        li.textContent = `${sport}: max ${data[sport]} atleten`;
+        limietList.appendChild(li);
+      }
+    }
+
+    // Tactieken
+    const tacticForm = document.getElementById("tacticForm");
+    const tacticList = document.getElementById("tacticList");
+    tacticForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      const sport = document.getElementById("tacticSport").value;
+      const naam = document.getElementById("tacticNaam").value;
+      const effect = document.getElementById("tacticEffect").value;
+      const risico = parseInt(document.getElementById("tacticRisico").value);
+      const tactieken = JSON.parse(localStorage.getItem("tactieken")) || {};
+      if (!tactieken[sport]) tactieken[sport] = [];
+      tactieken[sport].push({ naam, effect, risico });
+      localStorage.setItem("tactieken", JSON.stringify(tactieken));
+      updateTacticList();
+    });
+
+    function updateTacticList() {
+      const data = JSON.parse(localStorage.getItem("tactieken")) || {};
+      tacticList.innerHTML = "";
+      for (const sport in data) {
+        data[sport].forEach(t => {
+          const li = document.createElement("li");
+          li.textContent = `${sport} - ${t.naam}: ${t.effect} (Risico: ${t.risico}%)`;
+          tacticList.appendChild(li);
+        });
+      }
+    }
+
+    // Weer
+    const weatherToggle = document.getElementById("weatherToggle");
+    weatherToggle.addEventListener("change", function () {
+      localStorage.setItem("weerActief", weatherToggle.checked);
+    });
+    document.addEventListener("DOMContentLoaded", function () {
+      const weerStatus = localStorage.getItem("weerActief");
+      if (weerStatus !== null) {
+        weatherToggle.checked = weerStatus === "true";
+      }
+    });
+
+    // Editiebeheer
+    const editieForm = document.getElementById("editieForm");
+    const editieList = document.getElementById("editieList");
+    editieForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      const naam = document.getElementById("editieNaam").value;
+      const type = document.getElementById("editieType").value;
+      const datum = document.getElementById("editieStart").value;
+      const edities = JSON.parse(localStorage.getItem("edities")) || [];
+      edities.push({ naam, type, datum });
+      localStorage.setItem("edities", JSON.stringify(edities));
+      updateEditieList();
+    });
+
+    function updateEditieList() {
+      const edities = JSON.parse(localStorage.getItem("edities")) || [];
+      editieList.innerHTML = "";
+      edities.forEach(e => {
+        const li = document.createElement("li");
+        li.textContent = `${e.naam} (${e.type}) – Start: ${e.datum}`;
+        editieList.appendChild(li);
+      });
+    }
+
+    // Init
+    document.addEventListener("DOMContentLoaded", () => {
+      updateLimietList();
+      updateTacticList();
+      updateEditieList();
+    });
+  </script>
