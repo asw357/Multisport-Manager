@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Manager Home</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header>
+    <div class="topbar">
+      <h1>Manager Home</h1>
+      <div id="managerInfo" class="user-panel"></div>
+    </div>
+    <nav>
+      <ul>
+        <li><a href="athletes.html">Atletenbeheer</a></li>
+        <li><a href="tactics.html">Wedstrijdtactieken</a></li>
+        <li><a href="logout.html">Uitloggen</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section>
+      <h2>Welkom, <span id="managerName">...</span></h2>
+      <p>Land: <span id="managerLand"></span></p>
+      <p>Medalpoints (MP): <span id="managerMP">0</span></p>
+      <p>Bekijk hier jouw team, prestaties en beheer jouw atleten.</p>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Sport Manager Simulatie</p>
+  </footer>
+
+  <script>
+    const manager = JSON.parse(localStorage.getItem("loggedInUser"));
+    const ADMIN_EMAIL = "wilcoboesveld12@hotmail.com";
+
+    if (!manager) {
+      alert("Je moet ingelogd zijn om deze pagina te bekijken.");
+      window.location.href = "login.html";
+    } else {
+      // Vul profielinfo in
+      document.getElementById("managerName").textContent = manager.username;
+      document.getElementById("managerLand").textContent = manager.land;
+      document.getElementById("managerMP").textContent = manager.mp || 0;
+
+      // Toon vlag en info rechtsboven
+      const vlag = `<img src="img/flags/${manager.land.toLowerCase()}.png" alt="${manager.land}" style="height:20px;vertical-align:middle">`;
+      const info = document.createElement("span");
+      info.innerHTML = `${vlag} ${manager.land} – MP: ${manager.mp || 0}`;
+      document.getElementById("managerInfo").appendChild(info);
+    }
+  </script>
+</body>
+</html>
