@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Registreren</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header>
+    <h1>Registreren</h1>
+    <nav>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="login.html">Inloggen</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <form id="registerForm">
+      <label for="username">Gebruikersnaam:</label><br />
+      <input type="text" id="username" name="username" required /><br /><br />
+
+      <label for="email">E-mailadres:</label><br />
+      <input type="email" id="email" name="email" required /><br /><br />
+
+      <label for="password">Wachtwoord:</label><br />
+      <input type="password" id="password" name="password" required /><br /><br />
+
+      <label for="avatar">Profielfoto (optioneel):</label><br />
+      <input type="file" id="avatar" name="avatar" accept="image/*" /><br /><br />
+
+      <label for="captcha">Voer onderstaande code in: <strong>AB12</strong></label><br />
+      <input type="text" id="captcha" name="captcha" required /><br /><br />
+
+      <button type="submit">Account aanmaken</button>
+    </form>
+
+    <p id="confirmationMessage"></p>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Sport Manager Simulatie</p>
+  </footer>
+
+  <script>
+    document.getElementById('registerForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const captchaInput = document.getElementById('captcha').value.trim().toUpperCase();
+      if (captchaInput !== 'AB12') {
+        alert('Captcha incorrect. Probeer opnieuw.');
+        return;
+      }
+
+      // Simuleer registratie (voor nu gewoon melding tonen)
+      document.getElementById('confirmationMessage').textContent =
+        'Registratie succesvol! Je land en team worden nu aangemaakt.';
+    });
+  </script>
+</body>
+</html>
