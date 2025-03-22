@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Adminpaneel</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header>
+    <h1>Adminpaneel</h1>
+    <nav>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="manager.html">Manager Home</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section>
+      <h2>Landentoewijzingslijst beheren</h2>
+      <p>Pas hier de volgorde aan waarin landen toegewezen worden aan nieuwe spelers.</p>
+      <form id="addCountryForm">
+        <input type="text" id="newCountry" placeholder="Nieuw land toevoegen" required />
+        <button type="submit">Toevoegen</button>
+      </form>
+
+      <ul id="countryList"></ul>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Sport Manager Simulatie - Admin</p>
+  </footer>
+
+  <script>
+    const COUNTRY_KEY = "countryQueue";
+
+    function loadCountryList() {
+      const list = JSON.parse(localStorage.getItem(COUNTRY_KEY)) || [];
+      const ul = document.getElementById("countryList");
+      ul.innerHTML = "";
+
+      list.forEach((land, index) => {
+        const li = document.createElement("li");
+        li.textContent = `${index + 1}. ${land}`;
+        ul.appendChild(li);
+      });
+    }
+
+    document.getElementById("addCountryForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+      const newCountry = document.getElementById("newCountry").value.trim();
+      if (!newCountry) return;
+
+      const list = JSON.parse(localStorage.getItem(COUNTRY_KEY)) || [];
+      list.push(newCountry);
+      localStorage.setItem(COUNTRY_KEY, JSON.stringify(list));
+
+      document.getElementById("newCountry").value = "";
+      loadCountryList();
+    });
+
+    document.addEventListener("DOMContentLoaded", loadCountryList);
+  </script>
+</body>
+</html>
