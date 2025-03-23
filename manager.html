@@ -20,14 +20,23 @@
   <main>
     <section>
       <h2>Welkom, <span id="managerNaam">...</span></h2>
-      <p><strong>Land:</strong> <span id="managerLand">...</span> <img id="landVlag" src="" alt="vlag" style="height:20px; margin-left:10px;"></p>
+      <p><strong>Land:</strong> <span id="managerLand">...</span> 
+         <img id="landVlag" src="" alt="vlag" style="height:20px; margin-left:10px;"></p>
       <p><strong>MedalPoints (MP):</strong> <span id="managerMP">0</span></p>
+    </section>
+
+    <section>
+      <h3>📋 Jouw Atleten</h3>
+      <p>Totaal: <span id="aantalAtleten">...</span></p>
+      <ul id="atletenOverzicht"></ul>
+      <p><a href="athletes.html">➡️ Ga naar Atletenbeheer</a></p>
     </section>
 
     <section>
       <h3>🔗 Navigatie</h3>
       <ul>
-        <li><a href="athletes.html">👥 Atletenbeheer</a></li>
+        <li><a href="training.html">💪 Training</a></li>
+        <li><a href="scouting.html">🔍 Scouten</a></li>
         <li><a href="tactics.html">🎯 Wedstrijdtactieken</a></li>
         <li><a href="editie_resultaten.html">📜 Deelname & Resultaten</a></li>
         <li><a href="profiel.html">⚙️ Profielinstellingen</a></li>
@@ -49,10 +58,26 @@
     document.getElementById("managerNaam").textContent = user.username;
     document.getElementById("managerLand").textContent = user.land;
     document.getElementById("managerMP").textContent = user.mp || 0;
+    document.getElementById("landVlag").src = `https://flagcdn.com/h20/${user.land.toLowerCase().replace(" ", "-")}.png`;
 
-    // Simpele vlag URL op basis van landnaam
-    const vlag = user.land.toLowerCase().replace(" ", "-");
-    document.getElementById("landVlag").src = `https://flagcdn.com/h20/${vlag}.png`; // gebruik officiële 2-letter afkorting als upgrade
+    // Laad eigen atleten
+    const alleAtleten = JSON.parse(localStorage.getItem("atleten")) || [];
+    const eigenAtleten = alleAtleten.filter(a => a.owner === user.email);
+
+    document.getElementById("aantalAtleten").textContent = eigenAtleten.length;
+
+    const lijst = document.getElementById("atletenOverzicht");
+    eigenAtleten.slice(0, 5).forEach(a => {
+      const li = document.createElement("li");
+      li.textContent = `${a.naam} – ${a.sport}`;
+      lijst.appendChild(li);
+    });
+
+    if (eigenAtleten.length > 5) {
+      const extra = document.createElement("li");
+      extra.textContent = `+ ${eigenAtleten.length - 5} meer...`;
+      lijst.appendChild(extra);
+    }
   </script>
 </body>
 </html>
