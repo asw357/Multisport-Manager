@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Records & Statistieken</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <h1>📈 Records & Statistieken</h1>
+    <nav>
+      <ul>
+        <li><a href="edities.html">⬅️ Terug naar Edities</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section>
+      <h2>🌍 Multi Records (MR)</h2>
+      <ul id="mrList">
+        <!-- MR wordt hier geladen -->
+      </ul>
+    </section>
+
+    <section>
+      <h2>🏳️ Nationaal Records (NR)</h2>
+      <ul id="nrList">
+        <!-- NR wordt hier geladen -->
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Sport Manager Simulatie – Records</p>
+  </footer>
+
+  <script>
+    const mrData = JSON.parse(localStorage.getItem("multi_records")) || [];
+    const nrData = JSON.parse(localStorage.getItem("nationaal_records")) || [];
+
+    const mrList = document.getElementById("mrList");
+    const nrList = document.getElementById("nrList");
+
+    function laadRecords() {
+      if (mrData.length === 0) {
+        mrList.innerHTML = "<li>Nog geen MR's geregistreerd.</li>";
+      } else {
+        mrList.innerHTML = "";
+        mrData.forEach(r => {
+          mrList.innerHTML += `
+            <li>
+              <strong>${r.onderdeel}</strong> – ${r.waarde} (${r.naam}, ${r.land}) tijdens ${r.editie}
+            </li>
+          `;
+        });
+      }
+
+      if (nrData.length === 0) {
+        nrList.innerHTML = "<li>Nog geen NR's geregistreerd.</li>";
+      } else {
+        nrList.innerHTML = "";
+        nrData.forEach(r => {
+          nrList.innerHTML += `
+            <li>
+              <strong>${r.onderdeel}</strong> (${r.land}) – ${r.waarde} (${r.naam}) tijdens ${r.editie}
+            </li>
+          `;
+        });
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", laadRecords);
+  </script>
+</body>
+</html>
