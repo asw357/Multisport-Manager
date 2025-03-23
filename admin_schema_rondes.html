@@ -52,7 +52,7 @@
     const rondesContainer = document.getElementById("rondesContainer");
     const rondeDetailsForm = document.getElementById("rondeDetailsForm");
 
-    // Toon info
+    // Toon basisinformatie
     infoBlok.innerHTML = `
       <p><strong>Editie:</strong> ${schemaTemp.editie}</p>
       <p><strong>Onderdeel:</strong> ${schemaTemp.onderdeel}</p>
@@ -69,8 +69,8 @@
           <div style="margin-bottom:10px">
             <label>Ronde ${i} naam:</label><br />
             <input type="text" name="rondeNaam" placeholder="Bijv. Series, Halve Finale" required><br />
-            <label>Datum:</label><br />
-            <input type="date" name="rondeDatum" required><br />
+            <label>Dag (bijv. Dag 1):</label><br />
+            <input type="text" name="rondeDag" placeholder="Dag 1" required><br />
             <label>Tijd:</label><br />
             <input type="time" name="rondeTijd" required><br />
           </div>
@@ -83,14 +83,14 @@
       e.preventDefault();
 
       const namen = Array.from(document.getElementsByName("rondeNaam"));
-      const datums = Array.from(document.getElementsByName("rondeDatum"));
+      const dagen = Array.from(document.getElementsByName("rondeDag"));
       const tijden = Array.from(document.getElementsByName("rondeTijd"));
 
       const rondes = [];
       for (let i = 0; i < namen.length; i++) {
         rondes.push({
           naam: namen[i].value,
-          datum: datums[i].value,
+          dag: dagen[i].value,
           tijd: tijden[i].value
         });
       }
@@ -102,7 +102,6 @@
         rondes: rondes
       };
 
-      // Schema opslaan
       const alleSchemas = JSON.parse(localStorage.getItem("toernooi_schemas")) || [];
       alleSchemas.push(fullSchema);
       localStorage.setItem("toernooi_schemas", JSON.stringify(alleSchemas));
