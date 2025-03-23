@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Editiebeheer</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <h1>📆 Editiebeheer</h1>
+    <nav>
+      <ul>
+        <li><a href="admin.html">⬅️ Terug naar Admin Dashboard</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section>
+      <form id="editieForm">
+        <label for="editieNaam">Naam van editie:</label><br />
+        <input type="text" id="editieNaam" placeholder="Bijv. Zomereditie 7" required><br />
+        <label for="editieType">Type:</label><br />
+        <select id="editieType" required>
+          <option value="zomer">Zomer</option>
+          <option value="winter">Winter</option>
+        </select><br />
+        <label for="editieStart">Startdatum:</label><br />
+        <input type="date" id="editieStart" required><br /><br />
+        <button type="submit">Toevoegen</button>
+      </form>
+    </section>
+
+    <section>
+      <h2>Bestaande Edities</h2>
+      <ul id="editieList">
+        <!-- Dynamisch geladen -->
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Sport Manager Simulatie – Editiebeheer</p>
+  </footer>
+
+  <script>
+    const ADMIN_EMAIL = "wilcoboesveld12@hotmail.com";
+    const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
+    if (!loggedInUser || loggedInUser.email !== ADMIN_EMAIL) {
+      alert("Toegang geweigerd.");
+      window.location.href = "index.html";
+    }
+
+    const editieForm = document.getElementById("editieForm");
+    const editieList = document.getElementById("editieList");
+
+    function loadEditieList() {
+      const edities = JSON.parse(localStorage.getItem("edities")) || [];
+      editieList.innerHTML = "";
+      edities.forEach((e, index) => {
+        const li = document.createElement("li");
+        li.innerHTML = `
+          <strong>${e.naam}</strong> (${e.type}) – Start: ${e.datum}
+          <button onclick="verwijderEditie(${index})" style="margin-left:10px">❌ Verwijder</button>
+        `;
+        editieList.appendChild(li);
+      });
+    }
+
+    editieForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      const naam = document.getElementById("editieNaam").value.trim();
+      const type = document.getElementById("editieType").value;
+      const datum = document.getElementById("editieStart").value;
+
+      if (!naam || !type || !datum) return;
+
+      const edities = JSON.parse(localStorage.getItem("edities")) || [];
+      edities.push({ naam, type, datum });
+      localStorage.setItem("edities", JSON.stringify(edities));
+      editieForm.reset();
+      loadEditieList();
+    });
+
+    function verwijderEditie(index) {
+      const edities = JSON.parse(localStorage.getItem("edities")) || [];
+      edities.splice(index, 1);
+      localStorage.setItem("edities", JSON.stringify(edities));
+      loadEditieList();
+    }
+
+    document.addEventListener("DOMContentLoaded", loadEditieList);
+  </script>
+</body>
+</html>
