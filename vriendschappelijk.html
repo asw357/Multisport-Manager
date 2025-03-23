@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Vriendschappelijke Wedstrijd</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <h1>🤝 Vriendschappelijke Wedstrijden</h1>
+    <nav>
+      <ul>
+        <li><a href="manager.html">⬅️ Terug naar Manager Home</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section>
+      <h2>Stuur een Uitnodiging</h2>
+      <form id="uitnodigingForm">
+        <label>Ontvanger e-mail:</label><br />
+        <input type="email" id="ontvanger" required><br />
+        <label>Sportonderdeel:</label><br />
+        <select id="sportSelect" required></select><br /><br />
+        <button type="submit">Verzend Uitnodiging (10 MP)</button>
+      </form>
+    </section>
+
+    <section>
+      <h2>📥 Uitnodigingen Ontvangen</h2>
+      <ul id="ontvangenList"></ul>
+    </section>
+
+    <section id="resultaatSimulatie"></section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Sport Manager Simulatie – Vriendschappelijke Wedstrijd</p>
+  </footer>
+
+  <script>
+    const user = JSON.parse(localStorage.getItem("loggedInUser"));
+    if (!user) {
+      alert("Niet ingelogd.");
+      window.location.href = "login.html";
+    }
+
+    const uitnodigingen = JSON.parse(localStorage.getItem("vriend_utnodigingen")) || [];
+    const atleten = JSON.parse(localStorage.getItem("atleten")) || [];
+    const onderdelen = [...new Set(atleten.filter(a => a.owner === user.email).map(a => a.sport))];
+
+    // Vul dropdown
+    const select = document.getElementById("sportSelect");
+    onderdelen.forEach(o => {
+      const opt = document.createElement("option");
+      opt.value = o;
+      opt.textContent = o;
+      select.appendChild(opt);
+    });
+
+    // Verzend uitnodiging
+    document.getElementById("uitnodigingForm").addEventListener("submit", e => {
+      e.preventDefault();
+      const ontvanger = document.getElementById("ontvanger").value;
+      const onderdeel = document.getElementById("sportSelect").value;
+
+      if (user.mp < 10) {
+        alert("Niet genoeg MP.");
+        return;
+      }
+
+      uitnodigingen.push({
+        van: user.email,
+        naar: ontvanger,
+        onderdeel,
+        status: "open"
+      });
+
+      user.mp -= 10;
+      localStorage.setItem("vriend_utnodigingen", JSON.stringify(uitnodigingen));
+      localStorage.setItem("loggedInUser", JSON.stringify(user));
+      alert("Uitnodiging verzonden!");
+    });
+
+    // Toon ontvangen uitnodigingen
+    function toonUitnodigingen() {
+      const lijst = document.getElementById("ontvangenList");
+      const eigen = uitnodigingen.filter(u => u.naar === user.email && u.status === "open");
+
+      if (eigen.length === 0) {
+        lijst.innerHTML = "<li>Geen uitnodigingen ontvangen.</li>";
+        return;
+      }
+
+      lijst.innerHTML = "";
+      eigen.forEach((u, index) => {
+        const li = document.createElement("li");
+        li.innerHTML = `
+          Uitnodiging van <strong>${u.van}</strong> voor <strong>${u.onderdeel}</strong>
+          <button onclick="accepteer(${index})">✅ Accepteer</button>
+        `;
+        lijst.appendChild(li);
+      });
+    }
+
+    function accepteer(index) {
+      const u = uitnodigingen.filter(u => u.naar === user.email && u.status === "open")[index];
+      if (user.mp < 10) {
+        alert("Niet genoeg MP om te accepteren.");
+        return;
+      }
+
+      user.mp -= 10;
+      u.status = "gespeeld";
+
+      localStorage.setItem("vriend_utnodigingen", JSON.stringify(uitnodigingen));
+      localStorage.setItem("loggedInUser", JSON.stringify(user));
+
+      const resultaat = `🏁 Vriendschappelijke wedstrijd tussen ${u.van} en ${u.naar} in ${u.onderdeel}:  
+      ${Math.random() > 0.5 ? u.van + " wint!" : u.naar + " wint!"}`;
+
+      document.getElementById("resultaatSimulatie").innerHTML = `<p>${resultaat}</p>`;
+      toonUitnodigingen();
+    }
+
+    document.addEventListener("DOMContentLoaded", toonUitnodigingen);
+  </script>
+</body>
+</html>
