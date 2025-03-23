@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Nieuwspagina</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <h1>📰 Nieuws & Updates</h1>
+    <nav>
+      <ul>
+        <li><a href="index.html">⬅️ Terug naar Home</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section id="nieuwsContainer">
+      <!-- Nieuwsitems worden geladen -->
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Sport Manager Simulatie – Nieuws</p>
+  </footer>
+
+  <script>
+    const nieuws = JSON.parse(localStorage.getItem("nieuwsfeed")) || [];
+
+    function laadNieuws() {
+      const container = document.getElementById("nieuwsContainer");
+
+      if (nieuws.length === 0) {
+        container.innerHTML = "<p>Er zijn nog geen nieuwsberichten.</p>";
+        return;
+      }
+
+      // Sorteer op nieuw → oud
+      const gesorteerd = nieuws.sort((a, b) => new Date(b.datum) - new Date(a.datum));
+
+      gesorteerd.forEach(item => {
+        const div = document.createElement("div");
+        div.classList.add("nieuwsItem");
+        div.innerHTML = `
+          <h3>[${item.categorie}] ${item.titel}</h3>
+          <p>${item.tekst}</p>
+          <small>${item.datum}</small><br />
+          <button onclick="reageer(this)">👍</button>
+          <button onclick="reageer(this)">❤️</button>
+          <button onclick="reageer(this)">🔥</button>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function reageer(btn) {
+      btn.disabled = true;
+      btn.textContent += " ✔";
+    }
+
+    document.addEventListener("DOMContentLoaded", laadNieuws);
+  </script>
+</body>
+</html>
