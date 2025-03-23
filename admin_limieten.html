@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Limieten per Sportonderdeel</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <h1>📏 Limieten per Sportonderdeel</h1>
+    <nav>
+      <ul>
+        <li><a href="admin.html">⬅️ Terug naar Admin Dashboard</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section>
+      <form id="limietForm">
+        <label for="sportNaam">Sportonderdeel:</label><br />
+        <input type="text" id="sportNaam" placeholder="Bijv. Atletiek 100m" required><br />
+        <label for="limietAantal">Maximaal aantal atleten:</label><br />
+        <input type="number" id="limietAantal" required><br /><br />
+        <button type="submit">Instellen / Bijwerken</button>
+      </form>
+    </section>
+
+    <section>
+      <h2>Ingestelde Limieten</h2>
+      <ul id="limietList">
+        <!-- Dynamisch geladen -->
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Sport Manager Simulatie – Limietenbeheer</p>
+  </footer>
+
+  <script>
+    const ADMIN_EMAIL = "wilcoboesveld12@hotmail.com";
+    const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
+    if (!loggedInUser || loggedInUser.email !== ADMIN_EMAIL) {
+      alert("Toegang geweigerd.");
+      window.location.href = "index.html";
+    }
+
+    const limietForm = document.getElementById("limietForm");
+    const limietList = document.getElementById("limietList");
+
+    function loadLimieten() {
+      const limieten = JSON.parse(localStorage.getItem("limieten")) || {};
+      limietList.innerHTML = "";
+
+      Object.entries(limieten).forEach(([sport, aantal]) => {
+        const li = document.createElement("li");
+        li.innerHTML = `
+          <strong>${sport}</strong>: Max ${aantal} atleten
+          <button onclick="verwijderLimiet('${sport}')" style="margin-left:10px">❌ Verwijder</button>
+        `;
+        limietList.appendChild(li);
+      });
+    }
+
+    function verwijderLimiet(sport) {
+      const limieten = JSON.parse(localStorage.getItem("limieten")) || {};
+      delete limieten[sport];
+      localStorage.setItem("limieten", JSON.stringify(limieten));
+      loadLimieten();
+    }
+
+    limietForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      const sport = document.getElementById("sportNaam").value.trim();
+      const aantal = parseInt(document.getElementById("limietAantal").value);
+      if (!sport || isNaN(aantal)) return;
+
+      const limieten = JSON.parse(localStorage.getItem("limieten")) || {};
+      limieten[sport] = aantal;
+      localStorage.setItem("limieten", JSON.stringify(limieten));
+      limietForm.reset();
+      loadLimieten();
+    });
+
+    document.addEventListener("DOMContentLoaded", loadLimieten);
+  </script>
+</body>
+</html>
