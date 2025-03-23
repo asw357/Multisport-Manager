@@ -1,37 +1,32 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Registreren</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <header>
-    <h1>Account Registreren</h1>
+    <h1>📋 Registreren</h1>
     <nav>
       <ul>
-        <li><a href="index.html">Home</a></li>
-        <li><a href="login.html">Inloggen</a></li>
+        <li><a href="index.html">⬅️ Terug naar Home</a></li>
       </ul>
     </nav>
   </header>
 
   <main>
     <form id="registerForm">
-      <label for="username">Gebruikersnaam:</label><br />
-      <input type="text" id="username" required /><br />
-
-      <label for="email">E-mail:</label><br />
-      <input type="email" id="email" required /><br />
-
-      <label for="password">Wachtwoord:</label><br />
-      <input type="password" id="password" required /><br /><br />
-
-      <button type="submit">Registreren</button>
+      <label>Gebruikersnaam:</label><br />
+      <input type="text" id="username" required><br />
+      <label>Email:</label><br />
+      <input type="email" id="email" required><br />
+      <label>Wachtwoord:</label><br />
+      <input type="password" id="password" required><br /><br />
+      <button type="submit">Account aanmaken</button>
     </form>
-
-    <div id="result"></div>
+    <p id="feedback" style="color:red;"></p>
   </main>
 
   <footer>
@@ -39,33 +34,52 @@
   </footer>
 
   <script>
+    const landenLijst = JSON.parse(localStorage.getItem("landenlijst")) || [
+      "Australië", "Bulgarije", "Chili", "Denemarken", "IJsland", "Duitsland", "Frankrijk", "Griekenland"
+    ];
+
+    const users = JSON.parse(localStorage.getItem("users")) || [];
+    const mpInstellingen = JSON.parse(localStorage.getItem("mp_instellingen")) || {};
+    const standaardMP = mpInstellingen["registratie"]?.waarde || 100;
+
+    function getVolgendLand() {
+      const gebruikt = users.map(u => u.land);
+      for (let land of landenLijst) {
+        if (!gebruikt.includes(land)) return land;
+      }
+      return "N.V.T.";
+    }
+
     document.getElementById("registerForm").addEventListener("submit", function (e) {
       e.preventDefault();
 
-      // Simulatie: landentoewijzing ophalen uit een queue (later: data/country_queue.json)
-      const landen = [
-        "Australië", "Bulgarije", "Chili", "Denemarken", "IJsland", "Duitsland",
-        "Frankrijk", "Griekenland", "Hongarije", "Italië"
-      ];
+      const username = document.getElementById("username").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const feedback = document.getElementById("feedback");
 
-      // Ophalen hoeveel gebruikers er al zijn (simulatie)
-      const existingUsers = JSON.parse(localStorage.getItem("users")) || [];
-      const toegewezenLand = landen[existingUsers.length % landen.length];
+      if (users.find(u => u.email === email)) {
+        feedback.textContent = "Er bestaat al een account met dit e-mailadres.";
+        return;
+      }
 
-      const user = {
-        username: document.getElementById("username").value,
-        email: document.getElementById("email").value,
-        password: document.getElementById("password").value,
-        land: toegewezenLand
+      const toegewezenLand = getVolgendLand();
+
+      const newUser = {
+        username,
+        email,
+        password,
+        land: toegewezenLand,
+        mp: standaardMP
       };
 
-      existingUsers.push(user);
-      localStorage.setItem("users", JSON.stringify(existingUsers));
+      users.push(newUser);
+      localStorage.setItem("users", JSON.stringify(users));
+      localStorage.setItem("loggedInUser", JSON.stringify(newUser));
 
-      document.getElementById("result").innerHTML =
-        `<p>Registratie succesvol! Je bent toegewezen aan: <strong>${toegewezenLand}</strong>.</p>`;
+      alert(`Registratie succesvol! Je land is ${toegewezenLand} en je hebt ${standaardMP} MP.`);
+      window.location.href = "manager.html";
     });
   </script>
 </body>
 </html>
-
