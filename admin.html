@@ -8,11 +8,10 @@
 </head>
 <body>
   <header>
-    <h1>Admin Dashboard</h1>
+    <h1>⚙️ Admin Dashboard</h1>
     <nav>
       <ul>
         <li><a href="index.html">🏠 Home</a></li>
-        <li><a href="editions.html">📅 Edities</a></li>
         <li><a href="logout.html">🚪 Uitloggen</a></li>
       </ul>
     </nav>
@@ -23,13 +22,14 @@
       <h2>Beheerpanelen</h2>
       <ul>
         <li><a href="admin_landen.html">🌍 Landentoewijzing</a></li>
-        <li><a href="admin_sporten.html">🏟️ Sportonderdelenbeheer</a></li>
-        <li><a href="admin_mp.html">💰 MP-instellingen</a></li>
+        <li><a href="admin_sporten.html">🏟️ Sportonderdelen</a></li>
         <li><a href="admin_limieten.html">📏 Limieten per sport</a></li>
+        <li><a href="admin_mp.html">💰 MP-instellingen</a></li>
         <li><a href="admin_tactieken.html">🎯 Tactiekinstellingen</a></li>
         <li><a href="admin_edities.html">📆 Editiebeheer</a></li>
+        <li><a href="admin_schema.html">🧩 Toernooischema Maken (Stap 1)</a></li>
+        <li><a href="admin_schema_rondes.html">🕒 Rondeplanning (Stap 2)</a></li>
         <li><a href="admin_weer.html">⛅ Weersinstellingen</a></li>
-        <!-- <li><a href="admin_vertalingen.html">🌐 Taalbeheer</a></li> -->
       </ul>
     </section>
   </main>
@@ -41,7 +41,6 @@
   <script>
     const ADMIN_EMAIL = "wilcoboesveld12@hotmail.com";
     const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
-
     if (!loggedInUser || loggedInUser.email !== ADMIN_EMAIL) {
       alert("Toegang geweigerd. Je bent geen admin.");
       window.location.href = "index.html";
