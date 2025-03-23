@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Atletentraining</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <h1>💪 Training</h1>
+    <nav>
+      <ul>
+        <li><a href="manager.html">⬅️ Terug naar Manager Home</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section id="trainingContainer">
+      <!-- Atleten + training -->
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Sport Manager Simulatie – Training</p>
+  </footer>
+
+  <script>
+    const user = JSON.parse(localStorage.getItem("loggedInUser"));
+    if (!user) {
+      alert("Niet ingelogd.");
+      window.location.href = "login.html";
+    }
+
+    const container = document.getElementById("trainingContainer");
+    const alleAtleten = JSON.parse(localStorage.getItem("atleten")) || [];
+    const mijnAtleten = alleAtleten.filter(a => a.owner === user.email);
+    const trainingsdata = JSON.parse(localStorage.getItem("training_log")) || {};
+
+    const trainingKosten = {
+      licht: 10,
+      normaal: 20,
+      zwaar: 40
+    };
+
+    function toonAtleten() {
+      container.innerHTML = "";
+      if (mijnAtleten.length === 0) {
+        container.innerHTML = "<p>Je hebt nog geen atleten om te trainen.</p>";
+        return;
+      }
+
+      mijnAtleten.forEach(atleet => {
+        const id = atleet.id;
+        const sessies = trainingsdata[id] || 0;
+
+        const div = document.createElement("div");
+        div.innerHTML = `
+          <h3>${atleet.naam} (${atleet.sport}) – ${sessies}/4 sessies</h3>
+          <p>Stats: ${atleet.stats ? JSON.stringify(atleet.stats) : "n.v.t."}</p>
+          ${sessies >= 4 ? "<p><em>Maximaal aantal trainingen bereikt</em></p>" : `
+          <button onclick="train('${id}', 'licht')">Licht trainen (-10 MP)</button>
+          <button onclick="train('${id}', 'normaal')">Normaal trainen (-20 MP)</button>
+          <button onclick="train('${id}', 'zwaar')">Zwaar trainen (-40 MP)</button>
+          `}
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function train(id, type) {
+      const kosten = trainingKosten[type];
+      if (user.mp < kosten) {
+        alert("Je hebt niet genoeg MP.");
+        return;
+      }
+
+      let logs = JSON.parse(localStorage.getItem("training_log")) || {};
+      logs[id] = (logs[id] || 0) + 1;
+      if (logs[id] > 4) {
+        alert("Deze atleet heeft al 4 trainingen gehad.");
+        return;
+      }
+
+      // Kans op blessure bij zwaar
+      if (type === "zwaar" && Math.random() < 0.2) {
+        alert("Oei! Atleet raakte geblesseerd tijdens zware training.");
+        // (Later kun je een 'blessure' veld toevoegen aan atleet)
+        localStorage.setItem("training_log", JSON.stringify(logs));
+        return toonAtleten();
+      }
+
+      // Stats aanpassen
+      let atleten = JSON.parse(localStorage.getItem("atleten")) || [];
+      const index = atleten.findIndex(a => a.id === id && a.owner === user.email);
+      if (index !== -1) {
+        const stats = atleten[index].stats || {};
+        stats.snelheid = (stats.snelheid || 0) + (type === "licht" ? 1 : type === "normaal" ? 2 : 3);
+        atleten[index].stats = stats;
+      }
+
+      // MP aanpassen
+      user.mp -= kosten;
+      localStorage.setItem("loggedInUser", JSON.stringify(user));
+      localStorage.setItem("atleten", JSON.stringify(atleten));
+      localStorage.setItem("training_log", JSON.stringify(logs));
+      toonAtleten();
+    }
+
+    document.addEventListener("DOMContentLoaded", toonAtleten);
+  </script>
+</body>
+</html>
