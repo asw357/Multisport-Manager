@@ -21,14 +21,20 @@
       <form id="editieForm">
         <label for="editieNaam">Naam van editie:</label><br />
         <input type="text" id="editieNaam" placeholder="Bijv. Zomereditie 7" required><br />
-        <label for="editieType">Type:</label><br />
+        
+        <label for="editieLocatie">Gaststad en land:</label><br />
+        <input type="text" id="editieLocatie" placeholder="Bijv. Parijs, Frankrijk" required><br />
+
+        <label for="editieType">Type editie:</label><br />
         <select id="editieType" required>
           <option value="zomer">Zomer</option>
           <option value="winter">Winter</option>
         </select><br />
+
         <label for="editieStart">Startdatum:</label><br />
         <input type="date" id="editieStart" required><br /><br />
-        <button type="submit">Toevoegen</button>
+
+        <button type="submit">Toevoegen / Bijwerken</button>
       </form>
     </section>
 
@@ -61,23 +67,31 @@
       edities.forEach((e, index) => {
         const li = document.createElement("li");
         li.innerHTML = `
-          <strong>${e.naam}</strong> (${e.type}) – Start: ${e.datum}
+          <strong>${e.naam}</strong> (${e.type}) – ${e.locatie}<br />
+          Startdatum: <input type="date" value="${e.datum}" onchange="updateStartDatum(${index}, this.value)">
           <button onclick="verwijderEditie(${index})" style="margin-left:10px">❌ Verwijder</button>
         `;
         editieList.appendChild(li);
       });
     }
 
+    function updateStartDatum(index, nieuweDatum) {
+      const edities = JSON.parse(localStorage.getItem("edities")) || [];
+      edities[index].datum = nieuweDatum;
+      localStorage.setItem("edities", JSON.stringify(edities));
+    }
+
     editieForm.addEventListener("submit", function (e) {
       e.preventDefault();
       const naam = document.getElementById("editieNaam").value.trim();
+      const locatie = document.getElementById("editieLocatie").value.trim();
       const type = document.getElementById("editieType").value;
       const datum = document.getElementById("editieStart").value;
 
-      if (!naam || !type || !datum) return;
+      if (!naam || !locatie || !type || !datum) return;
 
       const edities = JSON.parse(localStorage.getItem("edities")) || [];
-      edities.push({ naam, type, datum });
+      edities.push({ naam, locatie, type, datum });
       localStorage.setItem("edities", JSON.stringify(edities));
       editieForm.reset();
       loadEditieList();
