@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Atletenbeheer</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <h1>👥 Atletenbeheer</h1>
+    <nav>
+      <ul>
+        <li><a href="manager.html">⬅️ Terug naar Manager Home</a></li>
+        <li><a href="training.html">💪 Ga naar Training</a></li>
+        <li><a href="scouting.html">🔍 Ga naar Scouten</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section id="atletenContainer">
+      <!-- Hier komen de atleten -->
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Sport Manager Simulatie – Atletenbeheer</p>
+  </footer>
+
+  <script>
+    const user = JSON.parse(localStorage.getItem("loggedInUser"));
+    if (!user) {
+      alert("Niet ingelogd.");
+      window.location.href = "login.html";
+    }
+
+    const container = document.getElementById("atletenContainer");
+    const alleAtleten = JSON.parse(localStorage.getItem("atleten")) || [];
+    const mijnAtleten = alleAtleten.filter(a => a.owner === user.email);
+
+    function toonAtleten() {
+      if (mijnAtleten.length === 0) {
+        container.innerHTML = "<p>Je hebt nog geen atleten. Ga naar Scouten.</p>";
+        return;
+      }
+
+      const perSport = {};
+
+      mijnAtleten.forEach(atleet => {
+        if (!perSport[atleet.sport]) perSport[atleet.sport] = [];
+        perSport[atleet.sport].push(atleet);
+      });
+
+      for (const sport in perSport) {
+        const groep = perSport[sport];
+        const div = document.createElement("div");
+        div.innerHTML = `<h3>${sport}</h3><ul>` +
+          groep.map((a, i) => `
+            <li>
+              ${a.naam} (${a.leeftijd} jaar) – ${a.stats ? JSON.stringify(a.stats) : "Geen stats"}
+              <button onclick="ontslaan('${a.id}', '${sport}')">❌ Ontsla</button>
+            </li>
+          `).join("") +
+        `</ul>`;
+        container.appendChild(div);
+      }
+    }
+
+    function ontslaan(id, sport) {
+      const bevestigd = confirm(`Weet je zeker dat je deze atleet uit ${sport} wilt ontslaan?`);
+      if (!bevestigd) return;
+
+      let atleten = JSON.parse(localStorage.getItem("atleten")) || [];
+      const index = atleten.findIndex(a => a.id === id && a.owner === user.email);
+      if (index !== -1) {
+        atleten.splice(index, 1);
+        localStorage.setItem("atleten", JSON.stringify(atleten));
+        location.reload();
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", toonAtleten);
+  </script>
+</body>
+</html>
