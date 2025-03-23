@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Toernooischema Maken</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <h1>📋 Toernooischema Maken</h1>
+    <nav>
+      <ul>
+        <li><a href="admin.html">⬅️ Terug naar Admin Dashboard</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section>
+      <form id="schemaForm">
+        <label for="editieSelect">Kies editie:</label><br />
+        <select id="editieSelect" required></select><br />
+
+        <label for="onderdeelSelect">Kies sportonderdeel:</label><br />
+        <select id="onderdeelSelect" required></select><br />
+
+        <h3>Deelnemende landen:</h3>
+        <div id="landenCheckboxes">
+          <!-- Hier komen de landen -->
+        </div><br />
+
+        <button type="submit">Volgende stap ➡️</button>
+      </form>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Sport Manager Simulatie – Schema</p>
+  </footer>
+
+  <script>
+    const ADMIN_EMAIL = "wilcoboesveld12@hotmail.com";
+    const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
+    if (!loggedInUser || loggedInUser.email !== ADMIN_EMAIL) {
+      alert("Toegang geweigerd.");
+      window.location.href = "index.html";
+    }
+
+    const editieSelect = document.getElementById("editieSelect");
+    const onderdeelSelect = document.getElementById("onderdeelSelect");
+    const landenContainer = document.getElementById("landenCheckboxes");
+
+    function laadEditieDropdown() {
+      const edities = JSON.parse(localStorage.getItem("edities")) || [];
+      editieSelect.innerHTML = "";
+      edities.forEach((e, i) => {
+        const opt = document.createElement("option");
+        opt.value = e.naam;
+        opt.textContent = `${e.naam} – ${e.locatie}`;
+        editieSelect.appendChild(opt);
+      });
+    }
+
+    function laadOnderdeelDropdown() {
+      const onderdelen = JSON.parse(localStorage.getItem("sportonderdelen")) || [];
+      onderdeelSelect.innerHTML = "";
+      onderdelen.forEach((s) => {
+        const opt = document.createElement("option");
+        opt.value = `${s.sport} - ${s.geslacht} - ${s.onderdeel}`;
+        opt.textContent = opt.value;
+        onderdeelSelect.appendChild(opt);
+      });
+    }
+
+    function laadLandenCheckboxes() {
+      const users = JSON.parse(localStorage.getItem("users")) || [];
+      const landen = [...new Set(users.map(u => u.land))]; // unieke landen
+      landenContainer.innerHTML = "";
+
+      landen.forEach(land => {
+        const label = document.createElement("label");
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.name = "deelnemers";
+        input.value = land;
+        label.appendChild(input);
+        label.append(` ${land}`);
+        landenContainer.appendChild(label);
+        landenContainer.appendChild(document.createElement("br"));
+      });
+    }
+
+    document.getElementById("schemaForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const editie = editieSelect.value;
+      const onderdeel = onderdeelSelect.value;
+      const deelnemers = Array.from(document.querySelectorAll("input[name='deelnemers']:checked")).map(cb => cb.value);
+
+      if (!editie || !onderdeel || deelnemers.length === 0) {
+        alert("Selecteer een editie, onderdeel en minimaal 1 deelnemer.");
+        return;
+      }
+
+      const schemaData = {
+        editie,
+        onderdeel,
+        deelnemers,
+        rondes: []
+      };
+
+      // Tijdelijk opslaan voor volgende stap
+      localStorage.setItem("schema_temp", JSON.stringify(schemaData));
+      window.location.href = "admin_schema_rondes.html";
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+      laadEditieDropdown();
+      laadOnderdeelDropdown();
+      laadLandenCheckboxes();
+    });
+  </script>
+</body>
+</html>
