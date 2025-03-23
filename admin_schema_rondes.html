@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rondes & Tijden</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <h1>📅 Ronde-indeling voor Toernooi</h1>
+    <nav>
+      <ul>
+        <li><a href="admin_schema.html">⬅️ Terug naar Deelnemers</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section id="infoBlok">
+      <!-- Editie & Onderdeel info -->
+    </section>
+
+    <section>
+      <form id="rondeForm">
+        <label for="aantalRondes">Aantal rondes:</label><br />
+        <input type="number" id="aantalRondes" min="1" max="10" required><br /><br />
+        <button type="button" onclick="genereerRondes()">Rondes aanmaken</button>
+      </form>
+
+      <form id="rondeDetailsForm" style="display:none;">
+        <h3>Vul rondegegevens in:</h3>
+        <div id="rondesContainer"></div>
+        <br />
+        <button type="submit">Schema opslaan ✅</button>
+      </form>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Sport Manager Simulatie – Rondes & Schema</p>
+  </footer>
+
+  <script>
+    const schemaTemp = JSON.parse(localStorage.getItem("schema_temp"));
+    if (!schemaTemp) {
+      alert("Geen schema-informatie gevonden. Keer terug naar stap 1.");
+      window.location.href = "admin_schema.html";
+    }
+
+    const infoBlok = document.getElementById("infoBlok");
+    const rondesContainer = document.getElementById("rondesContainer");
+    const rondeDetailsForm = document.getElementById("rondeDetailsForm");
+
+    // Toon info
+    infoBlok.innerHTML = `
+      <p><strong>Editie:</strong> ${schemaTemp.editie}</p>
+      <p><strong>Onderdeel:</strong> ${schemaTemp.onderdeel}</p>
+      <p><strong>Deelnemers:</strong> ${schemaTemp.deelnemers.join(", ")}</p>
+    `;
+
+    function genereerRondes() {
+      const aantal = parseInt(document.getElementById("aantalRondes").value);
+      rondesContainer.innerHTML = "";
+      if (isNaN(aantal) || aantal < 1) return;
+
+      for (let i = 1; i <= aantal; i++) {
+        rondesContainer.innerHTML += `
+          <div style="margin-bottom:10px">
+            <label>Ronde ${i} naam:</label><br />
+            <input type="text" name="rondeNaam" placeholder="Bijv. Series, Halve Finale" required><br />
+            <label>Datum:</label><br />
+            <input type="date" name="rondeDatum" required><br />
+            <label>Tijd:</label><br />
+            <input type="time" name="rondeTijd" required><br />
+          </div>
+        `;
+      }
+      rondeDetailsForm.style.display = "block";
+    }
+
+    document.getElementById("rondeDetailsForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const namen = Array.from(document.getElementsByName("rondeNaam"));
+      const datums = Array.from(document.getElementsByName("rondeDatum"));
+      const tijden = Array.from(document.getElementsByName("rondeTijd"));
+
+      const rondes = [];
+      for (let i = 0; i < namen.length; i++) {
+        rondes.push({
+          naam: namen[i].value,
+          datum: datums[i].value,
+          tijd: tijden[i].value
+        });
+      }
+
+      const fullSchema = {
+        editie: schemaTemp.editie,
+        onderdeel: schemaTemp.onderdeel,
+        deelnemers: schemaTemp.deelnemers,
+        rondes: rondes
+      };
+
+      // Schema opslaan
+      const alleSchemas = JSON.parse(localStorage.getItem("toernooi_schemas")) || [];
+      alleSchemas.push(fullSchema);
+      localStorage.setItem("toernooi_schemas", JSON.stringify(alleSchemas));
+
+      localStorage.removeItem("schema_temp");
+      alert("Schema opgeslagen ✅");
+      window.location.href = "admin.html";
+    });
+  </script>
+</body>
+</html>
