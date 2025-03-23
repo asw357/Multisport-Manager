@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Deelname & Resultaten</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <h1>📜 Jouw Resultaten per Editie</h1>
+    <nav>
+      <ul>
+        <li><a href="manager.html">⬅️ Terug naar Manager Home</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section id="resultatenContainer">
+      <!-- Dynamisch gevuld -->
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Sport Manager Simulatie – Resultaten</p>
+  </footer>
+
+  <script>
+    const user = JSON.parse(localStorage.getItem("loggedInUser"));
+    if (!user) {
+      alert("Niet ingelogd.");
+      window.location.href = "login.html";
+    }
+
+    const resultContainer = document.getElementById("resultatenContainer");
+    const logs = JSON.parse(localStorage.getItem("editie_resultaten_log")) || [];
+
+    function toonResultaten() {
+      const mijnResultaten = logs.filter(entry => entry.email === user.email);
+
+      if (mijnResultaten.length === 0) {
+        resultContainer.innerHTML = "<p>Je hebt nog geen deelname aan een editie geregistreerd.</p>";
+        return;
+      }
+
+      const perEditie = {};
+
+      mijnResultaten.forEach(r => {
+        if (!perEditie[r.editie]) perEditie[r.editie] = [];
+        perEditie[r.editie].push(r);
+      });
+
+      for (const editie in perEditie) {
+        const lijst = perEditie[editie];
+        const div = document.createElement("div");
+        div.innerHTML = `<h3>${editie}</h3><ul>` +
+          lijst.map(r =>
+            `<li><strong>${r.onderdeel}</strong>: ${r.resultaat} ${r.medaille ? `– 🏅 ${r.medaille}` : ""}</li>`
+          ).join("") +
+        "</ul>";
+        resultContainer.appendChild(div);
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", toonResultaten);
+  </script>
+</body>
+</html>
