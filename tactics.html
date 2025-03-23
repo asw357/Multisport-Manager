@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Wedstrijdtactieken</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <h1>🎯 Wedstrijdtactieken</h1>
+    <nav>
+      <ul>
+        <li><a href="manager.html">⬅️ Terug naar Manager Home</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section id="tactiekContainer">
+      <!-- Dynamisch -->
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Sport Manager Simulatie – Tactieken</p>
+  </footer>
+
+  <script>
+    const user = JSON.parse(localStorage.getItem("loggedInUser"));
+    if (!user) {
+      alert("Niet ingelogd.");
+      window.location.href = "login.html";
+    }
+
+    const alleTactieken = JSON.parse(localStorage.getItem("tactieken")) || {};
+    const alleAtleten = JSON.parse(localStorage.getItem("atleten")) || [];
+    const eigenAtleten = alleAtleten.filter(a => a.owner === user.email);
+    const tactiekOpslag = JSON.parse(localStorage.getItem("user_tactieken")) || {};
+    const container = document.getElementById("tactiekContainer");
+
+    // Groepeer atleten per onderdeel
+    const onderdelen = [...new Set(eigenAtleten.map(a => a.sport))];
+
+    function toonTactieken() {
+      if (onderdelen.length === 0) {
+        container.innerHTML = "<p>Je hebt nog geen atleten om tactieken voor in te stellen.</p>";
+        return;
+      }
+
+      onderdelen.forEach(onderdeel => {
+        const opties = alleTactieken[onderdeel] || [];
+
+        const geselecteerd = tactiekOpslag[onderdeel] || "Standaard";
+        const select = document.createElement("select");
+        select.id = `select_${onderdeel}`;
+        opties.forEach(opt => {
+          const o = document.createElement("option");
+          o.value = opt.naam;
+          o.textContent = `${opt.naam} (${opt.effect})`;
+          if (opt.naam === geselecteerd) o.selected = true;
+          select.appendChild(o);
+        });
+
+        const blok = document.createElement("div");
+        blok.innerHTML = `
+          <h3>${onderdeel}</h3>
+          <p><strong>Huidige tactiek:</strong> ${geselecteerd}</p>
+        `;
+        blok.appendChild(select);
+
+        const btn = document.createElement("button");
+        btn.textContent = "Opslaan";
+        btn.onclick = () => {
+          const gekozen = document.getElementById(`select_${onderdeel}`).value;
+          tactiekOpslag[onderdeel] = gekozen;
+          localStorage.setItem("user_tactieken", JSON.stringify(tactiekOpslag));
+          alert(`Tactiek voor ${onderdeel} opgeslagen!`);
+        };
+
+        blok.appendChild(btn);
+        container.appendChild(blok);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", toonTactieken);
+  </script>
+</body>
+</html>
