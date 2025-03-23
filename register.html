@@ -37,10 +37,12 @@
     const landenLijst = JSON.parse(localStorage.getItem("landenlijst")) || [
       "Australië", "Bulgarije", "Chili", "Denemarken", "IJsland", "Duitsland", "Frankrijk", "Griekenland"
     ];
-
     const users = JSON.parse(localStorage.getItem("users")) || [];
     const mpInstellingen = JSON.parse(localStorage.getItem("mp_instellingen")) || {};
     const standaardMP = mpInstellingen["registratie"]?.waarde || 100;
+
+    const limieten = JSON.parse(localStorage.getItem("limieten")) || {};
+    const atleten = JSON.parse(localStorage.getItem("atleten")) || [];
 
     function getVolgendLand() {
       const gebruikt = users.map(u => u.land);
@@ -48,6 +50,33 @@
         if (!gebruikt.includes(land)) return land;
       }
       return "N.V.T.";
+    }
+
+    function genereerNaam(land) {
+      const basis = land.substring(0, 3).toUpperCase();
+      const random = Math.random().toString(36).substring(2, 5).toUpperCase();
+      return `${basis}-${random}`;
+    }
+
+    function genereerAtleten(email, land) {
+      for (const onderdeel in limieten) {
+        const aantal = limieten[onderdeel].start || 0;
+        for (let i = 0; i < aantal; i++) {
+          const leeftijd = Math.floor(Math.random() * 10) + 18;
+          const stats = { snelheid: Math.floor(Math.random() * 5) + 3 };
+
+          atleten.push({
+            id: Date.now() + "_" + i + "_" + onderdeel,
+            naam: genereerNaam(land),
+            leeftijd,
+            stats,
+            sport: onderdeel,
+            owner: email
+          });
+        }
+      }
+
+      localStorage.setItem("atleten", JSON.stringify(atleten));
     }
 
     document.getElementById("registerForm").addEventListener("submit", function (e) {
@@ -77,7 +106,10 @@
       localStorage.setItem("users", JSON.stringify(users));
       localStorage.setItem("loggedInUser", JSON.stringify(newUser));
 
-      alert(`Registratie succesvol! Je land is ${toegewezenLand} en je hebt ${standaardMP} MP.`);
+      // ➕ Startatleten genereren
+      genereerAtleten(email, toegewezenLand);
+
+      alert(`Registratie voltooid! Je land is ${toegewezenLand} en je start met ${standaardMP} MP.`);
       window.location.href = "manager.html";
     });
   </script>
