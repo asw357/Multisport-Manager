@@ -8,33 +8,31 @@
 </head>
 <body>
   <header>
-    <div class="topbar">
-      <h1>Welkom bij de Sport Manager Simulatie</h1>
-      <div id="userPanel" class="user-panel"></div>
-    </div>
+    <h1>🏅 Welkom bij Sport Manager Simulatie</h1>
     <nav>
-      <ul id="mainNav">
-        <li><a href="register.html">Registreren</a></li>
-        <li><a href="login.html">Inloggen</a></li>
-        <li><a href="edities.html">Edities</a></li>
-        <li><a href="news.html">Nieuws</a></li>
-        <li><a href="contact.html">Contact</a></li>
+      <ul id="navLinks">
+        <li><a href="register.html">📋 Registreren</a></li>
+        <li><a href="login.html">🔐 Inloggen</a></li>
+        <li><a href="contact.html">✉️ Contact</a></li>
       </ul>
     </nav>
   </header>
 
   <main>
     <section>
-      <h2>Over het spel</h2>
-      <p>Beheer jouw nationale team, train atleten, neem deel aan edities en leid jouw land naar sportieve glorie.</p>
-      <p><a href="rules.html">Lees hier de regels & uitleg</a></p>
+      <p>
+        Stap in de rol van manager van jouw nationale team en leid jouw land naar glorie!  
+        Stel atleten op, scout nieuw talent, pas tactieken toe en win medailles!  
+        Lees ook de <a href="regels.html">Regels & Uitleg</a> voordat je begint.
+      </p>
     </section>
 
-    <section id="news-headlines">
-      <h2>Laatste Nieuws</h2>
-      <ul id="headlines">
-        <!-- Wordt automatisch ingevuld via JavaScript -->
+    <section>
+      <h2>📰 Laatste Nieuws</h2>
+      <ul id="nieuwsHeadlines">
+        <!-- Headlines worden geladen -->
       </ul>
+      <p><a href="nieuws.html">Meer nieuws bekijken ➜</a></p>
     </section>
   </main>
 
@@ -42,38 +40,31 @@
     <p>&copy; 2025 Sport Manager Simulatie</p>
   </footer>
 
-  <script src="js/main.js"></script>
-  <script src="js/language.js"></script>
   <script>
-    const userPanel = document.getElementById("userPanel");
-    const nav = document.getElementById("mainNav");
-    const ADMIN_EMAIL = "wilcoboesveld12@hotmail.com";
-    const loggedIn = JSON.parse(localStorage.getItem("loggedInUser"));
+    const user = JSON.parse(localStorage.getItem("loggedInUser"));
+    const nav = document.getElementById("navLinks");
 
-    if (loggedIn) {
-      const land = loggedIn.land || "Onbekend";
-      const vlag = `<img src="img/flags/${land.toLowerCase()}.png" alt="${land}" style="height:20px;vertical-align:middle">`;
-      const mp = loggedIn.mp || 0;
+    if (user) {
+      nav.innerHTML = `
+        <li><a href="manager.html">👤 Managerpagina</a></li>
+        <li><a href="edities.html">📅 Edities</a></li>
+        <li><a href="logout.html">🚪 Uitloggen</a></li>
+      `;
 
-      // Voeg knop toe voor Manager
-      const managerLink = document.createElement("a");
-      managerLink.href = "manager.html";
-      managerLink.textContent = "Manager Home";
-      managerLink.style.marginRight = "15px";
-
-      const info = document.createElement("span");
-      info.innerHTML = `${vlag} ${land} – MP: ${mp}`;
-
-      userPanel.appendChild(managerLink);
-      userPanel.appendChild(info);
-
-      // Voeg Admin-knop toe als e-mail klopt
-      if (loggedIn.email === ADMIN_EMAIL) {
-        const adminBtn = document.createElement("li");
-        adminBtn.innerHTML = `<a href="admin.html">Admin</a>`;
-        nav.appendChild(adminBtn);
+      if (user.email === "wilcoboesveld12@hotmail.com") {
+        nav.innerHTML += `<li><a href="admin.html">⚙️ Admin</a></li>`;
       }
     }
+
+    const headlinesList = document.getElementById("nieuwsHeadlines");
+    const nieuws = JSON.parse(localStorage.getItem("nieuwsfeed")) || [];
+
+    const recent = nieuws.sort((a, b) => new Date(b.datum) - new Date(a.datum)).slice(0, 3);
+    recent.forEach(n => {
+      const li = document.createElement("li");
+      li.innerHTML = `<strong>[${n.categorie}]</strong> ${n.titel}`;
+      headlinesList.appendChild(li);
+    });
   </script>
 </body>
 </html>
