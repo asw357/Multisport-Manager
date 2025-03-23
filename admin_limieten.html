@@ -19,8 +19,8 @@
   <main>
     <section>
       <form id="limietForm">
-        <label for="sportNaam">Sportonderdeel:</label><br />
-        <input type="text" id="sportNaam" placeholder="Bijv. Atletiek 100m" required><br />
+        <label for="sportSelect">Kies sportonderdeel:</label><br />
+        <select id="sportSelect" required></select><br />
         <label for="limietAantal">Maximaal aantal atleten:</label><br />
         <input type="number" id="limietAantal" required><br /><br />
         <button type="submit">Instellen / Bijwerken</button>
@@ -49,6 +49,18 @@
 
     const limietForm = document.getElementById("limietForm");
     const limietList = document.getElementById("limietList");
+    const sportSelect = document.getElementById("sportSelect");
+
+    function laadSporten() {
+      const onderdelen = JSON.parse(localStorage.getItem("sportonderdelen")) || [];
+      sportSelect.innerHTML = "";
+      onderdelen.forEach((s) => {
+        const option = document.createElement("option");
+        option.value = `${s.sport} - ${s.geslacht} - ${s.onderdeel}`;
+        option.textContent = option.value;
+        sportSelect.appendChild(option);
+      });
+    }
 
     function loadLimieten() {
       const limieten = JSON.parse(localStorage.getItem("limieten")) || {};
@@ -73,7 +85,7 @@
 
     limietForm.addEventListener("submit", function (e) {
       e.preventDefault();
-      const sport = document.getElementById("sportNaam").value.trim();
+      const sport = sportSelect.value;
       const aantal = parseInt(document.getElementById("limietAantal").value);
       if (!sport || isNaN(aantal)) return;
 
@@ -84,7 +96,11 @@
       loadLimieten();
     });
 
-    document.addEventListener("DOMContentLoaded", loadLimieten);
+    document.addEventListener("DOMContentLoaded", () => {
+      laadSporten();
+      loadLimieten();
+    });
   </script>
 </body>
 </html>
+
