@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tactiekinstellingen Beheren</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <h1>🎯 Tactiekinstellingen</h1>
+    <nav>
+      <ul>
+        <li><a href="admin.html">⬅️ Terug naar Admin Dashboard</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section>
+      <form id="tacticForm">
+        <label for="tacticSport">Kies sportonderdeel:</label><br />
+        <select id="tacticSport" required></select><br />
+        <label for="tacticNaam">Tactieknaam:</label><br />
+        <input type="text" id="tacticNaam" required><br />
+        <label for="tacticEffect">Effect (tekst):</label><br />
+        <input type="text" id="tacticEffect" required><br />
+        <label for="tacticRisico">Risico op fout (%):</label><br />
+        <input type="number" id="tacticRisico" value="0"><br /><br />
+        <button type="submit">Toevoegen</button>
+      </form>
+    </section>
+
+    <section>
+      <h2>Ingevoerde Tactieken</h2>
+      <ul id="tacticList">
+        <!-- Lijst met tactieken -->
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Sport Manager Simulatie – Tactiekenbeheer</p>
+  </footer>
+
+  <script>
+    const ADMIN_EMAIL = "wilcoboesveld12@hotmail.com";
+    const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
+    if (!loggedInUser || loggedInUser.email !== ADMIN_EMAIL) {
+      alert("Toegang geweigerd.");
+      window.location.href = "index.html";
+    }
+
+    const tacticForm = document.getElementById("tacticForm");
+    const tacticList = document.getElementById("tacticList");
+    const tacticSport = document.getElementById("tacticSport");
+
+    function laadSportonderdelen() {
+      const onderdelen = JSON.parse(localStorage.getItem("sportonderdelen")) || [];
+      tacticSport.innerHTML = "";
+      onderdelen.forEach((s) => {
+        const optie = document.createElement("option");
+        optie.value = `${s.sport} - ${s.geslacht} - ${s.onderdeel}`;
+        optie.textContent = optie.value;
+        tacticSport.appendChild(optie);
+      });
+    }
+
+    function updateTacticList() {
+      const data = JSON.parse(localStorage.getItem("tactieken")) || {};
+      tacticList.innerHTML = "";
+      for (const sport in data) {
+        data[sport].forEach((t, i) => {
+          const li = document.createElement("li");
+          li.innerHTML = `
+            <strong>${sport}</strong> – ${t.naam}: ${t.effect} (Risico: ${t.risico}%)
+            <button onclick="verwijderTactiek('${sport}', ${i})" style="margin-left:10px">❌</button>
+          `;
+          tacticList.appendChild(li);
+        });
+      }
+    }
+
+    function verwijderTactiek(sport, index) {
+      const data = JSON.parse(localStorage.getItem("tactieken")) || {};
+      if (data[sport]) {
+        data[sport].splice(index, 1);
+        if (data[sport].length === 0) delete data[sport];
+        localStorage.setItem("tactieken", JSON.stringify(data));
+        updateTacticList();
+      }
+    }
+
+    tacticForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      const sport = tacticSport.value;
+      const naam = document.getElementById("tacticNaam").value.trim();
+      const effect = document.getElementById("tacticEffect").value.trim();
+      const risico = parseInt(document.getElementById("tacticRisico").value);
+
+      if (!sport || !naam || !effect || isNaN(risico)) return;
+
+      const tactieken = JSON.parse(localStorage.getItem("tactieken")) || {};
+      if (!tactieken[sport]) tactieken[sport] = [];
+      tactieken[sport].push({ naam, effect, risico });
+      localStorage.setItem("tactieken", JSON.stringify(tactieken));
+      tacticForm.reset();
+      updateTacticList();
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+      laadSportonderdelen();
+      updateTacticList();
+    });
+  </script>
+</body>
+</html>
