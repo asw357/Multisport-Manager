@@ -3,37 +3,121 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Limieten per Sportonderdeel</title>
+  <title>Limieten per Sport</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <header>
-    <h1>📏 Limieten per Sportonderdeel</h1>
+    <h1>📏 Limieten & Startatleten</h1>
     <nav>
       <ul>
-        <li><a href="admin.html">⬅️ Terug naar Admin Dashboard</a></li>
+        <li><a href="admin.html">⬅️ Terug naar Admin</a></li>
       </ul>
     </nav>
   </header>
 
   <main>
     <section>
+      <h2>Limieten per Sportonderdeel</h2>
       <form id="limietForm">
-        <label for="sportSelect">Kies sportonderdeel:</label><br />
-        <select id="sportSelect" required></select><br />
-        <label for="limietAantal">Maximaal aantal atleten:</label><br />
-        <input type="number" id="limietAantal" required><br /><br />
-        <button type="submit">Instellen / Bijwerken</button>
+        <label>Sportonderdeel:</label><br />
+        <input type="text" id="limiet_sport" required><br />
+        <label>Max aantal atleten per land:</label><br />
+        <input type="number" id="limiet_aantal" min="1" required><br /><br />
+        <button type="submit">Opslaan</button>
       </form>
+
+      <ul id="limietLijst"></ul>
     </section>
 
+    <hr />
+
     <section>
-      <h2>Ingestelde Limieten</h2>
-      <ul id="limietList">
-        <!-- Dynamisch geladen -->
-      </ul>
+      <h2>Startatleten per Sportonderdeel (bij registratie)</h2>
+      <form id="startForm">
+        <label>Sport:</label><br />
+        <input type="text" id="start_sport" required><br />
+        <label>Onderdeel:</label><br />
+        <input type="text" id="start_onderdeel" required><br />
+        <label>Geslacht:</label><br />
+        <select id="start_geslacht">
+          <option value="Mannen">Mannen</option>
+          <option value="Vrouwen">Vrouwen</option>
+          <option value="Gemengd">Gemengd</option>
+        </select><br />
+        <label>Aantal start-atleten:</label><br />
+        <input type="number" id="start_aantal" min="0" required><br /><br />
+        <button type="submit">Opslaan</button>
+      </form>
+
+      <ul id="startLijst"></ul>
     </section>
   </main>
+
+  <footer>
+    <p>&copy; 2025 Sport Manager Simulatie – Limietenbeheer</p>
+  </footer>
+
+  <script>
+    const limieten = JSON.parse(localStorage.getItem("limieten")) || {};
+    const startAtleten = JSON.parse(localStorage.getItem("start_atleten")) || [];
+
+    // LIMIETEN
+    document.getElementById("limietForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const sport = document.getElementById("limiet_sport").value.trim();
+      const aantal = parseInt(document.getElementById("limiet_aantal").value);
+      limieten[sport] = aantal;
+      localStorage.setItem("limieten", JSON.stringify(limieten));
+      toonLimieten();
+    });
+
+    function toonLimieten() {
+      const lijst = document.getElementById("limietLijst");
+      lijst.innerHTML = "";
+      for (const s in limieten) {
+        lijst.innerHTML += `<li>${s}: max ${limieten[s]} atleten</li>`;
+      }
+    }
+
+    // STARTATLETEN
+    document.getElementById("startForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const sport = document.getElementById("start_sport").value.trim();
+      const onderdeel = document.getElementById("start_onderdeel").value.trim();
+      const geslacht = document.getElementById("start_geslacht").value;
+      const aantal = parseInt(document.getElementById("start_aantal").value);
+
+      const index = startAtleten.findIndex(r =>
+        r.sport === sport && r.onderdeel === onderdeel && r.geslacht === geslacht
+      );
+
+      if (index !== -1) {
+        startAtleten[index].aantal = aantal;
+      } else {
+        startAtleten.push({ sport, onderdeel, geslacht, aantal });
+      }
+
+      localStorage.setItem("start_atleten", JSON.stringify(startAtleten));
+      toonStartAtleten();
+    });
+
+    function toonStartAtleten() {
+      const lijst = document.getElementById("startLijst");
+      lijst.innerHTML = "";
+      startAtleten.forEach(s => {
+        lijst.innerHTML += `<li>${s.sport} - ${s.onderdeel} (${s.geslacht}): ${s.aantal}</li>`;
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      toonLimieten();
+      toonStartAtleten();
+    });
+  </script>
+</body>
+</html>
+
 
   <footer>
     <p>&copy; 2025 Sport Manager Simulatie – Limietenbeheer</p>
