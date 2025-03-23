@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sportonderdelen Beheren</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <h1>🏟️ Sportonderdelenbeheer</h1>
+    <nav>
+      <ul>
+        <li><a href="admin.html">⬅️ Terug naar Admin Dashboard</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section>
+      <form id="sportForm">
+        <label for="sportNaam">Sport:</label><br />
+        <input type="text" id="sportNaam" required><br />
+        <label for="geslacht">Geslacht:</label><br />
+        <select id="geslacht" required>
+          <option value="Mannen">Mannen</option>
+          <option value="Vrouwen">Vrouwen</option>
+          <option value="Gemengd">Gemengd</option>
+        </select><br />
+        <label for="onderdeel">Onderdeel:</label><br />
+        <input type="text" id="onderdeel" required><br /><br />
+        <button type="submit">Toevoegen</button>
+      </form>
+    </section>
+
+    <section>
+      <h2>Ingevoerde Sportonderdelen</h2>
+      <ul id="sportList">
+        <!-- Dynamisch geladen -->
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Sport Manager Simulatie – Sportonderdelenbeheer</p>
+  </footer>
+
+  <script>
+    const ADMIN_EMAIL = "wilcoboesveld12@hotmail.com";
+    const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
+    if (!loggedInUser || loggedInUser.email !== ADMIN_EMAIL) {
+      alert("Toegang geweigerd.");
+      window.location.href = "index.html";
+    }
+
+    const form = document.getElementById("sportForm");
+    const list = document.getElementById("sportList");
+
+    function loadSporten() {
+      const onderdelen = JSON.parse(localStorage.getItem("sportonderdelen")) || [];
+      list.innerHTML = "";
+
+      onderdelen.forEach((s, index) => {
+        const li = document.createElement("li");
+        li.innerHTML = `
+          <strong>${s.sport}</strong> – ${s.geslacht} – ${s.onderdeel}
+          <button onclick="verwijderSport(${index})" style="margin-left:10px">❌ Verwijder</button>
+        `;
+        list.appendChild(li);
+      });
+    }
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      const sport = document.getElementById("sportNaam").value.trim();
+      const geslacht = document.getElementById("geslacht").value;
+      const onderdeel = document.getElementById("onderdeel").value.trim();
+
+      if (!sport || !onderdeel) return;
+
+      const onderdelen = JSON.parse(localStorage.getItem("sportonderdelen")) || [];
+      onderdelen.push({ sport, geslacht, onderdeel });
+      localStorage.setItem("sportonderdelen", JSON.stringify(onderdelen));
+      form.reset();
+      loadSporten();
+    });
+
+    function verwijderSport(index) {
+      const onderdelen = JSON.parse(localStorage.getItem("sportonderdelen")) || [];
+      onderdelen.splice(index, 1);
+      localStorage.setItem("sportonderdelen", JSON.stringify(onderdelen));
+      loadSporten();
+    }
+
+    document.addEventListener("DOMContentLoaded", loadSporten);
+  </script>
+</body>
+</html>
