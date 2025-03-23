@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edities & Toernooischema’s</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <h1>📅 Overzicht van Edities</h1>
+    <nav>
+      <ul>
+        <li><a href="index.html">🏠 Home</a></li>
+        <li><a href="manager.html">📊 Manager Home</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section id="editiesContainer">
+      <!-- Dynamisch gevuld -->
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Sport Manager Simulatie – Edities & Schema</p>
+  </footer>
+
+  <script>
+    function laadOverzicht() {
+      const edities = JSON.parse(localStorage.getItem("edities")) || [];
+      const schemas = JSON.parse(localStorage.getItem("toernooi_schemas")) || [];
+
+      const container = document.getElementById("editiesContainer");
+      container.innerHTML = "";
+
+      if (edities.length === 0) {
+        container.innerHTML = "<p>Er zijn nog geen edities beschikbaar.</p>";
+        return;
+      }
+
+      edities.forEach(editie => {
+        const div = document.createElement("div");
+        div.classList.add("editieBlok");
+        div.innerHTML = `
+          <h2>${editie.naam} (${editie.type})</h2>
+          <p><strong>Locatie:</strong> ${editie.locatie}</p>
+          <p><strong>Startdatum:</strong> ${editie.datum}</p>
+        `;
+
+        // Zoek schema's bij deze editie
+        const bijbehorendeSchemas = schemas.filter(s => s.editie === editie.naam);
+
+        if (bijbehorendeSchemas.length > 0) {
+          const lijst = document.createElement("ul");
+          bijbehorendeSchemas.forEach(schema => {
+            const li = document.createElement("li");
+            li.innerHTML = `
+              <details>
+                <summary><strong>${schema.onderdeel}</strong></summary>
+                <p><strong>Deelnemers:</strong> ${schema.deelnemers.join(", ")}</p>
+                <ul>
+                  ${schema.rondes.map(r =>
+                    `<li><strong>${r.naam}</strong> – ${r.dag} om ${r.tijd}</li>`
+                  ).join("")}
+                </ul>
+              </details>
+            `;
+            lijst.appendChild(li);
+          });
+          div.appendChild(lijst);
+        } else {
+          div.innerHTML += `<p><em>Geen toernooischema’s beschikbaar.</em></p>`;
+        }
+
+        container.appendChild(div);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", laadOverzicht);
+  </script>
+</body>
+</html>
