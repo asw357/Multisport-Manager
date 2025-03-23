@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profielinstellingen</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <h1>⚙️ Profielinstellingen</h1>
+    <nav>
+      <ul>
+        <li><a href="manager.html">⬅️ Terug naar Manager Home</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section>
+      <h2>Persoonlijke informatie</h2>
+      <p><strong>Gebruikersnaam:</strong> <span id="profielNaam">...</span></p>
+      <p><strong>Email:</strong> <span id="profielEmail">...</span></p>
+      <p><strong>Land:</strong> <span id="profielLand">...</span> <img id="landVlag" src="" alt="vlag" style="height:20px; margin-left:10px;"></p>
+    </section>
+
+    <section>
+      <h2>🔑 Wachtwoord wijzigen</h2>
+      <form id="wachtwoordForm">
+        <label>Huidig wachtwoord:</label><br />
+        <input type="password" id="oudWachtwoord" required><br />
+        <label>Nieuw wachtwoord:</label><br />
+        <input type="password" id="nieuwWachtwoord" required><br /><br />
+        <button type="submit">Wijzigen</button>
+      </form>
+      <p id="feedback" style="color:green;"></p>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Sport Manager Simulatie – Profiel</p>
+  </footer>
+
+  <script>
+    const user = JSON.parse(localStorage.getItem("loggedInUser"));
+    if (!user) {
+      alert("Niet ingelogd.");
+      window.location.href = "login.html";
+    }
+
+    document.getElementById("profielNaam").textContent = user.username;
+    document.getElementById("profielEmail").textContent = user.email;
+    document.getElementById("profielLand").textContent = user.land;
+    document.getElementById("landVlag").src = `https://flagcdn.com/h20/${user.land.toLowerCase().replace(" ", "-")}.png`;
+
+    document.getElementById("wachtwoordForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const oud = document.getElementById("oudWachtwoord").value;
+      const nieuw = document.getElementById("nieuwWachtwoord").value;
+
+      const users = JSON.parse(localStorage.getItem("users")) || [];
+      const index = users.findIndex(u => u.email === user.email && u.password === oud);
+      if (index === -1) {
+        document.getElementById("feedback").style.color = "red";
+        document.getElementById("feedback").textContent = "Oud wachtwoord klopt niet.";
+        return;
+      }
+
+      users[index].password = nieuw;
+      localStorage.setItem("users", JSON.stringify(users));
+
+      user.password = nieuw;
+      localStorage.setItem("loggedInUser", JSON.stringify(user));
+
+      document.getElementById("feedback").style.color = "green";
+      document.getElementById("feedback").textContent = "Wachtwoord succesvol gewijzigd!";
+      document.getElementById("wachtwoordForm").reset();
+    });
+  </script>
+</body>
+</html>
