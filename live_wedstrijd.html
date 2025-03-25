@@ -10,13 +10,15 @@
       background: #f4f4f4;
       border: 1px solid #ccc;
       padding: 10px;
-      height: 300px;
+      height: 250px;
       overflow-y: auto;
       margin-top: 10px;
+      font-family: monospace;
     }
     .highlight { font-weight: bold; color: darkgreen; }
-    .dq { color: red; }
-    .finish { font-weight: bold; color: navy; }
+    .dq { color: red; font-weight: bold; }
+    .blessure { color: orange; }
+    .emoji { margin-left: 8px; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -27,9 +29,15 @@
 
   <main>
     <section>
-      <h2 id="wedstrijdTitel">Live Wedstrijd</h2>
+      <h2 id="wedstrijdTitel">[Sportonderdeel]</h2>
       <button onclick="startSimulatie()">▶️ Start simulatie</button>
       <div id="commentaarBox"></div>
+      <div id="emojiReacties">
+        <span class="emoji" onclick="reageer('🔥')">🔥</span>
+        <span class="emoji" onclick="reageer('😱')">😱</span>
+        <span class="emoji" onclick="reageer('🥇')">🥇</span>
+        <span class="emoji" onclick="reageer('💀')">💀</span>
+      </div>
       <h3>Uitslag</h3>
       <ol id="uitslag"></ol>
     </section>
@@ -40,93 +48,78 @@
   </footer>
 
   <script>
-    const onderdelenTest = [
-      "Atletiek - Mannen - 100m",
-      "Atletiek - Mannen - 400m",
-      "Atletiek - Mannen - Hink-stap-springen",
-      "Gewichtheffen - Mannen - Eenarmig (Open)",
-      "Turnen - Mannen - Touwklimmen",
-      "Turnen - Mannen - Knotszwaaien",
-      "Schietsport - Mannen - Militair pistool 25 m",
-      "Wielersport - Baan - Mannen - 10 km",
-      "Zeilen - Mannen - 0,5 ton",
-      "Zwemmen - Mannen - 100 m vrije slag matrozen"
-    ];
-
     const deelnemers = [
-      { naam: "NED-VAL", land: "Nederland", snelheid: 8, kracht: 6, techniek: 5, uithouding: 7, leeftijd: 24, tactiek: "Snelle start" },
-      { naam: "FRA-ZEN", land: "Frankrijk", snelheid: 7, kracht: 7, techniek: 6, uithouding: 8, leeftijd: 30, tactiek: "Evenwichtig" },
-      { naam: "GER-TIM", land: "Duitsland", snelheid: 9, kracht: 8, techniek: 4, uithouding: 6, leeftijd: 27, tactiek: "Snelle start" },
-      { naam: "USA-JAX", land: "VS", snelheid: 6, kracht: 7, techniek: 8, uithouding: 9, leeftijd: 21, tactiek: "Finish focus" }
+      { naam: "NED-VAL", land: "Nederland", stats: { snelheid: 8 }, leeftijd: 24, tactiek: "Snelle start" },
+      { naam: "FRA-ZEN", land: "Frankrijk", stats: { snelheid: 7 }, leeftijd: 30, tactiek: "Evenwichtig" },
+      { naam: "GER-TIM", land: "Duitsland", stats: { snelheid: 9 }, leeftijd: 27, tactiek: "Snelle start" },
+      { naam: "USA-JAX", land: "VS", stats: { snelheid: 6 }, leeftijd: 21, tactiek: "Finish focus" }
     ];
 
-    const wedstrijdTitel = document.getElementById("wedstrijdTitel");
     const commentaarBox = document.getElementById("commentaarBox");
     const uitslagBox = document.getElementById("uitslag");
+    let wedstrijdDuur = 10; // seconden
 
-    function startSimulatie() {
-      const onderdeel = onderdelenTest[Math.floor(Math.random() * onderdelenTest.length)];
-      wedstrijdTitel.textContent = onderdeel;
-      commentaarBox.innerHTML = "<p>🏁 De wedstrijd is begonnen...</p>";
-      uitslagBox.innerHTML = "";
-
-      let scores = deelnemers.map(deelnemer => {
-        let score = 0;
-
-        // Simuleer op basis van onderdeeltype (hier voorlopig snelheid + techniek + kracht + random)
-        score += deelnemer.snelheid * 1.5 + deelnemer.kracht + deelnemer.techniek;
-
-        // Leeftijdsafbouw
-        score -= Math.max(0, deelnemer.leeftijd - 28) * 1.5;
-
-        // Tactiek effecten
-        let dq = false;
-        if (deelnemer.tactiek === "Snelle start") {
-          score += 5;
-          if (Math.random() < 0.15) {
-            dq = true;
-            score = -999;
-          }
-        } else if (deelnemer.tactiek === "Finish focus") {
-          score += 3;
-        }
-
-        // Verrassing
-        score += Math.floor(Math.random() * 8);
-
-        return { ...deelnemer, score, dq };
-      });
-
-      // Simuleer live verloop
-      let stappen = 5;
-      let stap = 0;
-
-      const interval = setInterval(() => {
-        if (stap >= stappen) {
-          clearInterval(interval);
-          toonUitslag(scores);
-          return;
-        }
-
-        const liveMoment = scores
-          .map(d => `${d.naam}: ${Math.floor(Math.random() * 100)}%`) // pseudoprogressie
-          .join("<br>");
-
-        commentaarBox.innerHTML += `<p><strong>Tussenstand ${stap + 1}:</strong><br>${liveMoment}</p>`;
-        commentaarBox.scrollTop = commentaarBox.scrollHeight;
-        stap++;
-      }, 1000);
+    function reageer(emoji) {
+      const reactie = document.createElement("p");
+      reactie.textContent = `Speler reageert met ${emoji}`;
+      reactie.style.fontStyle = "italic";
+      commentaarBox.appendChild(reactie);
     }
 
-    function toonUitslag(scores) {
-      commentaarBox.innerHTML += `<p class='finish'>🏁 De race is voorbij! Hier is de uitslag:</p>`;
-      scores.sort((a, b) => b.score - a.score);
+    function startSimulatie() {
+      commentaarBox.innerHTML = "<p>🏁 De wedstrijd is gestart...</p>";
+      uitslagBox.innerHTML = "";
 
-      scores.forEach(d => {
-        const li = document.createElement("li");
-        li.innerHTML = `${d.naam} (${d.land}) ${d.dq ? '<span class='dq'>DQ</span>' : ''}`;
-        uitslagBox.appendChild(li);
+      const prestatie = deelnemers.map(d => {
+        let score = d.stats.snelheid * 10;
+        score -= Math.max(0, d.leeftijd - 28) * 1.5;
+        let commentaar = [];
+
+        if (d.tactiek === "Snelle start") {
+          score += 4;
+          if (Math.random() < 0.12) {
+            score = -999;
+            commentaar.push(`🚨 ${d.naam} maakt een valse start! Gediskwalificeerd.`);
+          } else {
+            commentaar.push(`${d.naam} schiet bliksemsnel uit de startblokken!`);
+          }
+        } else if (d.tactiek === "Finish focus") {
+          score += 2;
+          commentaar.push(`${d.naam} bewaart zijn energie voor het eind.`);
+        } else {
+          commentaar.push(`${d.naam} kiest voor balans en controle.`);
+        }
+
+        if (Math.random() < 0.05) {
+          score -= 8;
+          commentaar.push(`🤕 ${d.naam} lijkt geblesseerd!`);
+        }
+
+        score += Math.floor(Math.random() * 5);
+
+        return { ...d, score, commentaar };
       });
+
+      let seconden = 0;
+      const interval = setInterval(() => {
+        if (seconden >= wedstrijdDuur) {
+          clearInterval(interval);
+          const ranglijst = prestatie.sort((a, b) => b.score - a.score);
+          ranglijst.forEach(d => {
+            const li = document.createElement("li");
+            li.innerHTML = `${d.naam} (${d.land}) ${d.score < 0 ? '<span class='dq'>DQ</span>' : ''}`;
+            uitslagBox.appendChild(li);
+          });
+          commentaarBox.innerHTML += `<p class='highlight'>🏁 De finish is bereikt!</p>`;
+        } else {
+          const d = prestatie[seconden % prestatie.length];
+          const regel = d.commentaar.shift() || `${d.naam} blijft gefocust.`;
+          const p = document.createElement("p");
+          p.textContent = regel;
+          commentaarBox.appendChild(p);
+        }
+        seconden++;
+      }, 1000);
     }
   </script>
 </body>
