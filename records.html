@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Multi- en Nationale Records</title>
+  <title>Records Overzicht</title>
   <link rel="stylesheet" href="css/style.css">
   <style>
     table {
@@ -13,7 +13,7 @@
     }
     th, td {
       padding: 8px;
-      text-align: left;
+      text-align: center;
       border: 1px solid #ccc;
     }
     th {
@@ -29,22 +29,20 @@
 
   <main>
     <section>
-      <h2>🌍 Multi Records (MR)</h2>
+      <h2>🏆 Multi Records (MR)</h2>
       <table>
         <thead>
-          <tr><th>Sport & Onderdeel</th><th>Tijd</th></tr>
+          <tr><th>Onderdeel</th><th>Snelste Tijd / Score</th></tr>
         </thead>
-        <tbody id="mrTabel"></tbody>
+        <tbody id="mrTable"></tbody>
       </table>
-    </section>
 
-    <section>
-      <h2>🏳️ Nationale Records (NR)</h2>
+      <h2>🇳🇱 Nationale Records (NR)</h2>
       <table>
         <thead>
-          <tr><th>Land</th><th>Sport & Onderdeel</th><th>Tijd</th></tr>
+          <tr><th>Land – Onderdeel</th><th>Snelste Tijd / Score</th></tr>
         </thead>
-        <tbody id="nrTabel"></tbody>
+        <tbody id="nrTable"></tbody>
       </table>
     </section>
   </main>
@@ -54,23 +52,21 @@
   </footer>
 
   <script>
-    const mrData = JSON.parse(localStorage.getItem("records")) || {};
-    const nrData = JSON.parse(localStorage.getItem("nationale_records")) || {};
+    const mr = JSON.parse(localStorage.getItem("records")) || {};
+    const nr = JSON.parse(localStorage.getItem("nationale_records")) || {};
 
-    const mrTabel = document.getElementById("mrTabel");
-    Object.entries(mrData).forEach(([onderdeel, tijd]) => {
+    const mrTable = document.getElementById("mrTable");
+    Object.entries(mr).forEach(([onderdeel, tijd]) => {
       const row = document.createElement("tr");
       row.innerHTML = `<td>${onderdeel}</td><td>${tijd} sec</td>`;
-      mrTabel.appendChild(row);
+      mrTable.appendChild(row);
     });
 
-    const nrTabel = document.getElementById("nrTabel");
-    Object.entries(nrData).forEach(([key, tijd]) => {
-      const [land, onderdeel] = key.split(" – ", 2);
-      const rest = key.substring(land.length + 3);
+    const nrTable = document.getElementById("nrTable");
+    Object.entries(nr).forEach(([key, tijd]) => {
       const row = document.createElement("tr");
-      row.innerHTML = `<td>${land}</td><td>${rest}</td><td>${tijd} sec</td>`;
-      nrTabel.appendChild(row);
+      row.innerHTML = `<td>${key}</td><td>${tijd} sec</td>`;
+      nrTable.appendChild(row);
     });
   </script>
 </body>
