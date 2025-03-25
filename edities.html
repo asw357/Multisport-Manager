@@ -21,6 +21,9 @@
       display: inline-block;
       margin-top: 10px;
     }
+    .editie-type {
+      margin-top: 30px;
+    }
   </style>
 </head>
 <body>
@@ -34,9 +37,16 @@
   </header>
 
   <main>
-    <section id="editiesContainer">
-      <!-- Hier komen de edities -->
+    <section class="editie-type">
+      <h2>☀️ Zomeredities</h2>
+      <div id="zomerContainer"></div>
     </section>
+
+    <section class="editie-type">
+      <h2>❄️ Winteredities</h2>
+      <div id="winterContainer"></div>
+    </section>
+
     <div id="adminActions"></div>
   </main>
 
@@ -46,29 +56,40 @@
 
   <script>
     const edities = JSON.parse(localStorage.getItem("edities")) || [];
-    const container = document.getElementById("editiesContainer");
+    const zomerDiv = document.getElementById("zomerContainer");
+    const winterDiv = document.getElementById("winterContainer");
     const adminDiv = document.getElementById("adminActions");
     const user = JSON.parse(localStorage.getItem("loggedInUser"));
 
-    if (edities.length === 0) {
-      container.innerHTML = "<p>Er zijn nog geen edities toegevoegd.</p>";
-    } else {
-      edities.forEach(e => {
-        const div = document.createElement("div");
-        div.className = "editie-card";
-        div.innerHTML = `
-          <h3>${e.naam}</h3>
-          <p><strong>Gaststad:</strong> ${e.gaststad} – <strong>Startdatum:</strong> ${e.startdatum}</p>
-          <div class="editie-buttons">
-            <a href="toernooischema.html?editie=${e.naam}">📊 Toernooischema</a>
-            <a href="live_wedstrijd.html?editie=${e.naam}">📺 Live Wedstrijden</a>
-            <a href="nieuws.html?editie=${e.naam}">📰 Nieuws</a>
-            <a href="records.html?editie=${e.naam}">📈 Records</a>
-          </div>
-        `;
-        container.appendChild(div);
-      });
+    function isWinterEditie(naam) {
+      return naam.toLowerCase().includes("winter");
     }
+
+    const vandaag = new Date();
+
+    edities.forEach(e => {
+      const start = new Date(e.startdatum);
+      const actief = (start.toDateString() === vandaag.toDateString()) ? " (🔴 Vandaag live!)" : "";
+
+      const div = document.createElement("div");
+      div.className = "editie-card";
+      div.innerHTML = `
+        <h3>${e.naam}${actief}</h3>
+        <p><strong>Gaststad:</strong> ${e.gaststad} – <strong>Startdatum:</strong> ${e.startdatum}</p>
+        <div class="editie-buttons">
+          <a href="toernooischema.html?editie=${e.naam}">📊 Toernooischema</a>
+          <a href="live_wedstrijd.html?editie=${e.naam}">📺 Live Wedstrijden</a>
+          <a href="nieuws.html?editie=${e.naam}">📰 Nieuws</a>
+          <a href="records.html?editie=${e.naam}">📈 Records</a>
+        </div>
+      `;
+
+      if (isWinterEditie(e.naam)) {
+        winterDiv.appendChild(div);
+      } else {
+        zomerDiv.appendChild(div);
+      }
+    });
 
     if (user?.email === "wilcoboesveld12@hotmail.com") {
       const knop = document.createElement("button");
