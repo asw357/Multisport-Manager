@@ -27,13 +27,12 @@
 </head>
 <body>
   <header>
-    <h1>📺 Live Wedstrijd Simulatie</h1>
+    <h1 id="wedstrijdTitel">📺 Live Wedstrijd Simulatie</h1>
     <nav><a href="edities.html">⬅️ Terug naar Edities</a></nav>
   </header>
 
   <main>
     <section>
-      <h2>Atletiek - Mannen - 100m</h2>
       <button onclick="startSimulatie()">▶️ Start simulatie</button>
       <div id="commentaarBox"></div>
       <h3>Voortgang</h3>
@@ -48,6 +47,11 @@
   </footer>
 
   <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const sportParam = urlParams.get("sport") || "Onbekend sport";
+    const onderdeelParam = urlParams.get("onderdeel") || "Onbekend onderdeel";
+    document.getElementById("wedstrijdTitel").innerText = `📺 ${sportParam} – ${onderdeelParam}`;
+
     let deelnemers = [];
     let wedstrijdLengte = 100;
     let seconden = 0;
@@ -67,23 +71,20 @@
     }
 
     function startSimulatie() {
-      deelnemers = [
-        { naam: "NED-VAL", land: "Nederland", snelheid: 8, kracht: 6, leeftijd: 24, tactiek: "Snelle start", afstand: 0, verslag: [] },
-        { naam: "FRA-ZEN", land: "Frankrijk", snelheid: 7, kracht: 7, leeftijd: 30, tactiek: "Evenwichtig", afstand: 0, verslag: [] },
-        { naam: "GER-TIM", land: "Duitsland", snelheid: 9, kracht: 5, leeftijd: 27, tactiek: "Snelle start", afstand: 0, verslag: [] },
-        { naam: "USA-JAX", land: "VS", snelheid: 6, kracht: 8, leeftijd: 21, tactiek: "Finish focus", afstand: 0, verslag: [] }
-      ];
+      const alleAtleten = JSON.parse(localStorage.getItem("atleten")) || [];
+      deelnemers = alleAtleten.filter(a => a.sport === `${sportParam} – ${onderdeelParam}`);
 
-      commentaarBox.innerHTML = "";
-      uitslagBox.innerHTML = "";
-      balkenDiv.innerHTML = "";
-      seconden = 0;
-      gefinished = [];
+      if (deelnemers.length === 0) {
+        commentaarBox.innerHTML = "<p>❌ Geen deelnemers gevonden voor deze wedstrijd.</p>";
+        return;
+      }
 
       deelnemers.forEach(d => {
+        d.afstand = 0;
+        d.verslag = [];
         d.geDQd = false;
-        let leeftijdImpact = Math.max(0, d.leeftijd - 28) * 0.5;
-        let snelheidScore = d.snelheid * 2 + d.kracht - leeftijdImpact;
+        const leeftijdImpact = Math.max(0, d.leeftijd - 28) * 0.5;
+        let snelheidScore = (d.stats?.snelheid || 5) * 2 + (d.stats?.kracht || 5) - leeftijdImpact;
 
         if (d.tactiek === "Snelle start") {
           snelheidScore += 2;
@@ -108,6 +109,12 @@
         snelheidScore += Math.random() * 2;
         d.snelheidScore = snelheidScore;
       });
+
+      seconden = 0;
+      gefinished = [];
+      commentaarBox.innerHTML = "";
+      uitslagBox.innerHTML = "";
+      balkenDiv.innerHTML = "";
 
       interval = setInterval(updateRace, 1000);
     }
@@ -154,7 +161,7 @@
 
       sorted = sorted.concat(deelnemers.filter(d => d.geDQd));
 
-      sorted.forEach((d, i) => {
+      sorted.forEach(d => {
         const li = document.createElement("li");
         li.innerHTML = `<strong>${d.naam}</strong> (${d.land})<br />` +
           (d.geDQd ? '<span class="dq">Gediskwalificeerd</span>' : `Eindtijd: ${d.finishSeconden} sec`) +
