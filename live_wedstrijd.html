@@ -2,94 +2,95 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Live Wedstrijden</title>
-  <link rel="stylesheet" href="css/style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Live Wedstrijd Simulatie</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    #commentaarBox {
+      background: #f4f4f4;
+      border: 1px solid #ccc;
+      padding: 10px;
+      height: 150px;
+      overflow-y: auto;
+      margin-top: 10px;
+    }
+    .highlight { font-weight: bold; color: darkgreen; }
+    .dq { color: red; }
+  </style>
 </head>
 <body>
   <header>
-    <h1>📺 Live Wedstrijden</h1>
-    <nav>
-      <ul>
-        <li><a href="edities.html">⬅️ Terug naar Edities</a></li>
-      </ul>
-    </nav>
+    <h1>📺 Live Wedstrijd Simulatie</h1>
+    <nav><a href="edities.html">⬅️ Terug naar Edities</a></nav>
   </header>
 
   <main>
-    <section id="wedstrijdenVandaag">
-      <h2>Wedstrijden vandaag (bijv. Dag 1)</h2>
-      <ul id="wedstrijdLijst">
-        <!-- Dynamisch gevuld -->
-      </ul>
-    </section>
-
-    <section id="liveSimulatie" style="margin-top: 20px;">
-      <!-- Simulatie result -->
+    <section>
+      <h2>Atletiek - Mannen - 100m</h2>
+      <button onclick="startSimulatie()">▶️ Start simulatie</button>
+      <div id="commentaarBox"></div>
+      <h3>Uitslag</h3>
+      <ol id="uitslag"></ol>
     </section>
   </main>
 
   <footer>
-    <p>&copy; 2025 Sport Manager Simulatie – Live Wedstrijd</p>
+    <p>&copy; 2025 Sport Manager Simulatie</p>
   </footer>
 
   <script>
-    // DEMO: Vaste data tot schema's echt actief worden
-    const wedstrijden = [
-      {
-        editie: "Zomereditie 7",
-        onderdeel: "Atletiek - Mannen - 100m",
-        dag: "Dag 1",
-        tijd: "10:00",
-        deelnemers: ["Nederland", "Frankrijk", "Duitsland", "VS"]
-      },
-      {
-        editie: "Zomereditie 7",
-        onderdeel: "Zwemmen - Vrouwen - 50m",
-        dag: "Dag 1",
-        tijd: "12:00",
-        deelnemers: ["Nederland", "Italië", "Canada"]
-      }
+    const deelnemers = [
+      { naam: "NED-VAL", land: "Nederland", snelheid: 8, leeftijd: 24, tactiek: "Snelle start" },
+      { naam: "FRA-ZEN", land: "Frankrijk", snelheid: 7, leeftijd: 30, tactiek: "Evenwichtig" },
+      { naam: "GER-TIM", land: "Duitsland", snelheid: 9, leeftijd: 27, tactiek: "Snelle start" },
+      { naam: "USA-JAX", land: "VS", snelheid: 6, leeftijd: 21, tactiek: "Finish focus" }
     ];
 
-    const lijst = document.getElementById("wedstrijdLijst");
-    const liveDiv = document.getElementById("liveSimulatie");
+    const commentaarBox = document.getElementById("commentaarBox");
+    const uitslagBox = document.getElementById("uitslag");
 
-    function toonWedstrijden() {
-      wedstrijden.forEach((w, index) => {
+    function startSimulatie() {
+      commentaarBox.innerHTML = "<p>🏁 De wedstrijd is begonnen...</p>";
+      uitslagBox.innerHTML = "";
+
+      let scores = deelnemers.map(deelnemer => {
+        let score = deelnemer.snelheid * 10;
+
+        // Leeftijdsafbouw (ouder = trager)
+        score -= Math.max(0, deelnemer.leeftijd - 28) * 2;
+
+        // Tactiek effecten
+        if (deelnemer.tactiek === "Snelle start") {
+          score += 5;
+          if (Math.random() < 0.1) {
+            commentaarBox.innerHTML += `<p class='dq'>🚨 ${deelnemer.naam} maakt een valse start en is gediskwalificeerd!</p>`;
+            score = -1000;
+          } else {
+            commentaarBox.innerHTML += `<p>${deelnemer.naam} schiet uit de startblokken! ⚡</p>`;
+          }
+        } else if (deelnemer.tactiek === "Finish focus") {
+          score += 3;
+          commentaarBox.innerHTML += `<p>${deelnemer.naam} spaart energie voor een eindsprint. 🏃‍♂️💨</p>`;
+        } else {
+          commentaarBox.innerHTML += `<p>${deelnemer.naam} kiest voor een evenwichtige race.</p>`;
+        }
+
+        // Random verrassingsfactor
+        score += Math.floor(Math.random() * 10);
+
+        return { ...deelnemer, score };
+      });
+
+      // Sorteer op hoogste score = beste prestatie
+      scores.sort((a, b) => b.score - a.score);
+
+      // Toon uitslag
+      scores.forEach((d, i) => {
         const li = document.createElement("li");
-        li.innerHTML = `
-          <strong>${w.onderdeel}</strong> – ${w.editie}<br/>
-          Tijd: ${w.tijd} | Deelnemers: ${w.deelnemers.join(", ")}<br/>
-          <button onclick="startSimulatie(${index})">▶️ Start simulatie</button>
-        `;
-        lijst.appendChild(li);
+        li.innerHTML = `${d.naam} (${d.land}) ${d.score < 0 ? '<span class="dq">DQ</span>' : ''}`;
+        uitslagBox.appendChild(li);
       });
     }
-
-    function startSimulatie(index) {
-      const wedstrijd = wedstrijden[index];
-      liveDiv.innerHTML = `<h3>Simulatie: ${wedstrijd.onderdeel}</h3><p>Even geduld...</p>`;
-
-      setTimeout(() => {
-        // Simuleer prestatie (dummy logica)
-        const uitslag = [...wedstrijd.deelnemers].sort(() => Math.random() - 0.5);
-
-        const html = uitslag.map((land, i) => {
-          const label = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `#${i+1}`;
-          return `<li>${label} – ${land}</li>`;
-        }).join("");
-
-        liveDiv.innerHTML = `
-          <p><strong>Uitslag:</strong></p>
-          <ul>${html}</ul>
-        `;
-
-        // Later: opslaan in resultaten + check op MR/NR + MP-verdeling
-      }, 2000);
-    }
-
-    document.addEventListener("DOMContentLoaded", toonWedstrijden);
   </script>
 </body>
 </html>
