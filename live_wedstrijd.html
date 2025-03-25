@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="nl">
+>
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Live Wedstrijd Simulatie</title>
   <link rel="stylesheet" href="css/style.css" />
   <style>
@@ -25,6 +26,7 @@
     }
   </style>
 </head>
+
 <body>
   <header>
     <h1>📺 Live Wedstrijd Simulatie</h1>
@@ -36,8 +38,10 @@
       <h2>Atletiek - Mannen - 100m</h2>
       <button onclick="startSimulatie()">▶️ Start simulatie</button>
       <div id="commentaarBox"></div>
+
       <h3>Voortgang</h3>
       <div id="balken"></div>
+
       <h3>Uitslag</h3>
       <ol id="uitslag"></ol>
     </section>
@@ -48,19 +52,15 @@
   </footer>
 
   <script>
-    const deelnemers = [
-      { naam: "NED-VAL", land: "Nederland", snelheid: 8, kracht: 6, leeftijd: 24, tactiek: "Snelle start", score: 0 },
-      { naam: "FRA-ZEN", land: "Frankrijk", snelheid: 7, kracht: 7, leeftijd: 30, tactiek: "Evenwichtig", score: 0 },
-      { naam: "GER-TIM", land: "Duitsland", snelheid: 9, kracht: 5, leeftijd: 27, tactiek: "Snelle start", score: 0 },
-      { naam: "USA-JAX", land: "VS", snelheid: 6, kracht: 8, leeftijd: 21, tactiek: "Finish focus", score: 0 }
-    ];
+    let deelnemers = [];
+    let wedstrijdLengte = 100;
+    let seconden = 0;
+    let interval;
+    let gefinished = [];
 
-    const wedstrijdLengte = 100; // meters
-    const totaleSeconden = 10; // duur simulatie (real-time gevoel)
     const commentaarBox = document.getElementById("commentaarBox");
     const uitslagBox = document.getElementById("uitslag");
     const balkenDiv = document.getElementById("balken");
-    let interval, seconden = 0, gefinished = [];
 
     function log(text, type = "") {
       const p = document.createElement("p");
@@ -71,26 +71,30 @@
     }
 
     function startSimulatie() {
+      deelnemers = [
+        { naam: "NED-VAL", land: "Nederland", snelheid: 8, kracht: 6, leeftijd: 24, tactiek: "Snelle start", afstand: 0 },
+        { naam: "FRA-ZEN", land: "Frankrijk", snelheid: 7, kracht: 7, leeftijd: 30, tactiek: "Evenwichtig", afstand: 0 },
+        { naam: "GER-TIM", land: "Duitsland", snelheid: 9, kracht: 5, leeftijd: 27, tactiek: "Snelle start", afstand: 0 },
+        { naam: "USA-JAX", land: "VS", snelheid: 6, kracht: 8, leeftijd: 21, tactiek: "Finish focus", afstand: 0 }
+      ];
+
       commentaarBox.innerHTML = "";
       uitslagBox.innerHTML = "";
       balkenDiv.innerHTML = "";
       seconden = 0;
       gefinished = [];
 
-      // Init score
       deelnemers.forEach(d => {
-        d.afstand = 0;
         d.geDQd = false;
 
-        // Leeftijdsimpact
         let leeftijdImpact = Math.max(0, d.leeftijd - 28) * 0.5;
         let snelheidScore = d.snelheid * 2 + d.kracht - leeftijdImpact;
 
-        // Tactiek effecten
         if (d.tactiek === "Snelle start") {
           snelheidScore += 2;
           if (Math.random() < 0.1) {
             d.geDQd = true;
+            d.afstand = -1;
             log(`🚨 ${d.naam} maakt een valse start! Gediskwalificeerd.`, "dq");
           } else {
             log(`${d.naam} kiest voor een explosieve start! ⚡`, "highlight");
@@ -102,7 +106,6 @@
           log(`${d.naam} kiest voor een gebalanceerde aanpak.`);
         }
 
-        // Random verrassing
         snelheidScore += Math.random() * 2;
         d.snelheidScore = snelheidScore;
       });
@@ -117,11 +120,9 @@
       deelnemers.forEach(d => {
         if (d.geDQd || gefinished.includes(d.naam)) return;
 
-        // Simuleer voortgang op basis van snelheidScore
         let boost = Math.random() * 3;
         d.afstand += (d.snelheidScore + boost);
 
-        // Progress bar visualisatie
         const breedte = Math.min(100, Math.floor(d.afstand));
         let balk = "|" + "#".repeat(breedte / 2) + " ".repeat(50 - breedte / 2) + "|";
         const div = document.createElement("div");
@@ -135,71 +136,28 @@
         }
       });
 
-      if (gefinished.length + deelnemers.filter(d => d.geDQd).length === deelnemers.length) {
+      const totaal = deelnemers.length;
+      const klaar = gefinished.length + deelnemers.filter(d => d.geDQd).length;
+
+      if (klaar >= totaal) {
         clearInterval(interval);
         toonUitslag();
       }
     }
 
     function toonUitslag() {
-      let sorted = [...deelnemers].filter(d => !d.geDQd).sort((a, b) => b.afstand - a.afstand);
+      let sorted = [...deelnemers]
+        .filter(d => !d.geDQd)
+        .sort((a, b) => b.afstand - a.afstand);
+
       sorted = sorted.concat(deelnemers.filter(d => d.geDQd));
-      sorted.forEach(d => {
+
+      sorted.forEach((d, i) => {
         const li = document.createElement("li");
-        li.innerHTML = `${d.naam} (${d.land}) ${d.geDQd ? '<span class='dq'>DQ</span>' : ''}`;
+        li.innerHTML = `${d.naam} (${d.land}) ${d.geDQd ? '<span class="dq">DQ</span>' : ''}`;
         uitslagBox.appendChild(li);
       });
     }
   </script>
-  <!DOCTYPE html>
-<html lang="nl">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Live Wedstrijd Simulatie</title>
-  <link rel="stylesheet" href="css/style.css" />
-  <style>
-    #commentaarBox {
-      background: #f9f9f9;
-      border: 1px solid #ccc;
-      padding: 10px;
-      height: 250px;
-      overflow-y: auto;
-      margin-top: 10px;
-    }
-    .highlight { font-weight: bold; color: green; }
-    .dq { color: red; font-weight: bold; }
-    .progress-bar {
-      font-family: monospace;
-      white-space: pre;
-      background: #eee;
-      margin: 3px 0;
-      padding: 2px;
-    }
-  </style>
-</head>
-<body>
-  <header>
-    <h1>📺 Live Wedstrijd Simulatie</h1>
-    <nav><a href="edities.html">⬅️ Terug naar Edities</a></nav>
-  </header>
-
-  <main>
-    <section>
-      <h2>Atletiek - Mannen - 100m</h2>
-      <button onclick="startSimulatie()">▶️ Start simulatie</button>
-      <div id="commentaarBox"></div>
-      <h3>Voortgang</h3>
-      <div id="balken"></div>
-      <h3>Uitslag</h3>
-      <ol id="uitslag"></ol>
-    </section>
-  </main>
-
-  <footer>
-    <p>&copy; 2025 Sport Manager Simulatie</p>
-  </footer>
-
-  <script>
 </body>
 </html>
