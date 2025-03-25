@@ -1,84 +1,81 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Edities & Toernooischema’s</title>
+  <title>Edities</title>
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    .editie-card {
+      border: 1px solid #ccc;
+      padding: 15px;
+      margin: 10px 0;
+      background: #f9f9f9;
+      border-radius: 8px;
+    }
+    .editie-card h3 {
+      margin-top: 0;
+    }
+    .editie-buttons a {
+      margin-right: 10px;
+      display: inline-block;
+      margin-top: 10px;
+    }
+  </style>
 </head>
 <body>
   <header>
     <h1>📅 Overzicht van Edities</h1>
     <nav>
       <ul>
-        <li><a href="index.html">🏠 Home</a></li>
-        <li><a href="manager.html">📊 Manager Home</a></li>
+        <li><a href="index.html">⬅️ Terug naar Home</a></li>
       </ul>
     </nav>
   </header>
 
   <main>
     <section id="editiesContainer">
-      <!-- Dynamisch gevuld -->
+      <!-- Hier komen de edities -->
     </section>
+    <div id="adminActions"></div>
   </main>
 
   <footer>
-    <p>&copy; 2025 Sport Manager Simulatie – Edities & Schema</p>
+    <p>&copy; 2025 Sport Manager Simulatie – Edities</p>
   </footer>
 
   <script>
-    function laadOverzicht() {
-      const edities = JSON.parse(localStorage.getItem("edities")) || [];
-      const schemas = JSON.parse(localStorage.getItem("toernooi_schemas")) || [];
+    const edities = JSON.parse(localStorage.getItem("edities")) || [];
+    const container = document.getElementById("editiesContainer");
+    const adminDiv = document.getElementById("adminActions");
+    const user = JSON.parse(localStorage.getItem("loggedInUser"));
 
-      const container = document.getElementById("editiesContainer");
-      container.innerHTML = "";
-
-      if (edities.length === 0) {
-        container.innerHTML = "<p>Er zijn nog geen edities beschikbaar.</p>";
-        return;
-      }
-
-      edities.forEach(editie => {
+    if (edities.length === 0) {
+      container.innerHTML = "<p>Er zijn nog geen edities toegevoegd.</p>";
+    } else {
+      edities.forEach(e => {
         const div = document.createElement("div");
-        div.classList.add("editieBlok");
+        div.className = "editie-card";
         div.innerHTML = `
-          <h2>${editie.naam} (${editie.type})</h2>
-          <p><strong>Locatie:</strong> ${editie.locatie}</p>
-          <p><strong>Startdatum:</strong> ${editie.datum}</p>
+          <h3>${e.naam}</h3>
+          <p><strong>Gaststad:</strong> ${e.gaststad} – <strong>Startdatum:</strong> ${e.startdatum}</p>
+          <div class="editie-buttons">
+            <a href="toernooischema.html?editie=${e.naam}">📊 Toernooischema</a>
+            <a href="live_wedstrijd.html?editie=${e.naam}">📺 Live Wedstrijden</a>
+            <a href="nieuws.html?editie=${e.naam}">📰 Nieuws</a>
+            <a href="records.html?editie=${e.naam}">📈 Records</a>
+          </div>
         `;
-
-        // Zoek schema's bij deze editie
-        const bijbehorendeSchemas = schemas.filter(s => s.editie === editie.naam);
-
-        if (bijbehorendeSchemas.length > 0) {
-          const lijst = document.createElement("ul");
-          bijbehorendeSchemas.forEach(schema => {
-            const li = document.createElement("li");
-            li.innerHTML = `
-              <details>
-                <summary><strong>${schema.onderdeel}</strong></summary>
-                <p><strong>Deelnemers:</strong> ${schema.deelnemers.join(", ")}</p>
-                <ul>
-                  ${schema.rondes.map(r =>
-                    `<li><strong>${r.naam}</strong> – ${r.dag} om ${r.tijd}</li>`
-                  ).join("")}
-                </ul>
-              </details>
-            `;
-            lijst.appendChild(li);
-          });
-          div.appendChild(lijst);
-        } else {
-          div.innerHTML += `<p><em>Geen toernooischema’s beschikbaar.</em></p>`;
-        }
-
         container.appendChild(div);
       });
     }
 
-    document.addEventListener("DOMContentLoaded", laadOverzicht);
+    if (user?.email === "wilcoboesveld12@hotmail.com") {
+      const knop = document.createElement("button");
+      knop.textContent = "➕ Nieuwe editie toevoegen";
+      knop.onclick = () => window.location.href = "admin_edities.html";
+      adminDiv.appendChild(knop);
+    }
   </script>
 </body>
 </html>
