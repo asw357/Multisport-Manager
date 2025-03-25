@@ -7,18 +7,22 @@
   <link rel="stylesheet" href="css/style.css" />
   <style>
     #commentaarBox {
-      background: #f4f4f4;
+      background: #f9f9f9;
       border: 1px solid #ccc;
       padding: 10px;
       height: 250px;
       overflow-y: auto;
       margin-top: 10px;
-      font-family: monospace;
     }
-    .highlight { font-weight: bold; color: darkgreen; }
+    .highlight { font-weight: bold; color: green; }
     .dq { color: red; font-weight: bold; }
-    .blessure { color: orange; }
-    .emoji { margin-left: 8px; cursor: pointer; }
+    .progress-bar {
+      font-family: monospace;
+      white-space: pre;
+      background: #eee;
+      margin: 3px 0;
+      padding: 2px;
+    }
   </style>
 </head>
 <body>
@@ -29,15 +33,11 @@
 
   <main>
     <section>
-      <h2 id="wedstrijdTitel">[Sportonderdeel]</h2>
+      <h2>Atletiek - Mannen - 100m</h2>
       <button onclick="startSimulatie()">▶️ Start simulatie</button>
       <div id="commentaarBox"></div>
-      <div id="emojiReacties">
-        <span class="emoji" onclick="reageer('🔥')">🔥</span>
-        <span class="emoji" onclick="reageer('😱')">😱</span>
-        <span class="emoji" onclick="reageer('🥇')">🥇</span>
-        <span class="emoji" onclick="reageer('💀')">💀</span>
-      </div>
+      <h3>Voortgang</h3>
+      <div id="balken"></div>
       <h3>Uitslag</h3>
       <ol id="uitslag"></ol>
     </section>
@@ -49,77 +49,106 @@
 
   <script>
     const deelnemers = [
-      { naam: "NED-VAL", land: "Nederland", stats: { snelheid: 8 }, leeftijd: 24, tactiek: "Snelle start" },
-      { naam: "FRA-ZEN", land: "Frankrijk", stats: { snelheid: 7 }, leeftijd: 30, tactiek: "Evenwichtig" },
-      { naam: "GER-TIM", land: "Duitsland", stats: { snelheid: 9 }, leeftijd: 27, tactiek: "Snelle start" },
-      { naam: "USA-JAX", land: "VS", stats: { snelheid: 6 }, leeftijd: 21, tactiek: "Finish focus" }
+      { naam: "NED-VAL", land: "Nederland", snelheid: 8, kracht: 6, leeftijd: 24, tactiek: "Snelle start", score: 0 },
+      { naam: "FRA-ZEN", land: "Frankrijk", snelheid: 7, kracht: 7, leeftijd: 30, tactiek: "Evenwichtig", score: 0 },
+      { naam: "GER-TIM", land: "Duitsland", snelheid: 9, kracht: 5, leeftijd: 27, tactiek: "Snelle start", score: 0 },
+      { naam: "USA-JAX", land: "VS", snelheid: 6, kracht: 8, leeftijd: 21, tactiek: "Finish focus", score: 0 }
     ];
 
+    const wedstrijdLengte = 100; // meters
+    const totaleSeconden = 10; // duur simulatie (real-time gevoel)
     const commentaarBox = document.getElementById("commentaarBox");
     const uitslagBox = document.getElementById("uitslag");
-    let wedstrijdDuur = 10; // seconden
+    const balkenDiv = document.getElementById("balken");
+    let interval, seconden = 0, gefinished = [];
 
-    function reageer(emoji) {
-      const reactie = document.createElement("p");
-      reactie.textContent = `Speler reageert met ${emoji}`;
-      reactie.style.fontStyle = "italic";
-      commentaarBox.appendChild(reactie);
+    function log(text, type = "") {
+      const p = document.createElement("p");
+      p.innerHTML = text;
+      if (type) p.classList.add(type);
+      commentaarBox.appendChild(p);
+      commentaarBox.scrollTop = commentaarBox.scrollHeight;
     }
 
     function startSimulatie() {
-      commentaarBox.innerHTML = "<p>🏁 De wedstrijd is gestart...</p>";
+      commentaarBox.innerHTML = "";
       uitslagBox.innerHTML = "";
+      balkenDiv.innerHTML = "";
+      seconden = 0;
+      gefinished = [];
 
-      const prestatie = deelnemers.map(d => {
-        let score = d.stats.snelheid * 10;
-        score -= Math.max(0, d.leeftijd - 28) * 1.5;
-        let commentaar = [];
+      // Init score
+      deelnemers.forEach(d => {
+        d.afstand = 0;
+        d.geDQd = false;
 
+        // Leeftijdsimpact
+        let leeftijdImpact = Math.max(0, d.leeftijd - 28) * 0.5;
+        let snelheidScore = d.snelheid * 2 + d.kracht - leeftijdImpact;
+
+        // Tactiek effecten
         if (d.tactiek === "Snelle start") {
-          score += 4;
-          if (Math.random() < 0.12) {
-            score = -999;
-            commentaar.push(`🚨 ${d.naam} maakt een valse start! Gediskwalificeerd.`);
+          snelheidScore += 2;
+          if (Math.random() < 0.1) {
+            d.geDQd = true;
+            log(`🚨 ${d.naam} maakt een valse start! Gediskwalificeerd.`, "dq");
           } else {
-            commentaar.push(`${d.naam} schiet bliksemsnel uit de startblokken!`);
+            log(`${d.naam} kiest voor een explosieve start! ⚡`, "highlight");
           }
         } else if (d.tactiek === "Finish focus") {
-          score += 2;
-          commentaar.push(`${d.naam} bewaart zijn energie voor het eind.`);
+          snelheidScore += 1;
+          log(`${d.naam} bewaart energie voor een eindsprint. 🏃‍♂️💨`);
         } else {
-          commentaar.push(`${d.naam} kiest voor balans en controle.`);
+          log(`${d.naam} kiest voor een gebalanceerde aanpak.`);
         }
 
-        if (Math.random() < 0.05) {
-          score -= 8;
-          commentaar.push(`🤕 ${d.naam} lijkt geblesseerd!`);
-        }
-
-        score += Math.floor(Math.random() * 5);
-
-        return { ...d, score, commentaar };
+        // Random verrassing
+        snelheidScore += Math.random() * 2;
+        d.snelheidScore = snelheidScore;
       });
 
-      let seconden = 0;
-      const interval = setInterval(() => {
-        if (seconden >= wedstrijdDuur) {
-          clearInterval(interval);
-          const ranglijst = prestatie.sort((a, b) => b.score - a.score);
-          ranglijst.forEach(d => {
-            const li = document.createElement("li");
-            li.innerHTML = `${d.naam} (${d.land}) ${d.score < 0 ? '<span class='dq'>DQ</span>' : ''}`;
-            uitslagBox.appendChild(li);
-          });
-          commentaarBox.innerHTML += `<p class='highlight'>🏁 De finish is bereikt!</p>`;
-        } else {
-          const d = prestatie[seconden % prestatie.length];
-          const regel = d.commentaar.shift() || `${d.naam} blijft gefocust.`;
-          const p = document.createElement("p");
-          p.textContent = regel;
-          commentaarBox.appendChild(p);
+      interval = setInterval(updateRace, 1000);
+    }
+
+    function updateRace() {
+      seconden++;
+      balkenDiv.innerHTML = "";
+
+      deelnemers.forEach(d => {
+        if (d.geDQd || gefinished.includes(d.naam)) return;
+
+        // Simuleer voortgang op basis van snelheidScore
+        let boost = Math.random() * 3;
+        d.afstand += (d.snelheidScore + boost);
+
+        // Progress bar visualisatie
+        const breedte = Math.min(100, Math.floor(d.afstand));
+        let balk = "|" + "#".repeat(breedte / 2) + " ".repeat(50 - breedte / 2) + "|";
+        const div = document.createElement("div");
+        div.className = "progress-bar";
+        div.textContent = `${d.naam.padEnd(10)} ${balk} ${Math.floor(d.afstand)}m`;
+        balkenDiv.appendChild(div);
+
+        if (d.afstand >= wedstrijdLengte) {
+          gefinished.push(d.naam);
+          log(`✅ ${d.naam} finisht op ${seconden} seconden!`, "highlight");
         }
-        seconden++;
-      }, 1000);
+      });
+
+      if (gefinished.length + deelnemers.filter(d => d.geDQd).length === deelnemers.length) {
+        clearInterval(interval);
+        toonUitslag();
+      }
+    }
+
+    function toonUitslag() {
+      let sorted = [...deelnemers].filter(d => !d.geDQd).sort((a, b) => b.afstand - a.afstand);
+      sorted = sorted.concat(deelnemers.filter(d => d.geDQd));
+      sorted.forEach(d => {
+        const li = document.createElement("li");
+        li.innerHTML = `${d.naam} (${d.land}) ${d.geDQd ? '<span class='dq'>DQ</span>' : ''}`;
+        uitslagBox.appendChild(li);
+      });
     }
   </script>
 </body>
