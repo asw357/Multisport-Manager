@@ -151,6 +151,7 @@
       if (klaar >= totaal) {
         clearInterval(interval);
         toonUitslag();
+        verwerkResultaten();
       }
     }
 
@@ -161,13 +162,63 @@
 
       sorted = sorted.concat(deelnemers.filter(d => d.geDQd));
 
-      sorted.forEach(d => {
+      sorted.forEach((d, i) => {
         const li = document.createElement("li");
         li.innerHTML = `<strong>${d.naam}</strong> (${d.land})<br />` +
           (d.geDQd ? '<span class="dq">Gediskwalificeerd</span>' : `Eindtijd: ${d.finishSeconden} sec`) +
           `<br /><em>Verslag:</em> <ul>` + d.verslag.map(v => `<li>${v}</li>`).join("") + "</ul>";
         uitslagBox.appendChild(li);
       });
+    }
+
+    function verwerkResultaten() {
+      const mpInstellingen = JSON.parse(localStorage.getItem("mp_instellingen")) || {};
+      const users = JSON.parse(localStorage.getItem("users")) || [];
+      const records = JSON.parse(localStorage.getItem("records")) || {};
+      const nr = JSON.parse(localStorage.getItem("nationale_records")) || {};
+      const spiegel = JSON.parse(localStorage.getItem("medaillespiegel")) || {};
+
+      const uitslag = deelnemers.filter(d => !d.geDQd).sort((a, b) => a.finishSeconden - b.finishSeconden);
+      uitslag.forEach((d, index) => {
+        const user = users.find(u => u.email === d.owner);
+        if (!user) return;
+
+        // MP op basis van plaats
+        const pos = index + 1;
+        let mp = 0;
+        if (pos === 1) mp = mpInstellingen.goud?.waarde || 60;
+        else if (pos === 2) mp = mpInstellingen.zilver?.waarde || 45;
+        else if (pos === 3) mp = mpInstellingen.brons?.waarde || 30;
+        else if (pos === 4) mp = mpInstellingen.plaats4?.waarde || 20;
+        else if (pos === 5) mp = mpInstellingen.plaats5?.waarde || 10;
+        else if (pos <= 8) mp = mpInstellingen.top8?.waarde || 5;
+
+        user.mp = (user.mp || 0) + mp;
+
+        // Nationaal record check
+        const landKey = `${d.land} – ${sportParam} – ${onderdeelParam}`;
+        if (!nr[landKey] || d.finishSeconden < nr[landKey]) {
+          nr[landKey] = d.finishSeconden;
+        }
+
+        // MR check
+        const mrKey = `${sportParam} – ${onderdeelParam}`;
+        if (!records[mrKey] || d.finishSeconden < records[mrKey]) {
+          records[mrKey] = d.finishSeconden;
+        }
+
+        // Medaillespiegel
+        const medalKey = d.land;
+        if (!spiegel[medalKey]) spiegel[medalKey] = { goud: 0, zilver: 0, brons: 0 };
+        if (pos === 1) spiegel[medalKey].goud++;
+        else if (pos === 2) spiegel[medalKey].zilver++;
+        else if (pos === 3) spiegel[medalKey].brons++;
+      });
+
+      localStorage.setItem("users", JSON.stringify(users));
+      localStorage.setItem("nationale_records", JSON.stringify(nr));
+      localStorage.setItem("records", JSON.stringify(records));
+      localStorage.setItem("medaillespiegel", JSON.stringify(spiegel));
     }
   </script>
 </body>
