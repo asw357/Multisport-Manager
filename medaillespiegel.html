@@ -1,18 +1,31 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Medaillespiegel</title>
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      padding: 8px;
+      text-align: center;
+      border: 1px solid #ccc;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+  </style>
 </head>
 <body>
   <header>
-    <h1>🥇 All-Time Medaillespiegel</h1>
+    <h1>🥇 Live Medaillespiegel</h1>
     <nav>
-      <ul>
-        <li><a href="edities.html">⬅️ Terug naar Edities</a></li>
-      </ul>
+      <a href="index.html">⬅️ Terug naar Home</a>
     </nav>
   </header>
 
@@ -20,16 +33,15 @@
     <table>
       <thead>
         <tr>
-          <th>🇺🇳 Land</th>
+          <th>#</th>
+          <th>Land</th>
           <th>🥇 Goud</th>
           <th>🥈 Zilver</th>
           <th>🥉 Brons</th>
-          <th>🏅 Totaal</th>
+          <th>Totaal</th>
         </tr>
       </thead>
-      <tbody id="medalTableBody">
-        <!-- Medailles worden hier geladen -->
-      </tbody>
+      <tbody id="spiegelTabel"></tbody>
     </table>
   </main>
 
@@ -38,43 +50,31 @@
   </footer>
 
   <script>
-    const medailles = JSON.parse(localStorage.getItem("medaillespiegel")) || {};
+    const spiegel = JSON.parse(localStorage.getItem("medaillespiegel")) || {};
+    const rows = Object.entries(spiegel).map(([land, medailles]) => {
+      const totaal = (medailles.goud || 0) + (medailles.zilver || 0) + (medailles.brons || 0);
+      return { land, ...medailles, totaal };
+    });
 
-    function maakTabel() {
-      const lijst = [];
+    rows.sort((a, b) => {
+      if (b.goud !== a.goud) return b.goud - a.goud;
+      if (b.zilver !== a.zilver) return b.zilver - a.zilver;
+      return b.brons - a.brons;
+    });
 
-      for (const land in medailles) {
-        const entry = medailles[land];
-        lijst.push({
-          land,
-          goud: entry.goud || 0,
-          zilver: entry.zilver || 0,
-          brons: entry.brons || 0,
-          totaal: (entry.goud || 0) + (entry.zilver || 0) + (entry.brons || 0)
-        });
-      }
-
-      lijst.sort((a, b) => 
-        b.goud - a.goud || b.zilver - a.zilver || b.brons - a.brons
-      );
-
-      const tbody = document.getElementById("medalTableBody");
-      tbody.innerHTML = "";
-
-      lijst.forEach(item => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${item.land}</td>
-          <td>${item.goud}</td>
-          <td>${item.zilver}</td>
-          <td>${item.brons}</td>
-          <td>${item.totaal}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    document.addEventListener("DOMContentLoaded", maakTabel);
+    const tbody = document.getElementById("spiegelTabel");
+    rows.forEach((row, index) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${index + 1}</td>
+        <td>${row.land}</td>
+        <td>${row.goud || 0}</td>
+        <td>${row.zilver || 0}</td>
+        <td>${row.brons || 0}</td>
+        <td>${row.totaal}</td>
+      `;
+      tbody.appendChild(tr);
+    });
   </script>
 </body>
 </html>
