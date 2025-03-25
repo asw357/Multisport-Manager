@@ -29,10 +29,13 @@
 
     <section>
       <h2>📰 Laatste Nieuws</h2>
-      <ul id="nieuwsHeadlines">
-        <!-- Headlines worden geladen -->
-      </ul>
+      <ul id="nieuwsHeadlines"></ul>
       <p><a href="nieuws.html">Meer nieuws bekijken ➜</a></p>
+    </section>
+
+    <section>
+      <h2>⏰ Volgende Live Wedstrijd</h2>
+      <div id="volgendeWedstrijd"></div>
     </section>
   </main>
 
@@ -58,13 +61,32 @@
 
     const headlinesList = document.getElementById("nieuwsHeadlines");
     const nieuws = JSON.parse(localStorage.getItem("nieuwsfeed")) || [];
-
     const recent = nieuws.sort((a, b) => new Date(b.datum) - new Date(a.datum)).slice(0, 3);
     recent.forEach(n => {
       const li = document.createElement("li");
       li.innerHTML = `<strong>[${n.categorie}]</strong> ${n.titel}`;
       headlinesList.appendChild(li);
     });
+
+    // Volgende live wedstrijd tonen
+    const schema = JSON.parse(localStorage.getItem("wedstrijdschema")) || [];
+    const vandaag = new Date();
+    const vandaagStr = vandaag.toISOString().split("T")[0];
+    const nu = vandaag.getHours() + ":" + String(vandaag.getMinutes()).padStart(2, '0');
+    const vandaagWedstrijden = schema.filter(w => w.datum === vandaagStr);
+    const nogTeSpelen = vandaagWedstrijden.filter(w => w.tijd >= nu);
+    const volgende = nogTeSpelen.sort((a, b) => a.tijd.localeCompare(b.tijd))[0];
+
+    const container = document.getElementById("volgendeWedstrijd");
+    if (volgende) {
+      container.innerHTML = `
+        <p><strong>${volgende.sport} – ${volgende.onderdeel}</strong><br>
+        Tijd: ${volgende.tijd} | Dag ${volgende.dag}</p>
+        <a href="live_wedstrijd.html?sport=${encodeURIComponent(volgende.sport)}&onderdeel=${encodeURIComponent(volgende.onderdeel)}">▶️ Volg live</a>
+      `;
+    } else {
+      container.innerHTML = `<p>Er zijn vandaag geen geplande live wedstrijden meer.</p>`;
+    }
   </script>
 </body>
 </html>
