@@ -1,34 +1,51 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Records & Statistieken</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multi- en Nationale Records</title>
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      padding: 8px;
+      text-align: left;
+      border: 1px solid #ccc;
+    }
+    th {
+      background-color: #f0f0f0;
+    }
+  </style>
 </head>
 <body>
   <header>
-    <h1>📈 Records & Statistieken</h1>
-    <nav>
-      <ul>
-        <li><a href="edities.html">⬅️ Terug naar Edities</a></li>
-      </ul>
-    </nav>
+    <h1>📈 Records Overzicht</h1>
+    <nav><a href="index.html">⬅️ Terug naar Home</a></nav>
   </header>
 
   <main>
     <section>
       <h2>🌍 Multi Records (MR)</h2>
-      <ul id="mrList">
-        <!-- MR wordt hier geladen -->
-      </ul>
+      <table>
+        <thead>
+          <tr><th>Sport & Onderdeel</th><th>Tijd</th></tr>
+        </thead>
+        <tbody id="mrTabel"></tbody>
+      </table>
     </section>
 
     <section>
-      <h2>🏳️ Nationaal Records (NR)</h2>
-      <ul id="nrList">
-        <!-- NR wordt hier geladen -->
-      </ul>
+      <h2>🏳️ Nationale Records (NR)</h2>
+      <table>
+        <thead>
+          <tr><th>Land</th><th>Sport & Onderdeel</th><th>Tijd</th></tr>
+        </thead>
+        <tbody id="nrTabel"></tbody>
+      </table>
     </section>
   </main>
 
@@ -37,41 +54,24 @@
   </footer>
 
   <script>
-    const mrData = JSON.parse(localStorage.getItem("multi_records")) || [];
-    const nrData = JSON.parse(localStorage.getItem("nationaal_records")) || [];
+    const mrData = JSON.parse(localStorage.getItem("records")) || {};
+    const nrData = JSON.parse(localStorage.getItem("nationale_records")) || {};
 
-    const mrList = document.getElementById("mrList");
-    const nrList = document.getElementById("nrList");
+    const mrTabel = document.getElementById("mrTabel");
+    Object.entries(mrData).forEach(([onderdeel, tijd]) => {
+      const row = document.createElement("tr");
+      row.innerHTML = `<td>${onderdeel}</td><td>${tijd} sec</td>`;
+      mrTabel.appendChild(row);
+    });
 
-    function laadRecords() {
-      if (mrData.length === 0) {
-        mrList.innerHTML = "<li>Nog geen MR's geregistreerd.</li>";
-      } else {
-        mrList.innerHTML = "";
-        mrData.forEach(r => {
-          mrList.innerHTML += `
-            <li>
-              <strong>${r.onderdeel}</strong> – ${r.waarde} (${r.naam}, ${r.land}) tijdens ${r.editie}
-            </li>
-          `;
-        });
-      }
-
-      if (nrData.length === 0) {
-        nrList.innerHTML = "<li>Nog geen NR's geregistreerd.</li>";
-      } else {
-        nrList.innerHTML = "";
-        nrData.forEach(r => {
-          nrList.innerHTML += `
-            <li>
-              <strong>${r.onderdeel}</strong> (${r.land}) – ${r.waarde} (${r.naam}) tijdens ${r.editie}
-            </li>
-          `;
-        });
-      }
-    }
-
-    document.addEventListener("DOMContentLoaded", laadRecords);
+    const nrTabel = document.getElementById("nrTabel");
+    Object.entries(nrData).forEach(([key, tijd]) => {
+      const [land, onderdeel] = key.split(" – ", 2);
+      const rest = key.substring(land.length + 3);
+      const row = document.createElement("tr");
+      row.innerHTML = `<td>${land}</td><td>${rest}</td><td>${tijd} sec</td>`;
+      nrTabel.appendChild(row);
+    });
   </script>
 </body>
 </html>
