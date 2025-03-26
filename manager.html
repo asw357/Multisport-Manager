@@ -1,48 +1,52 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Manager Home</title>
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    .container { max-width: 800px; margin: auto; padding: 20px; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .info { text-align: left; }
+    .vlag-mp { display: flex; gap: 15px; align-items: center; }
+    .buttonbar a { display: inline-block; margin: 10px 10px 0 0; padding: 10px 15px; background: #eee; border-radius: 6px; text-decoration: none; }
+    .buttonbar a:hover { background: #ddd; }
+  </style>
 </head>
 <body>
   <header>
-    <h1>👤 Manager Home</h1>
+    <div class="topbar">
+      <h1>👤 Manager Home</h1>
+      <div class="vlag-mp">
+        <span id="landVlag">🏳️</span>
+        <strong id="mpDisplay">0 MP</strong>
+      </div>
+    </div>
     <nav>
-      <ul>
-        <li><a href="index.html">🏠 Home</a></li>
-        <li><a href="logout.html">🚪 Uitloggen</a></li>
-      </ul>
+      <a href="index.html">⬅️ Terug naar Home</a>
+      <a href="instellingen.html">⚙️ Instellingen</a>
+      <a href="profiel.html">🔐 Profiel</a>
+      <a href="logout.html">🚪 Uitloggen</a>
     </nav>
   </header>
 
-  <main>
-    <section>
-      <h2>Welkom, <span id="managerNaam">...</span></h2>
-      <p><strong>Land:</strong> <span id="managerLand">...</span> 
-         <img id="landVlag" src="" alt="vlag" style="height:20px; margin-left:10px;"></p>
-      <p><strong>MedalPoints (MP):</strong> <span id="managerMP">0</span></p>
-    </section>
+  <main class="container">
+    <div class="info">
+      <p><strong>Speler:</strong> <span id="naam"></span></p>
+      <p><strong>Land:</strong> <span id="land"></span></p>
+    </div>
 
-    <section>
-      <h3>📋 Jouw Atleten</h3>
-      <p>Totaal: <span id="aantalAtleten">...</span></p>
-      <ul id="atletenOverzicht"></ul>
-      <p><a href="athletes.html">➡️ Ga naar Atletenbeheer</a></p>
-    </section>
-
-    <section>
-      <h3>🔗 Navigatie</h3>
-      <ul>
-        <li><a href="training.html">💪 Training</a></li>
-        <li><a href="scouting.html">🔍 Scouten</a></li>
-        <li><a href="tactics.html">🎯 Wedstrijdtactieken</a></li>
-        <li><a href="editie_resultaten.html">📜 Deelname & Resultaten</a></li>
-        <li><a href="live_wedstrijd.html">📺 Volg Live Wedstrijden</a></li>
-        <li><a href="profiel.html">⚙️ Profielinstellingen</a></li>
-      </ul>
-    </section>
+    <div class="buttonbar">
+      <a href="athletes.html">🏃 Atletenbeheer</a>
+      <a href="tactics.html">🧠 Wedstrijdtactieken</a>
+      <a href="training.html">🏋️ Training</a>
+      <a href="scouting.html">🔍 Scouten</a>
+      <a href="edities.html">📅 Edities & Schema</a>
+      <a href="medaillespiegel.html">🥇 Medaillespiegel</a>
+      <a href="records.html">📈 Records</a>
+      <a href="nieuws.html">📰 Nieuws</a>
+    </div>
   </main>
 
   <footer>
@@ -51,34 +55,17 @@
 
   <script>
     const user = JSON.parse(localStorage.getItem("loggedInUser"));
-    if (!user) {
-      alert("Niet ingelogd.");
-      window.location.href = "login.html";
-    }
+    document.getElementById("naam").textContent = user?.gebruikersnaam || "Onbekend";
+    document.getElementById("land").textContent = user?.land || "?";
+    document.getElementById("mpDisplay").textContent = `${user?.mp || 0} MP`;
 
-    document.getElementById("managerNaam").textContent = user.username;
-    document.getElementById("managerLand").textContent = user.land;
-    document.getElementById("managerMP").textContent = user.mp || 0;
-    document.getElementById("landVlag").src = `https://flagcdn.com/h20/${user.land.toLowerCase().replace(" ", "-")}.png`;
+    const vlagIcon = {
+      "Australië": "🇦🇺", "Bulgarije": "🇧🇬", "Chili": "🇨🇱",
+      "Denemarken": "🇩🇰", "IJsland": "🇮🇸", "Duitsland": "🇩🇪",
+      "Frankrijk": "🇫🇷", "Griekenland": "🇬🇷"
+    };
 
-    // Laad eigen atleten
-    const alleAtleten = JSON.parse(localStorage.getItem("atleten")) || [];
-    const eigenAtleten = alleAtleten.filter(a => a.owner === user.email);
-
-    document.getElementById("aantalAtleten").textContent = eigenAtleten.length;
-
-    const lijst = document.getElementById("atletenOverzicht");
-    eigenAtleten.slice(0, 5).forEach(a => {
-      const li = document.createElement("li");
-      li.textContent = `${a.naam} – ${a.sport}`;
-      lijst.appendChild(li);
-    });
-
-    if (eigenAtleten.length > 5) {
-      const extra = document.createElement("li");
-      extra.textContent = `+ ${eigenAtleten.length - 5} meer...`;
-      lijst.appendChild(extra);
-    }
+    document.getElementById("landVlag").textContent = vlagIcon[user?.land] || "🏳️";
   </script>
 </body>
 </html>
