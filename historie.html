@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Historisch Overzicht</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .editie-blok {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 6px;
+      background: #f9f9f9;
+    }
+    .editie-blok h3 {
+      margin-top: 0;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>📅 Historisch Overzicht van Edities</h1>
+    <nav><a href="index.html">⬅️ Terug naar Home</a></nav>
+  </header>
+
+  <main id="historieContainer"></main>
+
+  <footer>
+    <p>&copy; 2025 Sport Manager Simulatie – Historie</p>
+  </footer>
+
+  <script>
+    const edities = JSON.parse(localStorage.getItem("edities")) || [];
+    const spiegel = JSON.parse(localStorage.getItem("medaillespiegel")) || {};
+
+    const container = document.getElementById("historieContainer");
+
+    edities.forEach(editie => {
+      const div = document.createElement("div");
+      div.className = "editie-blok";
+      div.innerHTML = `
+        <h3>${editie.naam}</h3>
+        <p><strong>Locatie:</strong> ${editie.gaststad}</p>
+        <p><strong>Startdatum:</strong> ${editie.startdatum}</p>
+        <a href="records.html">📈 Bekijk Records</a>
+        <a href="medaillespiegel.html">🥇 Medaillespiegel</a>
+      `;
+      container.appendChild(div);
+    });
+  </script>
+</body>
+</html>
