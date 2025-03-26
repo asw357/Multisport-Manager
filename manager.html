@@ -55,7 +55,8 @@
 
   <script>
     const user = JSON.parse(localStorage.getItem("loggedInUser"));
-    document.getElementById("naam").textContent = user?.gebruikersnaam || "Onbekend";
+    document.getElementById("naam").textContent =
+      user?.gebruikersnaam || user?.naam || user?.email || "Onbekend";
     document.getElementById("land").textContent = user?.land || "?";
     document.getElementById("mpDisplay").textContent = `${user?.mp || 0} MP`;
 
