@@ -59,6 +59,45 @@
       "Australië", "Bulgarije", "Chili", "Denemarken", "IJsland", "Duitsland", "Frankrijk", "Griekenland"
     ];
 
+    function genereerNaam(land) {
+      const voornamen = ["Alex", "Liam", "Sven", "Noah", "Julian", "Max", "Kai"];
+      const achternamen = ["Jansen", "Kovacs", "Nguyen", "Petrov", "Dimitrov", "Smith", "Garcia"];
+      return `${voornamen[Math.floor(Math.random() * voornamen.length)]} ${achternamen[Math.floor(Math.random() * achternamen.length)]}`;
+    }
+
+    function genereerAtleten(gebruiker) {
+      const sporten = JSON.parse(localStorage.getItem("sportonderdelen")) || [];
+      const limieten = JSON.parse(localStorage.getItem("limieten")) || {};
+      const alleAtleten = JSON.parse(localStorage.getItem("atleten")) || [];
+
+      let nieuwe = [];
+
+      sporten.forEach(s => {
+        const sleutel = `${s.sport} - ${s.geslacht} - ${s.onderdeel}`;
+        const limiet = limieten[sleutel];
+        const start = limiet?.start || 0;
+
+        for (let i = 0; i < start; i++) {
+          nieuwe.push({
+            id: Date.now() + Math.random(),
+            naam: genereerNaam(gebruiker.land),
+            leeftijd: Math.floor(Math.random() * 10) + 18,
+            sport: s.sport,
+            geslacht: s.geslacht,
+            onderdeel: s.onderdeel,
+            owner: gebruiker.email,
+            stats: {
+              snelheid: Math.random() * 100,
+              kracht: Math.random() * 100,
+              techniek: Math.random() * 100
+            }
+          });
+        }
+      });
+
+      localStorage.setItem("atleten", JSON.stringify([...alleAtleten, ...nieuwe]));
+    }
+
     document.getElementById("registerForm").addEventListener("submit", function (e) {
       e.preventDefault();
       const gebruikersnaam = document.getElementById("gebruikersnaam").value;
@@ -86,6 +125,7 @@
       localStorage.setItem("users", JSON.stringify(users));
       localStorage.setItem("loggedInUser", JSON.stringify(nieuweGebruiker));
 
+      genereerAtleten(nieuweGebruiker);
       window.location.href = "manager.html";
     });
   </script>
