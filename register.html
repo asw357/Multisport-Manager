@@ -1,115 +1,91 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Registreren</title>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    form {
+      max-width: 400px;
+      margin: auto;
+      padding: 20px;
+      background: #f9f9f9;
+      border-radius: 8px;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+    input {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+    }
+    button {
+      margin-top: 15px;
+      padding: 10px;
+      width: 100%;
+    }
+  </style>
 </head>
 <body>
   <header>
     <h1>📋 Registreren</h1>
-    <nav>
-      <ul>
-        <li><a href="index.html">⬅️ Terug naar Home</a></li>
-      </ul>
-    </nav>
+    <nav><a href="index.html">⬅️ Terug naar Home</a></nav>
   </header>
 
   <main>
     <form id="registerForm">
-      <label>Gebruikersnaam:</label><br />
-      <input type="text" id="username" required><br />
-      <label>Email:</label><br />
-      <input type="email" id="email" required><br />
-      <label>Wachtwoord:</label><br />
-      <input type="password" id="password" required><br /><br />
-      <button type="submit">Account aanmaken</button>
+      <label for="gebruikersnaam">Gebruikersnaam</label>
+      <input type="text" id="gebruikersnaam" required />
+
+      <label for="email">E-mailadres</label>
+      <input type="email" id="email" required />
+
+      <label for="wachtwoord">Wachtwoord</label>
+      <input type="password" id="wachtwoord" required />
+
+      <button type="submit">✅ Registreren</button>
     </form>
-    <p id="feedback" style="color:red;"></p>
   </main>
 
   <footer>
-    <p>&copy; 2025 Sport Manager Simulatie</p>
+    <p>&copy; 2025 Sport Manager Simulatie – Registratie</p>
   </footer>
 
   <script>
-    const landenLijst = JSON.parse(localStorage.getItem("landenlijst")) || [
+    const landenQueue = JSON.parse(localStorage.getItem("country_queue")) || [
       "Australië", "Bulgarije", "Chili", "Denemarken", "IJsland", "Duitsland", "Frankrijk", "Griekenland"
     ];
-    const users = JSON.parse(localStorage.getItem("users")) || [];
-    const mpInstellingen = JSON.parse(localStorage.getItem("mp_instellingen")) || {};
-    const standaardMP = mpInstellingen["registratie"]?.waarde || 100;
-
-    const limieten = JSON.parse(localStorage.getItem("limieten")) || {};
-    const atleten = JSON.parse(localStorage.getItem("atleten")) || [];
-
-    function getVolgendLand() {
-      const gebruikt = users.map(u => u.land);
-      for (let land of landenLijst) {
-        if (!gebruikt.includes(land)) return land;
-      }
-      return "N.V.T.";
-    }
-
-    function genereerNaam(land) {
-      const basis = land.substring(0, 3).toUpperCase();
-      const random = Math.random().toString(36).substring(2, 5).toUpperCase();
-      return `${basis}-${random}`;
-    }
-
-    function genereerAtleten(email, land) {
-      for (const onderdeel in limieten) {
-        const aantal = limieten[onderdeel].start || 0;
-        for (let i = 0; i < aantal; i++) {
-          const leeftijd = Math.floor(Math.random() * 10) + 18;
-          const stats = { snelheid: Math.floor(Math.random() * 5) + 3 };
-
-          atleten.push({
-            id: Date.now() + "_" + i + "_" + onderdeel,
-            naam: genereerNaam(land),
-            leeftijd,
-            stats,
-            sport: onderdeel,
-            owner: email
-          });
-        }
-      }
-
-      localStorage.setItem("atleten", JSON.stringify(atleten));
-    }
 
     document.getElementById("registerForm").addEventListener("submit", function (e) {
       e.preventDefault();
+      const gebruikersnaam = document.getElementById("gebruikersnaam").value;
+      const email = document.getElementById("email").value;
+      const wachtwoord = document.getElementById("wachtwoord").value;
 
-      const username = document.getElementById("username").value.trim();
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value.trim();
-      const feedback = document.getElementById("feedback");
-
+      const users = JSON.parse(localStorage.getItem("users")) || [];
       if (users.find(u => u.email === email)) {
-        feedback.textContent = "Er bestaat al een account met dit e-mailadres.";
+        alert("Er bestaat al een account met dit e-mailadres.");
         return;
       }
 
-      const toegewezenLand = getVolgendLand();
+      const land = landenQueue.shift() || "Landloos";
+      localStorage.setItem("country_queue", JSON.stringify(landenQueue));
 
-      const newUser = {
-        username,
+      const nieuweGebruiker = {
+        gebruikersnaam,
         email,
-        password,
-        land: toegewezenLand,
-        mp: standaardMP
+        wachtwoord,
+        land,
+        mp: 100
       };
 
-      users.push(newUser);
+      users.push(nieuweGebruiker);
       localStorage.setItem("users", JSON.stringify(users));
-      localStorage.setItem("loggedInUser", JSON.stringify(newUser));
+      localStorage.setItem("loggedInUser", JSON.stringify(nieuweGebruiker));
 
-      // ➕ Startatleten genereren
-      genereerAtleten(email, toegewezenLand);
-
-      alert(`Registratie voltooid! Je land is ${toegewezenLand} en je start met ${standaardMP} MP.`);
       window.location.href = "manager.html";
     });
   </script>
