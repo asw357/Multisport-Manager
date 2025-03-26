@@ -71,7 +71,10 @@
 
         statNamen.forEach(stat => {
           const li = document.createElement("li");
-          const waarde = a.stats && a.stats[stat] !== undefined ? a.stats[stat] : '–';
+          const waarde =
+            a.stats && a.stats[stat] !== undefined
+              ? Math.round(a.stats[stat])
+              : '–';
           li.textContent = `${stat}: ${waarde}`;
           statList.appendChild(li);
         });
