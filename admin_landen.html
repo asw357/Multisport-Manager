@@ -1,54 +1,72 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Landentoewijzing Beheer</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    main { max-width: 600px; margin: auto; padding: 20px; }
+    input, button { padding: 8px; margin-top: 10px; }
+    ul { list-style-type: decimal; padding-left: 20px; }
+    li { margin-bottom: 5px; }
+    button.verwijder { margin-left: 10px; background-color: #e74c3c; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px; }
+    button.verwijder:hover { background-color: #c0392b; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🌍 Landentoewijzing</h1>
+    <nav><a href="admin.html">⬅️ Terug naar Admin</a></nav>
+  </header>
+
+  <main>
+    <label for="landInput">Voeg land toe:</label><br>
+    <input type="text" id="landInput" placeholder="Bijv. Australië" />
+    <button onclick="voegLandToe()">➕ Toevoegen</button>
+
+    <h2>Huidige lijst:</h2>
+    <ul id="landenLijst"></ul>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Sport Manager Simulatie – Landentoewijzing</p>
+  </footer>
+
   <script>
-    const ADMIN_EMAIL = "wilcoboesveld12@hotmail.com";
-    const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
-    if (!loggedInUser || loggedInUser.email !== ADMIN_EMAIL) {
-      alert("Toegang geweigerd.");
-      window.location.href = "index.html";
-    }
+    let landen = JSON.parse(localStorage.getItem("country_queue")) || [];
 
-    const defaultCountries = [
-      "Australië", "Bulgarije", "Chili", "Denemarken", "IJsland", "Duitsland",
-      "Frankrijk", "Griekenland", "Hongarije", "Italië"
-    ];
-
-    function loadCountries() {
-      const list = document.getElementById("countryList");
-      list.innerHTML = "";
-
-      const queue = JSON.parse(localStorage.getItem("country_queue")) || defaultCountries;
-
-      queue.forEach((land, index) => {
+    function toonLanden() {
+      const lijst = document.getElementById("landenLijst");
+      lijst.innerHTML = "";
+      landen.forEach((land, index) => {
         const li = document.createElement("li");
-        li.innerHTML = `
-          ${index + 1}. ${land}
-          <button onclick="verwijderLand(${index})" style="margin-left:10px">❌ Verwijder</button>
-        `;
-        list.appendChild(li);
+        li.textContent = land;
+        const knop = document.createElement("button");
+        knop.className = "verwijder";
+        knop.textContent = "🗑️";
+        knop.onclick = () => {
+          landen.splice(index, 1);
+          localStorage.setItem("country_queue", JSON.stringify(landen));
+          toonLanden();
+        };
+        li.appendChild(knop);
+        lijst.appendChild(li);
       });
     }
 
-    function verwijderLand(index) {
-      const queue = JSON.parse(localStorage.getItem("country_queue")) || defaultCountries;
-      if (index >= 0 && index < queue.length) {
-        if (confirm(`Weet je zeker dat je "${queue[index]}" wilt verwijderen?`)) {
-          queue.splice(index, 1);
-          localStorage.setItem("country_queue", JSON.stringify(queue));
-          loadCountries();
-        }
+    function voegLandToe() {
+      const input = document.getElementById("landInput");
+      const nieuwLand = input.value.trim();
+      if (nieuwLand) {
+        landen.push(nieuwLand);
+        localStorage.setItem("country_queue", JSON.stringify(landen));
+        input.value = "";
+        toonLanden();
       }
     }
 
-    document.getElementById("addCountryForm").addEventListener("submit", function (e) {
-      e.preventDefault();
-      const newLand = document.getElementById("newCountry").value.trim();
-      if (!newLand) return;
-
-      const queue = JSON.parse(localStorage.getItem("country_queue")) || defaultCountries;
-      queue.push(newLand);
-      localStorage.setItem("country_queue", JSON.stringify(queue));
-      document.getElementById("newCountry").value = "";
-      loadCountries();
-    });
-
-    document.addEventListener("DOMContentLoaded", loadCountries);
+    toonLanden();
   </script>
+</body>
+</html>
