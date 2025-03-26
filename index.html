@@ -8,11 +8,20 @@
 </head>
 <body>
   <header>
-    <h1>🏅 Welkom bij Sport Manager Simulatie</h1>
+    <h1>🏅 <span data-i18n="welkom">Welkom bij Sport Manager Simulatie</span></h1>
+    <div style="position: absolute; top: 10px; right: 10px;">
+      <label for="taalKeuze" style="font-weight: bold;">🌍</label>
+      <select id="taalKeuze">
+        <option value="nl">🇳🇱 NL</option>
+        <option value="en">🇬🇧 EN</option>
+        <option value="de">🇩🇪 DE</option>
+        <option value="fr">🇫🇷 FR</option>
+      </select>
+    </div>
     <nav>
       <ul id="navLinks">
-        <li><a href="register.html">📋 Registreren</a></li>
-        <li><a href="login.html">🔐 Inloggen</a></li>
+        <li><a href="register.html" data-i18n="registreren">📋 Registreren</a></li>
+        <li><a href="login.html" data-i18n="inloggen">🔐 Inloggen</a></li>
         <li><a href="contact.html">✉️ Contact</a></li>
       </ul>
     </nav>
@@ -20,7 +29,7 @@
 
   <main>
     <section>
-      <p>
+      <p data-i18n="intro">
         Stap in de rol van manager van jouw nationale team en leid jouw land naar glorie!  
         Stel atleten op, scout nieuw talent, pas tactieken toe en win medailles!  
         Lees ook de <a href="regels.html">Regels & Uitleg</a> voordat je begint.
@@ -28,13 +37,13 @@
     </section>
 
     <section>
-      <h2>📰 Laatste Nieuws</h2>
+      <h2 data-i18n="nieuws">📰 Laatste Nieuws</h2>
       <ul id="nieuwsHeadlines"></ul>
       <p><a href="nieuws.html">Meer nieuws bekijken ➜</a></p>
     </section>
 
     <section>
-      <h2>⏰ Volgende Live Wedstrijd</h2>
+      <h2 data-i18n="volgende">⏰ Volgende Live Wedstrijd</h2>
       <div id="volgendeWedstrijd"></div>
     </section>
   </main>
@@ -43,17 +52,17 @@
     <p>&copy; 2025 Sport Manager Simulatie</p>
   </footer>
 
+  <script src="language.js"></script>
   <script>
     const user = JSON.parse(localStorage.getItem("loggedInUser"));
     const nav = document.getElementById("navLinks");
 
     if (user) {
       nav.innerHTML = `
-        <li><a href="manager.html">👤 Managerpagina</a></li>
+        <li><a href="manager.html" data-i18n="manager">👤 Managerpagina</a></li>
         <li><a href="edities.html">📅 Edities</a></li>
-        <li><a href="logout.html">🚪 Uitloggen</a></li>
+        <li><a href="logout.html" data-i18n="uitloggen">🚪 Uitloggen</a></li>
       `;
-
       if (user.email === "wilcoboesveld12@hotmail.com") {
         nav.innerHTML += `<li><a href="admin.html">⚙️ Admin</a></li>`;
       }
@@ -87,6 +96,18 @@
     } else {
       container.innerHTML = `<p>Er zijn vandaag geen geplande live wedstrijden meer.</p>`;
     }
+
+    // 🌍 Taal opslaan en laden
+    const taalDropdown = document.getElementById("taalKeuze");
+    const opgeslagenTaal = localStorage.getItem("taal") || "nl";
+    taalDropdown.value = opgeslagenTaal;
+    translatePage(opgeslagenTaal);
+
+    taalDropdown.addEventListener("change", e => {
+      const gekozen = e.target.value;
+      localStorage.setItem("taal", gekozen);
+      translatePage(gekozen);
+    });
   </script>
 </body>
 </html>
