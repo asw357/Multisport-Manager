@@ -1,50 +1,42 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Admin Dashboard</title>
-  <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Adminpaneel</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    main {
+      max-width: 600px;
+      margin: auto;
+      padding: 20px;
+    }
+    ul li {
+      margin-bottom: 10px;
+    }
+  </style>
 </head>
 <body>
   <header>
-    <h1>⚙️ Admin Dashboard</h1>
-    <nav>
-      <ul>
-        <li><a href="index.html">🏠 Home</a></li>
-        <li><a href="logout.html">🚪 Uitloggen</a></li>
-      </ul>
-    </nav>
+    <h1>⚙️ Adminpaneel</h1>
+    <nav><a href="index.html">⬅️ Terug naar Home</a></nav>
   </header>
-
   <main>
-    <section>
-      <h2>Beheerpanelen</h2>
-      <ul>
-        <li><a href="admin_landen.html">🌍 Landentoewijzing</a></li>
-        <li><a href="admin_sporten.html">🏟️ Sportonderdelen</a></li>
-        <li><a href="admin_limieten.html">📏 Limieten per sport</a></li>
-        <li><a href="admin_mp.html">💰 MP-instellingen</a></li>
-        <li><a href="admin_tactieken.html">🎯 Tactiekinstellingen</a></li>
-        <li><a href="admin_edities.html">📆 Editiebeheer</a></li>
-        <li><a href="admin_schema.html">🧩 Toernooischema Maken (Stap 1)</a></li>
-        <li><a href="admin_schema_rondes.html">🕒 Rondeplanning (Stap 2)</a></li>
-        <li><a href="admin_weer.html">⛅ Weersinstellingen</a></li>
-      </ul>
-    </section>
+    <ul>
+      <li><a href="admin_landen.html">🌍 Landentoewijzing</a></li>
+      <li><a href="admin_sporten.html">🏅 Sportonderdelen</a></li>
+      <li><a href="admin_limieten.html">📊 Limieten & Startatleten</a></li>
+      <li><a href="admin_mp.html">💰 MedalPoints Instellingen</a></li>
+      <li><a href="admin_tactieken.html">🧠 Tactiekenbeheer</a></li>
+      <li><a href="admin_edities.html">📆 Editiebeheer</a></li>
+      <li><a href="admin_schema.html">📋 Wedstrijdschema</a></li>
+      <li><a href="admin_schema_rondes.html">🧮 Toernooirondes</a></li>
+      <li><a href="admin_stats.html">📊 Statcategorieën</a></li>
+      <li><a href="admin_reset.html">🔄 Reset & Testhulpmiddelen</a></li>
+    </ul>
   </main>
-
   <footer>
-    <p>&copy; 2025 Sport Manager Simulatie – Adminportaal</p>
+    <p>&copy; 2025 Sport Manager Simulatie – Admin</p>
   </footer>
-
-  <script>
-    const ADMIN_EMAIL = "wilcoboesveld12@hotmail.com";
-    const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
-    if (!loggedInUser || loggedInUser.email !== ADMIN_EMAIL) {
-      alert("Toegang geweigerd. Je bent geen admin.");
-      window.location.href = "index.html";
-    }
-  </script>
 </body>
 </html>
