@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Instellingen</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    label { display: block; margin-top: 10px; }
+    select, input[type="checkbox"] { margin-top: 5px; }
+    .container { max-width: 500px; margin: auto; padding: 20px; background: #f9f9f9; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>⚙️ Instellingen</h1>
+    <nav><a href="index.html">⬅️ Terug naar Home</a></nav>
+  </header>
+
+  <main>
+    <div class="container">
+      <form id="instellingenForm">
+        <label for="taal">🌍 Taalkeuze:</label>
+        <select id="taal" name="taal">
+          <option value="nl">Nederlands</option>
+          <option value="en">English</option>
+          <option value="de">Deutsch</option>
+          <option value="fr">Français</option>
+        </select>
+
+        <label for="meldingen">🔔 Meldingen ontvangen:</label>
+        <input type="checkbox" id="meldingen" name="meldingen">
+
+        <button type="submit" style="margin-top:15px;">💾 Instellingen opslaan</button>
+      </form>
+    </div>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Sport Manager Simulatie – Instellingen</p>
+  </footer>
+
+  <script>
+    const user = JSON.parse(localStorage.getItem("loggedInUser")) || {};
+    const form = document.getElementById("instellingenForm");
+
+    if (user.taal) document.getElementById("taal").value = user.taal;
+    if (user.meldingen !== undefined) document.getElementById("meldingen").checked = user.meldingen;
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      user.taal = document.getElementById("taal").value;
+      user.meldingen = document.getElementById("meldingen").checked;
+      localStorage.setItem("loggedInUser", JSON.stringify(user));
+      alert("Instellingen opgeslagen ✅");
+    });
+  </script>
+</body>
+</html>
