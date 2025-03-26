@@ -4,35 +4,20 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Atletenbeheer</title>
-  <link rel="stylesheet" href="css/style.css">
-  <style>
-    .container { max-width: 900px; margin: auto; }
-    .zoekveld { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-    th { background: #f2f2f2; }
-  </style>
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
   <header>
-    <h1>🏃 Atletenbeheer</h1>
-    <nav><a href="manager.html">⬅️ Terug naar Manager Home</a></nav>
+    <h1>🏃 Mijn Atleten</h1>
+    <nav>
+      <a href="manager.html">⬅️ Terug naar Manager</a>
+    </nav>
   </header>
 
-  <main class="container">
-    <input type="text" id="zoekInput" class="zoekveld" placeholder="Zoek op naam, sport of onderdeel...">
-    <table>
-      <thead>
-        <tr>
-          <th>Naam</th>
-          <th>Sport</th>
-          <th>Leeftijd</th>
-          <th>Onderdeel</th>
-          <th>Acties</th>
-        </tr>
-      </thead>
-      <tbody id="atletenTabel"></tbody>
-    </table>
+  <main>
+    <input type="text" id="zoekInput" placeholder="🔎 Zoek op naam, sport of onderdeel" />
+
+    <div id="atletenContainer"></div>
   </main>
 
   <footer>
@@ -40,34 +25,71 @@
   </footer>
 
   <script>
-    const gebruiker = JSON.parse(localStorage.getItem("loggedInUser")) || {};
     const atleten = JSON.parse(localStorage.getItem("atleten")) || [];
-    const mijnAtleten = atleten.filter(a => a.owner === gebruiker.email);
+    const user = JSON.parse(localStorage.getItem("loggedInUser"));
+    const statCategorieen = JSON.parse(localStorage.getItem("statcategorieen")) || {};
+    const container = document.getElementById("atletenContainer");
+    const zoekInput = document.getElementById("zoekInput");
 
-    function renderAtleten(filter = "") {
-      const body = document.getElementById("atletenTabel");
-      body.innerHTML = "";
-      mijnAtleten.forEach(a => {
-        const zoektekst = `${a.naam} ${a.sport} ${a.onderdeel}`.toLowerCase();
-        if (zoektekst.includes(filter.toLowerCase())) {
-          const row = document.createElement("tr");
-          row.innerHTML = `
-            <td>${a.naam}</td>
-            <td>${a.sport}</td>
-            <td>${a.leeftijd}</td>
-            <td>${a.onderdeel}</td>
-            <td>
-              <a href="training.html?id=${a.id}">🏋️ Train</a> |
-              <a href="scouten.html">🔍 Scout</a>
-            </td>
-          `;
-          body.appendChild(row);
-        }
+    function toonAtleten() {
+      container.innerHTML = "";
+      const zoekterm = zoekInput.value.toLowerCase();
+
+      const eigenAtleten = atleten.filter(a => a.owner === user.email);
+      const gefilterd = eigenAtleten.filter(a =>
+        a.naam.toLowerCase().includes(zoekterm) ||
+        a.sport?.toLowerCase().includes(zoekterm) ||
+        a.onderdeel?.toLowerCase().includes(zoekterm)
+      );
+
+      if (gefilterd.length === 0) {
+        container.innerHTML = "<p>Geen atleten gevonden.</p>";
+        return;
+      }
+
+      gefilterd.forEach(a => {
+        const div = document.createElement("div");
+        div.className = "atleet-box";
+        div.innerHTML = `
+          <h3>${a.naam}</h3>
+          <p><strong>Sport:</strong> ${a.sport}</p>
+          <p><strong>Onderdeel:</strong> ${a.onderdeel || 'Onbekend'}</p>
+          <p><strong>Leeftijd:</strong> ${a.leeftijd}</p>
+          <div><strong>Stats:</strong></div>
+          <ul id="stats-${a.id}"></ul>
+          <p>
+            <a href="training.html?id=${a.id}">🏋️ Train</a> |
+            <a href="scouting.html">🔍 Scout</a> |
+            <button onclick="ontslaAtleet('${a.id}')">❌ Ontsla</button>
+          </p>
+        `;
+        container.appendChild(div);
+
+        // Stats tonen
+        const statList = document.getElementById(`stats-${a.id}`);
+        const sleutel = `${a.sport} - ${a.geslacht || "Mannen"} - ${a.onderdeel}`;
+        const statNamen = statCategorieen[sleutel] || Object.keys(a.stats || {});
+
+        statNamen.forEach(stat => {
+          const li = document.createElement("li");
+          li.textContent = `${stat}: ${a.stats?.[stat] ?? '-'}`;
+          statList.appendChild(li);
+        });
       });
     }
 
-    document.getElementById("zoekInput").addEventListener("input", e => renderAtleten(e.target.value));
-    renderAtleten();
+    zoekInput.addEventListener("input", toonAtleten);
+    toonAtleten();
+
+    function ontslaAtleet(id) {
+      if (!confirm("Weet je zeker dat je deze atleet wilt ontslaan?")) return;
+      const index = atleten.findIndex(a => a.id === id);
+      if (index > -1) {
+        atleten.splice(index, 1);
+        localStorage.setItem("atleten", JSON.stringify(atleten));
+        toonAtleten();
+      }
+    }
   </script>
 </body>
 </html>
