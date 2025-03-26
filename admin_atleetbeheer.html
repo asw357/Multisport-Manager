@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Atletenbeheer (Admin)</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header>
+    <h1>👨‍💼 Admin - Atletenbeheer</h1>
+    <nav>
+      <a href="admin.html">⬅️ Terug naar Admin</a>
+    </nav>
+  </header>
+
+  <main>
+    <section>
+      <h2>Filter op Sportonderdeel</h2>
+      <select id="onderdeelSelect">
+        <option value="">-- Kies sportonderdeel --</option>
+      </select>
+    </section>
+
+    <section id="beheerSectie" style="display: none;">
+      <h2>Gevonden Atleten</h2>
+      <div id="atletenLijst"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Sport Manager Simulatie</p>
+  </footer>
+
+  <script>
+    const alleAtleten = JSON.parse(localStorage.getItem("atleten")) || [];
+    const users = JSON.parse(localStorage.getItem("users")) || [];
+    const statCategorieen = JSON.parse(localStorage.getItem("statcategorieen")) || {};
+    const limieten = JSON.parse(localStorage.getItem("limieten")) || {};
+    const onderdeelSelect = document.getElementById("onderdeelSelect");
+    const atletenLijst = document.getElementById("atletenLijst");
+    const beheerSectie = document.getElementById("beheerSectie");
+
+    // Vul dropdown met bestaande sportonderdelen
+    Object.keys(statCategorieen).forEach(sleutel => {
+      const opt = document.createElement("option");
+      opt.value = sleutel;
+      opt.textContent = sleutel;
+      onderdeelSelect.appendChild(opt);
+    });
+
+    onderdeelSelect.addEventListener("change", () => {
+      const geselecteerd = onderdeelSelect.value;
+      if (!geselecteerd) {
+        beheerSectie.style.display = "none";
+        atletenLijst.innerHTML = "";
+        return;
+      }
+
+      const atleten = alleAtleten.filter(a => {
+        const sleutel = `${a.sport} - ${a.geslacht || "Mannen"} - ${a.onderdeel}`;
+        return sleutel === geselecteerd;
+      });
+
+      beheerSectie.style.display = "block";
+      toonAtleten(atleten);
+    });
+
+    function toonAtleten(atleten) {
+      atletenLijst.innerHTML = "";
+      if (atleten.length === 0) {
+        atletenLijst.innerHTML = "<p>Geen atleten gevonden.</p>";
+        return;
+      }
+
+      atleten.forEach((a, index) => {
+        const eigenaar = users.find(u => u.email === a.owner);
+        const spelerNaam = eigenaar?.gebruikersnaam || eigenaar?.naam || eigenaar?.email || "Onbekend";
+
+        const div = document.createElement("div");
+        div.className = "beheer-box";
+        div.innerHTML = `
+          <h3>${a.naam}</h3>
+          <p><strong>Speler:</strong> ${spelerNaam}</p>
+          <p><strong>Sport:</strong> ${a.sport}</p>
+          <p><strong>Onderdeel:</strong> ${a.onderdeel}</p>
+          <label>➡️ Verplaats naar:</label>
+          <input type="text" id="verplaats-${index}" placeholder="Bijv. 100m">
+          <br />
+          <label>❌ Verwijder + geef MP:</label>
+          <input type="number" id="mp-${index}" value="15" min="0">
+          <button onclick="verplaatsAtleet(${index})">Verplaats</button>
+          <button onclick="verwijderAtleet(${index})">Verwijder + MP</button>
+        `;
+        atletenLijst.appendChild(div);
+      });
+    }
+    function verplaatsAtleet(index) {
+      const geselecteerd = onderdeelSelect.value;
+      const atleten = alleAtleten.filter(a => {
+        const sleutel = `${a.sport} - ${a.geslacht || "Mannen"} - ${a.onderdeel}`;
+        return sleutel === geselecteerd;
+      });
+      const atleet = atleten[index];
+      const nieuwOnderdeel = document.getElementById(`verplaats-${index}`).value.trim();
+
+      if (!nieuwOnderdeel) {
+        alert("Vul een nieuw onderdeel in om te verplaatsen.");
+        return;
+      }
+
+      atleet.onderdeel = nieuwOnderdeel;
+      localStorage.setItem("atleten", JSON.stringify(alleAtleten));
+      alert(`Atleet ${atleet.naam} is verplaatst naar ${nieuwOnderdeel}.`);
+      onderdeelSelect.dispatchEvent(new Event("change")); // herlaad lijst
+    }
+
+    function verwijderAtleet(index) {
+      const geselecteerd = onderdeelSelect.value;
+      const atleten = alleAtleten.filter(a => {
+        const sleutel = `${a.sport} - ${a.geslacht || "Mannen"} - ${a.onderdeel}`;
+        return sleutel === geselecteerd;
+      });
+      const atleet = atleten[index];
+      const mpWaarde = parseInt(document.getElementById(`mp-${index}`).value);
+
+      if (!confirm(`Weet je zeker dat je atleet ${atleet.naam} wilt verwijderen?`)) return;
+
+      const speler = users.find(u => u.email === atleet.owner);
+      if (speler) {
+        speler.medalpoints = (speler.medalpoints || 0) + mpWaarde;
+        localStorage.setItem("users", JSON.stringify(users));
+
+        const loggedIn = JSON.parse(localStorage.getItem("loggedInUser"));
+        if (loggedIn?.email === speler.email) {
+          loggedIn.medalpoints = speler.medalpoints;
+          localStorage.setItem("loggedInUser", JSON.stringify(loggedIn));
+        }
+      }
+
+      const indexInAlle = alleAtleten.findIndex(a => a.id === atleet.id);
+      if (indexInAlle > -1) {
+        alleAtleten.splice(indexInAlle, 1);
+        localStorage.setItem("atleten", JSON.stringify(alleAtleten));
+      }
+
+      alert(`Atleet verwijderd en ${mpWaarde} MP toegekend.`);
+      onderdeelSelect.dispatchEvent(new Event("change")); // herlaad lijst
+    }
+  </script>
+</body>
+</html>
