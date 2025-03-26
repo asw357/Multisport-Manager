@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin – Statcategorieën</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    main { max-width: 700px; margin: auto; padding: 20px; }
+    input, button, select { padding: 8px; margin: 5px 0; }
+    ul { list-style: disc; padding-left: 20px; }
+    li { margin-bottom: 4px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>⚙️ Admin – Statcategorieën per Onderdeel</h1>
+    <nav><a href="admin.html">⬅️ Terug naar Admin</a></nav>
+  </header>
+
+  <main>
+    <label for="onderdeelSelect">Kies Sportonderdeel:</label><br />
+    <select id="onderdeelSelect"></select><br />
+
+    <label for="statInput">Voeg stat toe:</label><br />
+    <input type="text" id="statInput" placeholder="bijv. snelheid" />
+    <button onclick="voegStatToe()">➕ Toevoegen</button>
+
+    <h2>📊 Stats voor onderdeel:</h2>
+    <ul id="statsLijst"></ul>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Sport Manager Simulatie – Statsbeheer</p>
+  </footer>
+
+  <script>
+    const statdata = JSON.parse(localStorage.getItem("statcategorieen")) || {};
+    const sporten = JSON.parse(localStorage.getItem("sportonderdelen")) || [];
+
+    const select = document.getElementById("onderdeelSelect");
+    const lijst = document.getElementById("statsLijst");
+
+    sporten.forEach(s => {
+      const key = `${s.sport} - ${s.geslacht} - ${s.onderdeel}`;
+      const opt = document.createElement("option");
+      opt.value = key;
+      opt.textContent = key;
+      select.appendChild(opt);
+    });
+
+    function toonStats() {
+      const selected = select.value;
+      const stats = statdata[selected] || [];
+      lijst.innerHTML = "";
+      stats.forEach(stat => {
+        const li = document.createElement("li");
+        li.textContent = stat;
+        lijst.appendChild(li);
+      });
+    }
+
+    function voegStatToe() {
+      const selected = select.value;
+      const stat = document.getElementById("statInput").value.trim();
+      if (!stat) return;
+
+      if (!statdata[selected]) statdata[selected] = [];
+      statdata[selected].push(stat);
+
+      localStorage.setItem("statcategorieen", JSON.stringify(statdata));
+      document.getElementById("statInput").value = "";
+      toonStats();
+    }
+
+    select.addEventListener("change", toonStats);
+    if (select.options.length > 0) select.selectedIndex = 0;
+    toonStats();
+  </script>
+</body>
+</html>
