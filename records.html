@@ -19,6 +19,14 @@
     th {
       background-color: #f0f0f0;
     }
+    input[type="text"] {
+      width: 300px;
+      padding: 8px;
+      margin: 10px auto;
+      display: block;
+      border: 1px solid #aaa;
+      border-radius: 4px;
+    }
   </style>
 </head>
 <body>
@@ -30,6 +38,7 @@
   <main>
     <section>
       <h2>🏆 Multi Records (MR)</h2>
+      <input type="text" id="zoekMR" placeholder="Zoek onderdeel...">
       <table>
         <thead>
           <tr><th>Onderdeel</th><th>Snelste Tijd / Score</th></tr>
@@ -38,6 +47,7 @@
       </table>
 
       <h2>🇳🇱 Nationale Records (NR)</h2>
+      <input type="text" id="zoekNR" placeholder="Zoek land of onderdeel...">
       <table>
         <thead>
           <tr><th>Land – Onderdeel</th><th>Snelste Tijd / Score</th></tr>
@@ -56,18 +66,35 @@
     const nr = JSON.parse(localStorage.getItem("nationale_records")) || {};
 
     const mrTable = document.getElementById("mrTable");
-    Object.entries(mr).forEach(([onderdeel, tijd]) => {
-      const row = document.createElement("tr");
-      row.innerHTML = `<td>${onderdeel}</td><td>${tijd} sec</td>`;
-      mrTable.appendChild(row);
-    });
-
     const nrTable = document.getElementById("nrTable");
-    Object.entries(nr).forEach(([key, tijd]) => {
-      const row = document.createElement("tr");
-      row.innerHTML = `<td>${key}</td><td>${tijd} sec</td>`;
-      nrTable.appendChild(row);
-    });
+
+    function renderMR(filter = "") {
+      mrTable.innerHTML = "";
+      Object.entries(mr).forEach(([onderdeel, tijd]) => {
+        if (onderdeel.toLowerCase().includes(filter.toLowerCase())) {
+          const row = document.createElement("tr");
+          row.innerHTML = `<td>${onderdeel}</td><td>${tijd} sec</td>`;
+          mrTable.appendChild(row);
+        }
+      });
+    }
+
+    function renderNR(filter = "") {
+      nrTable.innerHTML = "";
+      Object.entries(nr).forEach(([key, tijd]) => {
+        if (key.toLowerCase().includes(filter.toLowerCase())) {
+          const row = document.createElement("tr");
+          row.innerHTML = `<td>${key}</td><td>${tijd} sec</td>`;
+          nrTable.appendChild(row);
+        }
+      });
+    }
+
+    document.getElementById("zoekMR").addEventListener("input", e => renderMR(e.target.value));
+    document.getElementById("zoekNR").addEventListener("input", e => renderNR(e.target.value));
+
+    renderMR();
+    renderNR();
   </script>
 </body>
 </html>
