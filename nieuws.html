@@ -1,25 +1,44 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Nieuwspagina</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nieuws</title>
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    .filter { margin: 20px auto; text-align: center; }
+    select { padding: 8px; }
+    .bericht {
+      border: 1px solid #ccc;
+      padding: 15px;
+      margin-bottom: 10px;
+      border-radius: 6px;
+      background: #f9f9f9;
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .bericht h3 { margin-top: 0; }
+  </style>
 </head>
 <body>
   <header>
-    <h1>📰 Nieuws & Updates</h1>
-    <nav>
-      <ul>
-        <li><a href="index.html">⬅️ Terug naar Home</a></li>
-      </ul>
-    </nav>
+    <h1>📰 Nieuws</h1>
+    <nav><a href="index.html">⬅️ Terug naar Home</a></nav>
   </header>
 
   <main>
-    <section id="nieuwsContainer">
-      <!-- Nieuwsitems worden geladen -->
-    </section>
+    <div class="filter">
+      <label for="categorie">Filter op categorie: </label>
+      <select id="categorie">
+        <option value="">Alle categorieën</option>
+        <option value="Blessure">Blessure</option>
+        <option value="Update">Update</option>
+        <option value="Record">Record</option>
+        <option value="Voorspelling">Voorspelling</option>
+      </select>
+    </div>
+    <div id="nieuwsContainer"></div>
   </main>
 
   <footer>
@@ -28,39 +47,28 @@
 
   <script>
     const nieuws = JSON.parse(localStorage.getItem("nieuwsfeed")) || [];
+    const container = document.getElementById("nieuwsContainer");
+    const categorieSelect = document.getElementById("categorie");
 
-    function laadNieuws() {
-      const container = document.getElementById("nieuwsContainer");
+    function toonNieuws(filter = "") {
+      container.innerHTML = "";
+      const gefilterd = nieuws.filter(n => filter === "" || n.categorie === filter);
+      gefilterd.sort((a, b) => new Date(b.datum) - new Date(a.datum));
 
-      if (nieuws.length === 0) {
-        container.innerHTML = "<p>Er zijn nog geen nieuwsberichten.</p>";
-        return;
-      }
-
-      // Sorteer op nieuw → oud
-      const gesorteerd = nieuws.sort((a, b) => new Date(b.datum) - new Date(a.datum));
-
-      gesorteerd.forEach(item => {
+      gefilterd.forEach(n => {
         const div = document.createElement("div");
-        div.classList.add("nieuwsItem");
+        div.className = "bericht";
         div.innerHTML = `
-          <h3>[${item.categorie}] ${item.titel}</h3>
-          <p>${item.tekst}</p>
-          <small>${item.datum}</small><br />
-          <button onclick="reageer(this)">👍</button>
-          <button onclick="reageer(this)">❤️</button>
-          <button onclick="reageer(this)">🔥</button>
+          <h3>${n.titel}</h3>
+          <p><strong>Categorie:</strong> ${n.categorie} | <em>${n.datum}</em></p>
+          <p>${n.inhoud}</p>
         `;
         container.appendChild(div);
       });
     }
 
-    function reageer(btn) {
-      btn.disabled = true;
-      btn.textContent += " ✔";
-    }
-
-    document.addEventListener("DOMContentLoaded", laadNieuws);
+    categorieSelect.addEventListener("change", e => toonNieuws(e.target.value));
+    toonNieuws();
   </script>
 </body>
 </html>
