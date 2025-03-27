@@ -3,57 +3,52 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Edities beheren</title>
+  <title>Admin - Edities Beheren</title>
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
   <header>
-    <h1>📅 Edities beheren</h1>
-    <nav>
-      <a href="admin.html">⬅️ Terug naar Admin</a>
-    </nav>
+    <h1>📅 Admin – Edities beheren</h1>
+    <nav><a href="admin.html">⬅️ Terug naar Admin</a></nav>
   </header>
 
   <main>
     <section>
-      <h2>➕ Nieuwe editie toevoegen</h2>
+      <h2>➕ Nieuwe Editie toevoegen</h2>
       <form id="editieForm">
-        <label for="soort">Soort Editie:</label>
+        <label for="soort">Soort editie:</label>
         <select id="soort" required>
-          <option value="">-- Kies een soort --</option>
+          <option value="">-- Kies --</option>
           <option value="Zomer editie">Zomer editie</option>
           <option value="Winter editie">Winter editie</option>
-        </select><br/><br/>
+        </select><br/>
 
         <label for="stad">Gaststad:</label>
-        <input type="text" id="stad" required><br/><br/>
+        <input type="text" id="stad" required><br/>
 
         <label for="land">Gastland:</label>
-        <input type="text" id="land" required><br/><br/>
+        <input type="text" id="land" required><br/>
 
         <label for="datum">Startdatum:</label>
-        <input type="date" id="datum" required><br/><br/>
+        <input type="date" id="datum" required><br/>
 
         <button type="submit">Toevoegen</button>
       </form>
     </section>
 
     <section>
-      <h2>📋 Bestaande edities</h2>
-      <ul id="editieLijst"></ul>
+      <h2>📋 Bestaande Edities</h2>
+      <div id="editieLijst"></div>
     </section>
   </main>
 
   <footer>
     <p>&copy; 2025 Sport Manager Simulatie</p>
   </footer>
-
   <script>
     const editieForm = document.getElementById("editieForm");
     const lijst = document.getElementById("editieLijst");
     let edities = JSON.parse(localStorage.getItem("edities")) || [];
-
-    functieToonEdities();
 
     editieForm.addEventListener("submit", e => {
       e.preventDefault();
@@ -63,54 +58,62 @@
       const land = document.getElementById("land").value.trim();
       const datum = document.getElementById("datum").value;
 
-      if (!soort || !stad || !land || !datum) {
-        alert("Vul alle velden in.");
-        return;
-      }
-
-      // Tel bestaande edities van deze soort
       const aantal = edities.filter(e => e.soort === soort).length + 1;
       const naam = `${soort} ${aantal}`;
 
       const nieuweEditie = {
+        id: Date.now(),
         naam,
         soort,
         stad,
         land,
-        datum,
-        actief: false
+        datum
       };
 
       edities.push(nieuweEditie);
       localStorage.setItem("edities", JSON.stringify(edities));
-      functieToonEdities();
       editieForm.reset();
+      toonEdities();
     });
 
-    function functieToonEdities() {
+    function toonEdities() {
       lijst.innerHTML = "";
-
       if (edities.length === 0) {
-        lijst.innerHTML = "<li>Er zijn nog geen edities.</li>";
+        lijst.innerHTML = "<p>Geen edities gevonden.</p>";
         return;
       }
 
       edities.forEach((e, index) => {
-        const li = document.createElement("li");
-        li.innerHTML = `
-          <strong>${e.naam}</strong> – ${e.stad}, ${e.land} – Start: ${e.datum}
-          ${e.actief ? "<span style='color:green;'>🟢 Actief</span>" : ""}
-          <button onclick="toggleActief(${index})">Actief maken</button>
+        const div = document.createElement("div");
+        div.className = "editie-blok";
+        div.innerHTML = `
+          <h3>${e.naam}</h3>
+          <label>Stad: <input type="text" value="${e.stad}" onchange="bewerk(${e.id}, 'stad', this.value)"></label><br/>
+          <label>Land: <input type="text" value="${e.land}" onchange="bewerk(${e.id}, 'land', this.value)"></label><br/>
+          <label>Datum: <input type="date" value="${e.datum}" onchange="bewerk(${e.id}, 'datum', this.value)"></label><br/>
+          <button onclick="verwijder(${e.id})">🗑️ Verwijder</button>
         `;
-        lijst.appendChild(li);
+        lijst.appendChild(div);
       });
     }
 
-    function toggleActief(index) {
-      edities = edities.map((e, i) => ({ ...e, actief: i === index }));
-      localStorage.setItem("edities", JSON.stringify(edities));
-      functieToonEdities();
+    function bewerk(id, veld, waarde) {
+      const i = edities.findIndex(e => e.id === id);
+      if (i > -1) {
+        edities[i][veld] = waarde;
+        localStorage.setItem("edities", JSON.stringify(edities));
+      }
     }
+
+    function verwijder(id) {
+      if (!confirm("Weet je zeker dat je deze editie wilt verwijderen?")) return;
+      edities = edities.filter(e => e.id !== id);
+      localStorage.setItem("edities", JSON.stringify(edities));
+      toonEdities();
+    }
+
+    // Init
+    toonEdities();
   </script>
 </body>
 </html>
