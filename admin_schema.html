@@ -1,125 +1,157 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Toernooischema Maken</title>
-  <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin - Wedstrijdschema</title>
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
   <header>
-    <h1>📋 Toernooischema Maken</h1>
+    <h1>📋 Admin – Wedstrijdschema aanmaken</h1>
     <nav>
-      <ul>
-        <li><a href="admin.html">⬅️ Terug naar Admin Dashboard</a></li>
-      </ul>
+      <a href="admin.html">⬅️ Terug naar Admin</a>
     </nav>
   </header>
 
   <main>
     <section>
+      <h2>➕ Nieuwe Wedstrijd Invoeren</h2>
       <form id="schemaForm">
-        <label for="editieSelect">Kies editie:</label><br />
-        <select id="editieSelect" required></select><br />
+        <label for="editie">Kies editie:</label>
+        <select id="editie" required></select><br/>
 
-        <label for="onderdeelSelect">Kies sportonderdeel:</label><br />
-        <select id="onderdeelSelect" required></select><br />
+        <label for="dag">Dagnummer (bijv. Dag 1):</label>
+        <input type="text" id="dag" required><br/>
 
-        <h3>Deelnemende landen:</h3>
-        <div id="landenCheckboxes">
-          <!-- Hier komen de landen -->
-        </div><br />
+        <label for="tijd">Tijdstip (bijv. 14:00):</label>
+        <input type="time" id="tijd" required><br/>
 
-        <button type="submit">Volgende stap ➡️</button>
+        <label for="sport">Sport:</label>
+        <select id="sport" required></select><br/>
+
+        <label for="onderdeel">Onderdeel:</label>
+        <select id="onderdeel" required></select><br/>
+
+        <label for="maxTotaal">Max deelnemers totaal:</label>
+        <input type="number" id="maxTotaal" min="1" required><br/>
+
+        <label for="maxLand">Max per land:</label>
+        <input type="number" id="maxLand" min="1" required><br/>
+
+        <label for="ronde">Ronde-type:</label>
+        <select id="ronde" required>
+          <option value="Kwalificatie">Kwalificatie</option>
+          <option value="Halve Finale">Halve Finale</option>
+          <option value="Finale">Finale</option>
+        </select><br/>
+
+        <button type="submit">➕ Voeg toe aan schema</button>
       </form>
+    </section>
+
+    <section>
+      <h2>📅 Ingevoerde Wedstrijden</h2>
+      <div id="schemaLijst"></div>
     </section>
   </main>
 
   <footer>
-    <p>&copy; 2025 Sport Manager Simulatie – Schema</p>
+    <p>&copy; 2025 Sport Manager Simulatie</p>
   </footer>
-
   <script>
-    const ADMIN_EMAIL = "wilcoboesveld12@hotmail.com";
-    const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
-    if (!loggedInUser || loggedInUser.email !== ADMIN_EMAIL) {
-      alert("Toegang geweigerd.");
-      window.location.href = "index.html";
-    }
+    const edities = JSON.parse(localStorage.getItem("edities")) || [];
+    const onderdelen = JSON.parse(localStorage.getItem("sportonderdelen")) || [];
+    let schema = JSON.parse(localStorage.getItem("schema")) || [];
 
-    const editieSelect = document.getElementById("editieSelect");
-    const onderdeelSelect = document.getElementById("onderdeelSelect");
-    const landenContainer = document.getElementById("landenCheckboxes");
+    const editieSelect = document.getElementById("editie");
+    const sportSelect = document.getElementById("sport");
+    const onderdeelSelect = document.getElementById("onderdeel");
+    const schemaForm = document.getElementById("schemaForm");
+    const schemaLijst = document.getElementById("schemaLijst");
 
-    function laadEditieDropdown() {
-      const edities = JSON.parse(localStorage.getItem("edities")) || [];
-      editieSelect.innerHTML = "";
-      edities.forEach((e, i) => {
-        const opt = document.createElement("option");
-        opt.value = e.naam;
-        opt.textContent = `${e.naam} – ${e.locatie}`;
-        editieSelect.appendChild(opt);
-      });
-    }
+    // Vul edities
+    edities.forEach(e => {
+      const opt = document.createElement("option");
+      opt.value = e.id;
+      opt.textContent = e.naam;
+      editieSelect.appendChild(opt);
+    });
 
-    function laadOnderdeelDropdown() {
-      const onderdelen = JSON.parse(localStorage.getItem("sportonderdelen")) || [];
+    // Vul sporten
+    const sportenUniek = [...new Set(onderdelen.map(o => o.sport))];
+    sportenUniek.forEach(sport => {
+      const opt = document.createElement("option");
+      opt.value = sport;
+      opt.textContent = sport;
+      sportSelect.appendChild(opt);
+    });
+
+    // Onderdeel bij geselecteerde sport
+    sportSelect.addEventListener("change", () => {
       onderdeelSelect.innerHTML = "";
-      onderdelen.forEach((s) => {
+      const geselecteerd = sportSelect.value;
+      const gefilterd = onderdelen.filter(o => o.sport === geselecteerd);
+      gefilterd.forEach(o => {
         const opt = document.createElement("option");
-        opt.value = `${s.sport} - ${s.geslacht} - ${s.onderdeel}`;
-        opt.textContent = opt.value;
+        opt.value = o.onderdeel;
+        opt.textContent = `${o.geslacht} - ${o.onderdeel}`;
         onderdeelSelect.appendChild(opt);
       });
-    }
+    });
 
-    function laadLandenCheckboxes() {
-      const users = JSON.parse(localStorage.getItem("users")) || [];
-      const landen = [...new Set(users.map(u => u.land))]; // unieke landen
-      landenContainer.innerHTML = "";
-
-      landen.forEach(land => {
-        const label = document.createElement("label");
-        const input = document.createElement("input");
-        input.type = "checkbox";
-        input.name = "deelnemers";
-        input.value = land;
-        label.appendChild(input);
-        label.append(` ${land}`);
-        landenContainer.appendChild(label);
-        landenContainer.appendChild(document.createElement("br"));
-      });
-    }
-
-    document.getElementById("schemaForm").addEventListener("submit", function (e) {
+    // Form submit
+    schemaForm.addEventListener("submit", e => {
       e.preventDefault();
 
-      const editie = editieSelect.value;
-      const onderdeel = onderdeelSelect.value;
-      const deelnemers = Array.from(document.querySelectorAll("input[name='deelnemers']:checked")).map(cb => cb.value);
+      const nieuw = {
+        id: Date.now(),
+        editieId: editieSelect.value,
+        editieNaam: editieSelect.options[editieSelect.selectedIndex].textContent,
+        dag: document.getElementById("dag").value.trim(),
+        tijd: document.getElementById("tijd").value,
+        sport: sportSelect.value,
+        onderdeel: onderdeelSelect.value,
+        maxTotaal: parseInt(document.getElementById("maxTotaal").value),
+        maxLand: parseInt(document.getElementById("maxLand").value),
+        ronde: document.getElementById("ronde").value
+      };
 
-      if (!editie || !onderdeel || deelnemers.length === 0) {
-        alert("Selecteer een editie, onderdeel en minimaal 1 deelnemer.");
+      schema.push(nieuw);
+      localStorage.setItem("schema", JSON.stringify(schema));
+      schemaForm.reset();
+      toonSchema();
+    });
+
+    function toonSchema() {
+      schemaLijst.innerHTML = "";
+      if (schema.length === 0) {
+        schemaLijst.innerHTML = "<p>Nog geen wedstrijden ingevoerd.</p>";
         return;
       }
 
-      const schemaData = {
-        editie,
-        onderdeel,
-        deelnemers,
-        rondes: []
-      };
+      schema.forEach(s => {
+        const div = document.createElement("div");
+        div.className = "schema-blok";
+        div.innerHTML = `
+          <h3>${s.editieNaam} – ${s.sport} (${s.onderdeel})</h3>
+          <p><strong>Dag:</strong> ${s.dag} | <strong>Tijd:</strong> ${s.tijd}</p>
+          <p><strong>Ronde:</strong> ${s.ronde} | <strong>Max totaal:</strong> ${s.maxTotaal}, <strong>Per land:</strong> ${s.maxLand}</p>
+          <button onclick="verwijderSchema(${s.id})">🗑️ Verwijder</button>
+        `;
+        schemaLijst.appendChild(div);
+      });
+    }
 
-      // Tijdelijk opslaan voor volgende stap
-      localStorage.setItem("schema_temp", JSON.stringify(schemaData));
-      window.location.href = "admin_schema_rondes.html";
-    });
+    function verwijderSchema(id) {
+      if (!confirm("Weet je zeker dat je deze wedstrijd wilt verwijderen?")) return;
+      schema = schema.filter(s => s.id !== id);
+      localStorage.setItem("schema", JSON.stringify(schema));
+      toonSchema();
+    }
 
-    document.addEventListener("DOMContentLoaded", () => {
-      laadEditieDropdown();
-      laadOnderdeelDropdown();
-      laadLandenCheckboxes();
-    });
+    // Init
+    toonSchema();
   </script>
 </body>
 </html>
