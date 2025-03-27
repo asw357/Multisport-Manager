@@ -29,8 +29,8 @@
         <label for="land">Gastland:</label>
         <input type="text" id="land" required><br/>
 
-        <label for="datum">Startdatum:</label>
-        <input type="date" id="datum" required><br/>
+        <label for="datum">Startdatum (optioneel):</label>
+        <input type="date" id="datum"><br/>
 
         <button type="submit">Toevoegen</button>
       </form>
@@ -56,7 +56,7 @@
       const soort = document.getElementById("soort").value;
       const stad = document.getElementById("stad").value.trim();
       const land = document.getElementById("land").value.trim();
-      const datum = document.getElementById("datum").value;
+      const datum = document.getElementById("datum").value || "";
 
       const aantal = edities.filter(e => e.soort === soort).length + 1;
       const naam = `${soort} ${aantal}`;
@@ -67,7 +67,8 @@
         soort,
         stad,
         land,
-        datum
+        datum,
+        actief: false
       };
 
       edities.push(nieuweEditie);
@@ -91,6 +92,8 @@
           <label>Stad: <input type="text" value="${e.stad}" onchange="bewerk(${e.id}, 'stad', this.value)"></label><br/>
           <label>Land: <input type="text" value="${e.land}" onchange="bewerk(${e.id}, 'land', this.value)"></label><br/>
           <label>Datum: <input type="date" value="${e.datum}" onchange="bewerk(${e.id}, 'datum', this.value)"></label><br/>
+          <label><input type="radio" name="actief" ${e.actief ? "checked" : ""} onchange="markeerActief(${e.id})"> Actieve editie</label><br/>
+          <a href="admin_schema.html?id=${e.id}">📋 Ga naar schema</a><br/>
           <button onclick="verwijder(${e.id})">🗑️ Verwijder</button>
         `;
         lijst.appendChild(div);
@@ -105,6 +108,15 @@
       }
     }
 
+    function markeerActief(id) {
+      edities = edities.map(e => ({
+        ...e,
+        actief: e.id === id
+      }));
+      localStorage.setItem("edities", JSON.stringify(edities));
+      toonEdities();
+    }
+
     function verwijder(id) {
       if (!confirm("Weet je zeker dat je deze editie wilt verwijderen?")) return;
       edities = edities.filter(e => e.id !== id);
@@ -112,7 +124,6 @@
       toonEdities();
     }
 
-    // Init
     toonEdities();
   </script>
 </body>
