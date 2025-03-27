@@ -1,114 +1,116 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Rondes & Tijden</title>
-  <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin – Toernooirondes Instellen</title>
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
   <header>
-    <h1>📅 Ronde-indeling voor Toernooi</h1>
+    <h1>🎯 Admin – Toernooirondes automatisch instellen</h1>
     <nav>
-      <ul>
-        <li><a href="admin_schema.html">⬅️ Terug naar Deelnemers</a></li>
-      </ul>
+      <a href="admin.html">⬅️ Terug naar Admin</a>
     </nav>
   </header>
 
   <main>
-    <section id="infoBlok">
-      <!-- Editie & Onderdeel info -->
+    <section>
+      <h2>🔍 Kies wedstrijd uit schema</h2>
+      <select id="wedstrijdSelect" required>
+        <option value="">-- Kies een geplande wedstrijd --</option>
+      </select>
     </section>
 
-    <section>
-      <form id="rondeForm">
-        <label for="aantalRondes">Aantal rondes:</label><br />
-        <input type="number" id="aantalRondes" min="1" max="10" required><br /><br />
-        <button type="button" onclick="genereerRondes()">Rondes aanmaken</button>
-      </form>
+    <section id="rondeSectie" style="display:none;">
+      <h2>🔁 Automatisch gegenereerde structuur</h2>
+      <div id="rondeResultaat"></div>
 
-      <form id="rondeDetailsForm" style="display:none;">
-        <h3>Vul rondegegevens in:</h3>
-        <div id="rondesContainer"></div>
-        <br />
-        <button type="submit">Schema opslaan ✅</button>
+      <h3>🗓️ Planning aanpassen</h3>
+      <form id="rondeForm">
+        <div id="dagenPerRonde"></div>
+        <button type="submit">💾 Opslaan rondestructuur</button>
       </form>
     </section>
   </main>
 
   <footer>
-    <p>&copy; 2025 Sport Manager Simulatie – Rondes & Schema</p>
+    <p>&copy; 2025 Sport Manager Simulatie</p>
   </footer>
-
   <script>
-    const schemaTemp = JSON.parse(localStorage.getItem("schema_temp"));
-    if (!schemaTemp) {
-      alert("Geen schema-informatie gevonden. Keer terug naar stap 1.");
-      window.location.href = "admin_schema.html";
-    }
+    const schema = JSON.parse(localStorage.getItem("schema")) || [];
+    let rondeschema = JSON.parse(localStorage.getItem("rondeschema")) || {};
+    const wedstrijdSelect = document.getElementById("wedstrijdSelect");
+    const rondeSectie = document.getElementById("rondeSectie");
+    const rondeResultaat = document.getElementById("rondeResultaat");
+    const dagenContainer = document.getElementById("dagenPerRonde");
+    const rondeForm = document.getElementById("rondeForm");
 
-    const infoBlok = document.getElementById("infoBlok");
-    const rondesContainer = document.getElementById("rondesContainer");
-    const rondeDetailsForm = document.getElementById("rondeDetailsForm");
+    // Vul select met geplande wedstrijden
+    schema.forEach(s => {
+      const opt = document.createElement("option");
+      opt.value = s.id;
+      opt.textContent = `${s.editieNaam} – ${s.sport} (${s.onderdeel}) [Dag ${s.dag}]`;
+      wedstrijdSelect.appendChild(opt);
+    });
 
-    // Toon basisinformatie
-    infoBlok.innerHTML = `
-      <p><strong>Editie:</strong> ${schemaTemp.editie}</p>
-      <p><strong>Onderdeel:</strong> ${schemaTemp.onderdeel}</p>
-      <p><strong>Deelnemers:</strong> ${schemaTemp.deelnemers.join(", ")}</p>
-    `;
+    wedstrijdSelect.addEventListener("change", () => {
+      const id = parseInt(wedstrijdSelect.value);
+      if (!id) return;
+      const wedstrijd = schema.find(s => s.id === id);
+      if (!wedstrijd) return;
 
-    function genereerRondes() {
-      const aantal = parseInt(document.getElementById("aantalRondes").value);
-      rondesContainer.innerHTML = "";
-      if (isNaN(aantal) || aantal < 1) return;
+      const totaal = wedstrijd.maxTotaal;
+      const struct = genereerRondeStructuur(totaal);
+      toonRondes(struct);
+      rondeSectie.style.display = "block";
+    });
 
-      for (let i = 1; i <= aantal; i++) {
-        rondesContainer.innerHTML += `
-          <div style="margin-bottom:10px">
-            <label>Ronde ${i} naam:</label><br />
-            <input type="text" name="rondeNaam" placeholder="Bijv. Series, Halve Finale" required><br />
-            <label>Dag (bijv. Dag 1):</label><br />
-            <input type="text" name="rondeDag" placeholder="Dag 1" required><br />
-            <label>Tijd:</label><br />
-            <input type="time" name="rondeTijd" required><br />
-          </div>
-        `;
-      }
-      rondeDetailsForm.style.display = "block";
-    }
-
-    document.getElementById("rondeDetailsForm").addEventListener("submit", function (e) {
-      e.preventDefault();
-
-      const namen = Array.from(document.getElementsByName("rondeNaam"));
-      const dagen = Array.from(document.getElementsByName("rondeDag"));
-      const tijden = Array.from(document.getElementsByName("rondeTijd"));
-
+    function genereerRondeStructuur(totaal) {
       const rondes = [];
-      for (let i = 0; i < namen.length; i++) {
-        rondes.push({
-          naam: namen[i].value,
-          dag: dagen[i].value,
-          tijd: tijden[i].value
-        });
+
+      if (totaal <= 8) {
+        rondes.push("Finale");
+      } else if (totaal <= 16) {
+        rondes.push("Halve Finale", "Finale");
+      } else {
+        rondes.push("Kwalificatie", "Halve Finale", "Finale");
       }
 
-      const fullSchema = {
-        editie: schemaTemp.editie,
-        onderdeel: schemaTemp.onderdeel,
-        deelnemers: schemaTemp.deelnemers,
-        rondes: rondes
-      };
+      return rondes;
+    }
 
-      const alleSchemas = JSON.parse(localStorage.getItem("toernooi_schemas")) || [];
-      alleSchemas.push(fullSchema);
-      localStorage.setItem("toernooi_schemas", JSON.stringify(alleSchemas));
+    function toonRondes(rondes) {
+      rondeResultaat.innerHTML = `<p><strong>Gegenereerde rondes:</strong> ${rondes.join(" → ")}</p>`;
+      dagenContainer.innerHTML = "";
 
-      localStorage.removeItem("schema_temp");
-      alert("Schema opgeslagen ✅");
-      window.location.href = "admin.html";
+      rondes.forEach((ronde, i) => {
+        const label = document.createElement("label");
+        label.textContent = `${ronde} – Dagnummer:`;
+        const input = document.createElement("input");
+        input.type = "text";
+        input.name = ronde;
+        input.required = true;
+        input.value = `Dag ${i + 1}`;
+        dagenContainer.appendChild(label);
+        dagenContainer.appendChild(input);
+        dagenContainer.appendChild(document.createElement("br"));
+      });
+    }
+
+    rondeForm.addEventListener("submit", e => {
+      e.preventDefault();
+      const id = parseInt(wedstrijdSelect.value);
+      const inputs = rondeForm.querySelectorAll("input");
+      const dagen = {};
+
+      inputs.forEach(input => {
+        dagen[input.name] = input.value.trim();
+      });
+
+      rondeschema[id] = dagen;
+      localStorage.setItem("rondeschema", JSON.stringify(rondeschema));
+      alert("Rondestructuur opgeslagen!");
     });
   </script>
 </body>
