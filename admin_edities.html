@@ -1,110 +1,116 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Editiebeheer</title>
-  <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Edities beheren</title>
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
   <header>
-    <h1>📆 Editiebeheer</h1>
+    <h1>📅 Edities beheren</h1>
     <nav>
-      <ul>
-        <li><a href="admin.html">⬅️ Terug naar Admin Dashboard</a></li>
-      </ul>
+      <a href="admin.html">⬅️ Terug naar Admin</a>
     </nav>
   </header>
 
   <main>
     <section>
+      <h2>➕ Nieuwe editie toevoegen</h2>
       <form id="editieForm">
-        <label for="editieNaam">Naam van editie:</label><br />
-        <input type="text" id="editieNaam" placeholder="Bijv. Zomereditie 7" required><br />
-        
-        <label for="editieLocatie">Gaststad en land:</label><br />
-        <input type="text" id="editieLocatie" placeholder="Bijv. Parijs, Frankrijk" required><br />
+        <label for="soort">Soort Editie:</label>
+        <select id="soort" required>
+          <option value="">-- Kies een soort --</option>
+          <option value="Zomer editie">Zomer editie</option>
+          <option value="Winter editie">Winter editie</option>
+        </select><br/><br/>
 
-        <label for="editieType">Type editie:</label><br />
-        <select id="editieType" required>
-          <option value="zomer">Zomer</option>
-          <option value="winter">Winter</option>
-        </select><br />
+        <label for="stad">Gaststad:</label>
+        <input type="text" id="stad" required><br/><br/>
 
-        <label for="editieStart">Startdatum:</label><br />
-        <input type="date" id="editieStart" required><br /><br />
+        <label for="land">Gastland:</label>
+        <input type="text" id="land" required><br/><br/>
 
-        <button type="submit">Toevoegen / Bijwerken</button>
+        <label for="datum">Startdatum:</label>
+        <input type="date" id="datum" required><br/><br/>
+
+        <button type="submit">Toevoegen</button>
       </form>
     </section>
 
     <section>
-      <h2>Bestaande Edities</h2>
-      <ul id="editieList">
-        <!-- Dynamisch geladen -->
-      </ul>
+      <h2>📋 Bestaande edities</h2>
+      <ul id="editieLijst"></ul>
     </section>
   </main>
 
   <footer>
-    <p>&copy; 2025 Sport Manager Simulatie – Editiebeheer</p>
+    <p>&copy; 2025 Sport Manager Simulatie</p>
   </footer>
 
   <script>
-    const ADMIN_EMAIL = "wilcoboesveld12@hotmail.com";
-    const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
-    if (!loggedInUser || loggedInUser.email !== ADMIN_EMAIL) {
-      alert("Toegang geweigerd.");
-      window.location.href = "index.html";
-    }
-
     const editieForm = document.getElementById("editieForm");
-    const editieList = document.getElementById("editieList");
+    const lijst = document.getElementById("editieLijst");
+    let edities = JSON.parse(localStorage.getItem("edities")) || [];
 
-    function loadEditieList() {
-      const edities = JSON.parse(localStorage.getItem("edities")) || [];
-      editieList.innerHTML = "";
+    functieToonEdities();
+
+    editieForm.addEventListener("submit", e => {
+      e.preventDefault();
+
+      const soort = document.getElementById("soort").value;
+      const stad = document.getElementById("stad").value.trim();
+      const land = document.getElementById("land").value.trim();
+      const datum = document.getElementById("datum").value;
+
+      if (!soort || !stad || !land || !datum) {
+        alert("Vul alle velden in.");
+        return;
+      }
+
+      // Tel bestaande edities van deze soort
+      const aantal = edities.filter(e => e.soort === soort).length + 1;
+      const naam = `${soort} ${aantal}`;
+
+      const nieuweEditie = {
+        naam,
+        soort,
+        stad,
+        land,
+        datum,
+        actief: false
+      };
+
+      edities.push(nieuweEditie);
+      localStorage.setItem("edities", JSON.stringify(edities));
+      functieToonEdities();
+      editieForm.reset();
+    });
+
+    function functieToonEdities() {
+      lijst.innerHTML = "";
+
+      if (edities.length === 0) {
+        lijst.innerHTML = "<li>Er zijn nog geen edities.</li>";
+        return;
+      }
+
       edities.forEach((e, index) => {
         const li = document.createElement("li");
         li.innerHTML = `
-          <strong>${e.naam}</strong> (${e.type}) – ${e.locatie}<br />
-          Startdatum: <input type="date" value="${e.datum}" onchange="updateStartDatum(${index}, this.value)">
-          <button onclick="verwijderEditie(${index})" style="margin-left:10px">❌ Verwijder</button>
+          <strong>${e.naam}</strong> – ${e.stad}, ${e.land} – Start: ${e.datum}
+          ${e.actief ? "<span style='color:green;'>🟢 Actief</span>" : ""}
+          <button onclick="toggleActief(${index})">Actief maken</button>
         `;
-        editieList.appendChild(li);
+        lijst.appendChild(li);
       });
     }
 
-    function updateStartDatum(index, nieuweDatum) {
-      const edities = JSON.parse(localStorage.getItem("edities")) || [];
-      edities[index].datum = nieuweDatum;
+    function toggleActief(index) {
+      edities = edities.map((e, i) => ({ ...e, actief: i === index }));
       localStorage.setItem("edities", JSON.stringify(edities));
+      functieToonEdities();
     }
-
-    editieForm.addEventListener("submit", function (e) {
-      e.preventDefault();
-      const naam = document.getElementById("editieNaam").value.trim();
-      const locatie = document.getElementById("editieLocatie").value.trim();
-      const type = document.getElementById("editieType").value;
-      const datum = document.getElementById("editieStart").value;
-
-      if (!naam || !locatie || !type || !datum) return;
-
-      const edities = JSON.parse(localStorage.getItem("edities")) || [];
-      edities.push({ naam, locatie, type, datum });
-      localStorage.setItem("edities", JSON.stringify(edities));
-      editieForm.reset();
-      loadEditieList();
-    });
-
-    function verwijderEditie(index) {
-      const edities = JSON.parse(localStorage.getItem("edities")) || [];
-      edities.splice(index, 1);
-      localStorage.setItem("edities", JSON.stringify(edities));
-      loadEditieList();
-    }
-
-    document.addEventListener("DOMContentLoaded", loadEditieList);
   </script>
 </body>
 </html>
