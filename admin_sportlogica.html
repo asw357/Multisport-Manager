@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin – Simulatieregels per Onderdeel</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header>
+    <h1>🧠 Admin – Simulatieregels per Sportonderdeel</h1>
+    <nav>
+      <a href="admin.html">⬅️ Terug naar Admin</a>
+    </nav>
+  </header>
+
+  <main>
+    <section>
+      <h2>⚙️ Kies Sport + Onderdeel</h2>
+      <label for="sportSelect">Sport:</label>
+      <select id="sportSelect"></select><br/>
+
+      <label for="onderdeelSelect">Onderdeel:</label>
+      <select id="onderdeelSelect"></select><br/>
+    </section>
+
+    <section>
+      <h2>🔧 Simulatieregels instellen</h2>
+      <form id="logicaForm">
+        <label for="type">Simulatietype:</label>
+        <select id="type" required>
+          <option value="standaard">Standaard (1 score)</option>
+          <option value="meerdere_pogingen">Meerdere pogingen</option>
+          <option value="serie_punten">Serie met puntentelling</option>
+          <option value="gemiddelde_score">Gemiddelde score</option>
+          <option value="custom">Custom uitleg</option>
+        </select><br/>
+
+        <label for="instellingen">Instellingen (JSON):</label><br/>
+        <textarea id="instellingen" rows="4" cols="50" placeholder='Bijv: {"pogingen": 3}'></textarea><br/>
+
+        <label for="uitleg">Uitleg voor verslag/speler:</label><br/>
+        <textarea id="uitleg" rows="3" cols="50" placeholder="Bijv: Elke atleet krijgt 3 pogingen, beste telt."></textarea><br/>
+
+        <button type="submit">💾 Opslaan logica</button>
+      </form>
+    </section>
+
+    <section>
+      <h2>📋 Huidige Instellingen</h2>
+      <div id="logicaWeergave"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Sport Manager Simulatie</p>
+  </footer>
+  <script>
+    const sporten = JSON.parse(localStorage.getItem("sportonderdelen")) || [];
+    const sportSelect = document.getElementById("sportSelect");
+    const onderdeelSelect = document.getElementById("onderdeelSelect");
+    const instellingen = document.getElementById("instellingen");
+    const uitleg = document.getElementById("uitleg");
+    const type = document.getElementById("type");
+    const logicaForm = document.getElementById("logicaForm");
+    const logicaWeergave = document.getElementById("logicaWeergave");
+
+    let sportlogica = JSON.parse(localStorage.getItem("sportlogica")) || {};
+
+    // Vul sporten
+    const uniekeSporten = [...new Set(sporten.map(s => s.sport))];
+    uniekeSporten.forEach(sport => {
+      const opt = document.createElement("option");
+      opt.value = sport;
+      opt.textContent = sport;
+      sportSelect.appendChild(opt);
+    });
+
+    // Vul onderdelen op sportkeuze
+    sportSelect.addEventListener("change", () => {
+      const geselecteerd = sportSelect.value;
+      onderdeelSelect.innerHTML = "";
+      const gefilterd = sporten.filter(s => s.sport === geselecteerd);
+      gefilterd.forEach(o => {
+        const opt = document.createElement("option");
+        opt.value = o.onderdeel;
+        opt.textContent = `${o.geslacht} - ${o.onderdeel}`;
+        onderdeelSelect.appendChild(opt);
+      });
+    });
+
+    // Toon bestaande logica
+    onderdeelSelect.addEventListener("change", () => {
+      const sleutel = maakSleutel();
+      const huidige = sportlogica[sleutel];
+      if (huidige) {
+        type.value = huidige.type || "standaard";
+        instellingen.value = JSON.stringify(huidige.instellingen || {});
+        uitleg.value = huidige.uitleg || "";
+      } else {
+        type.value = "standaard";
+        instellingen.value = "";
+        uitleg.value = "";
+      }
+      toonHuidigeLogica();
+    });
+
+    logicaForm.addEventListener("submit", e => {
+      e.preventDefault();
+      const sleutel = maakSleutel();
+      try {
+        const parsed = instellingen.value ? JSON.parse(instellingen.value) : {};
+        sportlogica[sleutel] = {
+          type: type.value,
+          instellingen: parsed,
+          uitleg: uitleg.value.trim()
+        };
+        localStorage.setItem("sportlogica", JSON.stringify(sportlogica));
+        alert("Logica opgeslagen!");
+        toonHuidigeLogica();
+      } catch (err) {
+        alert("Instellingen moeten geldig JSON zijn.");
+      }
+    });
+
+    function toonHuidigeLogica() {
+      const sleutel = maakSleutel();
+      const l = sportlogica[sleutel];
+      if (!l) {
+        logicaWeergave.innerHTML = "<p>Geen specifieke logica ingesteld voor dit onderdeel.</p>";
+        return;
+      }
+      logicaWeergave.innerHTML = `
+        <p><strong>Type:</strong> ${l.type}</p>
+        <p><strong>Instellingen:</strong> <code>${JSON.stringify(l.instellingen)}</code></p>
+        <p><strong>Uitleg:</strong> ${l.uitleg}</p>
+      `;
+    }
+
+    function maakSleutel() {
+      return `${sportSelect.value} - ${onderdeelSelect.value}`;
+    }
+  </script>
+</body>
+</html>
