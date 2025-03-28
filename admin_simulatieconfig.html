@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="nl">
+>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin – Simulatieconfiguratie</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header>
+    <h1>🛠️ Admin – Simulatie-instellingen per Editie & Onderdeel</h1>
+    <nav><a href="admin.html">⬅️ Terug naar Admin</a></nav>
+  </header>
+
+  <main>
+    <section>
+      <h2>🔗 Koppel configuratie</h2>
+      <form id="configForm">
+        <label for="editieSelect">Editie:</label>
+        <select id="editieSelect" required></select><br/>
+
+        <label for="sportSelect">Sport:</label>
+        <select id="sportSelect" required></select><br/>
+
+        <label for="onderdeelSelect">Onderdeel:</label>
+        <select id="onderdeelSelect" required></select><br/>
+
+        <label for="rondeSelect">Ronde:</label>
+        <select id="rondeSelect" required>
+          <option value="">-- Kies ronde --</option>
+          <option value="Groepsfase">Groepsfase</option>
+          <option value="Voorrondes">Voorrondes</option>
+          <option value="Series">Series</option>
+          <option value="Kwartfinale">Kwartfinale</option>
+          <option value="Halve Finale">Halve Finale</option>
+          <option value="Finale">Finale</option>
+        </select><br/>
+      </form>
+    </section>
+
+    <section>
+      <h2>⚙️ Simulatiedetails</h2>
+      <form id="detailsForm">
+        <label for="type">Simulatie-type:</label>
+        <select id="type" required>
+          <option value="standaard">Standaard</option>
+          <option value="best_of">Best of (bijv. 2 of 3)</option>
+          <option value="meerdere_pogingen">Meerdere pogingen</option>
+          <option value="puntenklassement">Puntenklassement</option>
+          <option value="tijdvergelijking">Tijdvergelijking</option>
+          <option value="custom">Custom</option>
+        </select><br/>
+
+        <label for="instellingen">Technische instellingen (JSON):</label><br/>
+        <textarea id="instellingen" rows="5" cols="60" placeholder='Bijv: {"pogingen": 3, "om_de_beurt": true}'></textarea><br/>
+
+        <label for="uitleg">Uitleg voor speler of verslag:</label><br/>
+        <textarea id="uitleg" rows="3" cols="60" placeholder="Bijv: Elke atleet krijgt 3 pogingen. Beste telt."></textarea><br/>
+
+        <button type="submit">💾 Opslaan</button>
+      </form>
+    </section>
+
+    <section>
+      <h2>📋 Bestaande Configuratie</h2>
+      <div id="huidigeInstelling"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Sport Manager Simulatie</p>
+  </footer>
+  <script>
+    const edities = JSON.parse(localStorage.getItem("edities")) || [];
+    const onderdelen = JSON.parse(localStorage.getItem("sportonderdelen")) || [];
+    let simulatieconfig = JSON.parse(localStorage.getItem("simulatieconfig")) || {};
+
+    const editieSelect = document.getElementById("editieSelect");
+    const sportSelect = document.getElementById("sportSelect");
+    const onderdeelSelect = document.getElementById("onderdeelSelect");
+    const rondeSelect = document.getElementById("rondeSelect");
+    const typeSelect = document.getElementById("type");
+    const instellingen = document.getElementById("instellingen");
+    const uitleg = document.getElementById("uitleg");
+    const huidigeInstelling = document.getElementById("huidigeInstelling");
+    const detailsForm = document.getElementById("detailsForm");
+
+    // Laad edities
+    edities.forEach(e => {
+      const opt = document.createElement("option");
+      opt.value = e.id;
+      opt.textContent = e.naam;
+      editieSelect.appendChild(opt);
+    });
+
+    // Laad sporten
+    const uniekeSporten = [...new Set(onderdelen.map(o => o.sport))];
+    uniekeSporten.forEach(sport => {
+      const opt = document.createElement("option");
+      opt.value = sport;
+      opt.textContent = sport;
+      sportSelect.appendChild(opt);
+    });
+
+    // Laad onderdelen bij geselecteerde sport
+    sportSelect.addEventListener("change", () => {
+      const gekozen = sportSelect.value;
+      onderdeelSelect.innerHTML = "";
+      const gefilterd = onderdelen.filter(o => o.sport === gekozen);
+      gefilterd.forEach(o => {
+        const opt = document.createElement("option");
+        opt.value = `${o.geslacht} - ${o.onderdeel}`;
+        opt.textContent = `${o.geslacht} - ${o.onderdeel}`;
+        onderdeelSelect.appendChild(opt);
+      });
+    });
+
+    // Toon bestaande instellingen als ronde wordt gekozen
+    [editieSelect, sportSelect, onderdeelSelect, rondeSelect].forEach(el => {
+      el.addEventListener("change", toonBestaandeConfig);
+    });
+
+    function getSleutel() {
+      const editie = editieSelect.value;
+      const onderdeel = `${sportSelect.value} - ${onderdeelSelect.value}`;
+      const ronde = rondeSelect.value;
+      return `${editie} | ${onderdeel} | ${ronde}`;
+    }
+
+    function toonBestaandeConfig() {
+      const sleutel = getSleutel();
+      const config = simulatieconfig[sleutel];
+      if (config) {
+        typeSelect.value = config.type || "standaard";
+        instellingen.value = JSON.stringify(config.instellingen || {}, null, 2);
+        uitleg.value = config.uitleg || "";
+        huidigeInstelling.innerHTML = `
+          <p><strong>Type:</strong> ${config.type}</p>
+          <p><strong>Instellingen:</strong> <pre>${JSON.stringify(config.instellingen, null, 2)}</pre></p>
+          <p><strong>Uitleg:</strong> ${config.uitleg}</p>
+        `;
+      } else {
+        instellingen.value = "";
+        uitleg.value = "";
+        huidigeInstelling.innerHTML = "<p>Geen bestaande instellingen voor deze combinatie.</p>";
+      }
+    }
+
+    detailsForm.addEventListener("submit", e => {
+      e.preventDefault();
+      const sleutel = getSleutel();
+
+      try {
+        const parsed = instellingen.value ? JSON.parse(instellingen.value) : {};
+        simulatieconfig[sleutel] = {
+          type: typeSelect.value,
+          instellingen: parsed,
+          uitleg: uitleg.value.trim()
+        };
+        localStorage.setItem("simulatieconfig", JSON.stringify(simulatieconfig));
+        alert("Simulatieregels opgeslagen!");
+        toonBestaandeConfig();
+      } catch (err) {
+        alert("Fout in JSON instellingen. Corrigeer deze eerst.");
+      }
+    });
+  </script>
+</body>
+</html>
