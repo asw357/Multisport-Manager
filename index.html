@@ -10,13 +10,9 @@
 <body>
   <header>
     <h1 data-i18n="heading">🏅 Multisport-Manager</h1>
-
-    <!-- 🌐 Taalkeuze -->
     <div id="taalkeuze"></div>
-
-    <!-- 📌 Navigatie met knoppen -->
     <nav id="navigatie">
-      <!-- Wordt dynamisch ingevuld -->
+      <!-- Wordt dynamisch gevuld door JS -->
     </nav>
   </header>
 
@@ -47,7 +43,6 @@
   <footer>
     <p data-i18n="footer">&copy; 2025 Multisport-Manager – Jouw sport, jouw strategie.</p>
   </footer>
-
   <script>
     // 🌐 Taalkeuze
     const taalDiv = document.getElementById("taalkeuze");
@@ -70,10 +65,9 @@
       vertaalPagina();
     }
 
-    // 🌍 Landen tonen
+    // 🌍 Landenrij
     const landendiv = document.getElementById("landenVlaggen");
     const landenQueue = JSON.parse(localStorage.getItem("countryQueue")) || [];
-
     if (landenQueue.length > 0) {
       landenQueue.slice(0, 12).forEach(land => {
         const span = document.createElement("span");
@@ -85,21 +79,22 @@
       landendiv.innerHTML = "<p data-i18n='no-countries'>Er zijn nog geen landen toegewezen.</p>";
     }
 
-    // 👥 Navigatie dynamisch op basis van user
+    // 👤 Navigatie: login/logout/manager/admin
     const nav = document.getElementById("navigatie");
+    nav.innerHTML = "";
     const user = JSON.parse(localStorage.getItem("user"));
-
-    nav.innerHTML = ""; // Schoon
 
     if (user) {
       const vlag = user.land ? `🏳️ ${user.land}` : "";
       const spelernaam = user.gebruikersnaam || user.email || "Speler";
 
+      // 👤 Managerlink
       const managerLink = document.createElement("a");
       managerLink.href = "manager.html";
-      managerLink.innerHTML = `👤 Managerpagina (${spelernaam}) – ${vlag} – ${user.mp || 0} MP`;
+      managerLink.innerHTML = `👤 ${spelernaam} – ${vlag} – ${user.mp || 0} MP`;
       nav.appendChild(managerLink);
 
+      // 🛠️ Admin (alleen juiste e-mailadres)
       if (user.email === "wilcoboesveld12@hotmail.com") {
         const adminLink = document.createElement("a");
         adminLink.href = "admin.html";
@@ -107,11 +102,13 @@
         nav.appendChild(adminLink);
       }
 
+      // 🚪 Logout
       const logoutLink = document.createElement("a");
       logoutLink.href = "logout.html";
       logoutLink.textContent = "🚪 Uitloggen";
       nav.appendChild(logoutLink);
     } else {
+      // 🔐 Login/Register
       const loginLink = document.createElement("a");
       loginLink.href = "login.html";
       loginLink.textContent = "🔐 Inloggen";
