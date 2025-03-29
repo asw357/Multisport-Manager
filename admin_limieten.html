@@ -125,3 +125,63 @@
     html += "</tbody></table>";
     limietenOverzicht.innerHTML = html;
   }
+  function bewerkLimiet(index) {
+    const l = limieten[index];
+    const rij = document.getElementById(`rij-${index}`);
+    rij.innerHTML = `
+      <td>${toonIcon(l.teamsport)}</td>
+      <td><input type="text" id="editSport" value="${l.sport}" /></td>
+      <td><input type="text" id="editDiscipline" value="${l.discipline || ""}" /></td>
+      <td>
+        <select id="editGeslacht">
+          <option ${l.geslacht === "Mannen" ? "selected" : ""}>Mannen</option>
+          <option ${l.geslacht === "Vrouwen" ? "selected" : ""}>Vrouwen</option>
+          <option ${l.geslacht === "Gemengd" ? "selected" : ""}>Gemengd</option>
+        </select>
+      </td>
+      <td><input type="text" id="editOnderdeel" value="${l.onderdeel}" /></td>
+      <td><input type="number" id="editMax" value="${l.max}" min="1" /></td>
+      <td><input type="number" id="editStart" value="${l.start}" min="0" /></td>
+      <td>
+        <input type="checkbox" id="editTeam" ${l.teamsport ? "checked" : ""} onchange="toggleTeamInput(${index})"/>
+      </td>
+      <td>
+        <input type="number" id="editTeamGrootte" value="${l.teamgrootte || ""}" ${l.teamsport ? "" : "disabled"} min="1"/>
+      </td>
+      <td>
+        <button onclick="opslaanBewerking(${index})">💾</button>
+        <button onclick="toonOverzicht()">❌</button>
+      </td>
+    `;
+  }
+
+  function toggleTeamInput(index) {
+    const teamInput = document.getElementById("editTeamGrootte");
+    teamInput.disabled = !document.getElementById("editTeam").checked;
+    if (!teamInput.disabled) teamInput.focus();
+  }
+
+  function opslaanBewerking(index) {
+    const nieuwe = {
+      sport: document.getElementById("editSport").value.trim(),
+      discipline: document.getElementById("editDiscipline").value.trim(),
+      geslacht: document.getElementById("editGeslacht").value,
+      onderdeel: document.getElementById("editOnderdeel").value.trim(),
+      max: parseInt(document.getElementById("editMax").value),
+      start: parseInt(document.getElementById("editStart").value),
+      teamsport: document.getElementById("editTeam").checked,
+      teamgrootte: document.getElementById("editTeam").checked
+        ? parseInt(document.getElementById("editTeamGrootte").value) || null
+        : null
+    };
+
+    if (!nieuwe.sport || !nieuwe.onderdeel || !nieuwe.geslacht || isNaN(nieuwe.max) || isNaN(nieuwe.start)) {
+      alert("Vul alle vereiste velden correct in.");
+      return;
+    }
+
+    nieuwe.sleutel = maakSleutel(nieuwe.sport, nieuwe.discipline, nieuwe.geslacht, nieuwe.onderdeel);
+    limieten[index] = nieuwe;
+    localStorage.setItem("limieten", JSON.stringify(limieten));
+    toonOverzicht();
+  }
