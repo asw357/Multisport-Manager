@@ -1,72 +1,95 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Regels & Uitleg</title>
-  <link rel="stylesheet" href="css/style.css">
-  <style>
-    main {
-      max-width: 900px;
-      margin: auto;
-      padding: 20px;
-    }
-    h2 { margin-top: 30px; }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title data-i18n="rules-title">Spelregels & Uitleg – Multisport-Manager</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="language.js"></script>
 </head>
 <body>
   <header>
-    <h1>📘 Regels & Uitleg</h1>
-    <nav><a href="index.html">⬅️ Terug naar Home</a></nav>
+    <h1 data-i18n="rules-heading">📖 Spelregels & Uitleg</h1>
+    <nav>
+      <a href="index.html" data-i18n="back-home">⬅️ Terug naar homepage</a>
+    </nav>
+    <div id="taalkeuze"></div>
   </header>
+
   <main>
-    <h2>1. Registratie & Landtoewijzing</h2>
-    <p>Bij registratie ontvangt elke speler automatisch een uniek land, op basis van een vooraf ingestelde lijst. Deze landen worden in volgorde toegewezen en kunnen alleen door de admin worden aangepast.</p>
+    <section>
+      <h2 data-i18n="what-is-game">🎯 Wat is Multisport-Manager?</h2>
+      <p data-i18n="game-desc">
+        Multisport-Manager is een online multiplayer sportmanagementspel waarin je een land bestuurt in realistische sporttoernooien.
+        Je scout atleten, traint hen, bepaalt tactieken en strijdt mee in echte toernooischema’s die zich in real-time afspelen.
+      </p>
+    </section>
 
-    <h2>2. Managerpagina</h2>
-    <p>Na inloggen heeft de speler toegang tot de Managerpagina. Hier zie je jouw vlag, naam, MP (MedalPoints), je profiel, deelnamegeschiedenis, prijzenkast en links naar je atletenbeheer, training en scouting.</p>
+    <section>
+      <h2 data-i18n="how-to-play">🕹️ Hoe speel je?</h2>
+      <ul>
+        <li data-i18n="step-1">Maak een account aan en krijg automatisch een land toegewezen.</li>
+        <li data-i18n="step-2">Bekijk je team via de Managerpagina.</li>
+        <li data-i18n="step-3">Scout nieuwe atleten, train bestaande, stel tactieken in per wedstrijd.</li>
+        <li data-i18n="step-4">Neem deel aan toernooien (Zomer/Winter/Continentale edities).</li>
+        <li data-i18n="step-5">Verdien MP door prestaties, records en medailles.</li>
+      </ul>
+    </section>
 
-    <h2>3. Atletenbeheer</h2>
-    <p>Beheer je atleten per sportonderdeel. Ontsla 1 per onderdeel per editie tegen MP-kosten. Elke atleet heeft stats, leeftijden, limieten, naam passend bij land. Stats kunnen ouder worden of blesseren.</p>
+    <section>
+      <h2 data-i18n="about-mp">💰 Wat zijn Medalpoints (MP)?</h2>
+      <p data-i18n="mp-desc">
+        MP is de valuta binnen het spel. Je gebruikt MP om atleten te scouten, te trainen of te vervangen. MP verdien je door successen te behalen zoals medailles, het verbreken van records of deelname aan wedstrijden.
+      </p>
+    </section>
 
-    <h2>4. Training</h2>
-    <p>Elke atleet mag maximaal 4x trainen per editie. Je kiest tussen lichte, normale of zware training — met toenemend risico en beloning. Training kost MP.</p>
+    <section>
+      <h2 data-i18n="about-simulation">🏁 Hoe werkt de simulatie?</h2>
+      <p data-i18n="sim-desc">
+        Wedstrijden worden live gespeeld op vaste tijden. Resultaten worden bepaald door atleetstatistieken, toegepaste tactiek en een beetje geluk. Je kunt per wedstrijd vooraf een tactiek kiezen die bij jouw atleten past.
+      </p>
+    </section>
 
-    <h2>5. Scouting</h2>
-    <p>Je kunt 4x per editie per onderdeel scouten. Je krijgt telkens 6 fictieve atleten te zien en mag er max. 8 per onderdeel toevoegen. Kosten verschillen per atleet.</p>
+    <section>
+      <h2 data-i18n="records-section">📊 Records & Statistieken</h2>
+      <p data-i18n="record-desc">
+        Er zijn Multi Records (MR) en Nationale Records (NR) die automatisch worden bijgehouden. Elke prestatie telt mee voor de geschiedenis van jouw land en atleten.
+      </p>
+    </section>
 
-    <h2>6. Tactieken</h2>
-    <p>Voor elke wedstrijd kun je een tactiek kiezen. Tactieken zijn gekoppeld aan het onderdeel en beïnvloeden prestaties, risico op DQ of blessures. Geen MP-kosten.</p>
-
-    <h2>7. MedalPoints (MP)</h2>
-    <p>Je verdient MP door prestaties zoals medailles, doorgaan in toernooien, deelname, records en eindrangschikkingen. Admin bepaalt de MP-waardes. MP blijft staan en wordt niet gereset.</p>
-
-    <h2>8. Simulatie</h2>
-    <p>Wedstrijden worden live gesimuleerd op het door admin ingestelde schema. Elke wedstrijd heeft verslag, voortgangsbalk, recordsysteem, en verwerkt automatisch resultaten, MP en medailles.</p>
-
-    <h2>9. Records & Statistieken</h2>
-    <p>Multi Records (MR) zijn wereldwijde records. Nationale Records (NR) zijn gebonden aan landen. Alles wordt automatisch bijgewerkt.</p>
-
-    <h2>10. Toernooi & Editiebeheer</h2>
-    <p>Edities worden gepland met fictieve jaren. Zomer en Winter edities wisselen om de 4 jaar af. Admin bepaalt schema en wedstrijden. Tussen edities is er 2 jaar. Je behoudt je land, maar atleten zijn gescheiden.</p>
-
-    <h2>11. Continentale kwalificaties & Vriendschappelijk</h2>
-    <p>Kwalificatietoernooien vinden plaats wanneer nodig. Deelname is verplicht. Vriendschappelijke wedstrijden kun je zelf aanvragen tegen kleine MP-kosten.</p>
-
-    <h2>12. Nieuws & Medaillespiegel</h2>
-    <p>Nieuws wordt automatisch gegenereerd (bijv. records, blessures, prestaties). Spelers kunnen reageren met emoji's. Medaillespiegel wordt automatisch bijgewerkt en heeft een aparte pagina.</p>
-
-    <h2>13. Taal & Instellingen</h2>
-    <p>Elke gebruiker kan zijn taal instellen (NL, EN, DE, FR). Admin beheert vertalingen. Instellingen kunnen ook meldingen aan/uit zetten.</p>
-
-    <h2>14. Adminmogelijkheden</h2>
-    <p>De admin heeft toegang tot alle beheerpagina’s voor landen, sporten, limieten, MP-instellingen, schema’s, edities, resettools en testtools. Alleen e-mailadres <code>wilcoboesveld12@hotmail.com</code> heeft adminrechten.</p>
-
-    <h2>15. Overig</h2>
-    <p>Transfers zijn niet mogelijk. Atleten blijven bij hun land. Sponsoring, betalingen en evenementen zijn niet beschikbaar. Spelers kunnen geen MP verliezen, behalve bij uitgaven.</p>
+    <section>
+      <h2 data-i18n="admin-section">ℹ️ Meer informatie voor admins?</h2>
+      <p data-i18n="admin-note">
+        Admins kunnen alles beheren via de Adminpagina: van limieten, onderdelen en edities tot simulatiegedrag. Voor vragen of feedback neem contact op via de contactpagina.
+      </p>
+    </section>
   </main>
+
   <footer>
-    <p>&copy; 2025 Sport Manager Simulatie – Regels</p>
+    <p data-i18n="footer">&copy; 2025 Multisport-Manager – Jouw sport, jouw strategie.</p>
   </footer>
+  <script>
+    // 🌐 Taalkeuze bovenaan
+    const taalDiv = document.getElementById("taalkeuze");
+    const talen = ["nl", "en", "fr", "de"];
+    const actieveTaal = localStorage.getItem("taal") || "nl";
+
+    talen.forEach(taal => {
+      const knop = document.createElement("button");
+      knop.textContent = taal.toUpperCase();
+      knop.style.marginRight = "5px";
+      if (taal === actieveTaal) knop.disabled = true;
+      knop.addEventListener("click", () => {
+        localStorage.setItem("taal", taal);
+        location.reload();
+      });
+      taalDiv.appendChild(knop);
+    });
+
+    // 🌍 Vertaal alles op de pagina
+    if (typeof vertaalPagina === "function") {
+      vertaalPagina();
+    }
+  </script>
 </body>
 </html>
