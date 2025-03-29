@@ -1,22 +1,62 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Atletenbeheer</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mijn Atleten</title>
   <link rel="stylesheet" href="css/style.css" />
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+    }
+    h1 {
+      margin-bottom: 20px;
+    }
+    .atleten-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .atleet-kaart {
+      border: 1px solid #ccc;
+      padding: 15px;
+      border-radius: 10px;
+      width: 300px;
+      background: #f7f7f7;
+      box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+    }
+    .atleet-kaart h3 {
+      margin-top: 0;
+    }
+    .extra-onderdelen {
+      margin-top: 10px;
+    }
+    .extra-onderdelen ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+    .extra-selectie {
+      margin-top: 10px;
+    }
+    .extra-selectie select {
+      width: 100%;
+      padding: 5px;
+    }
+    .extra-selectie button {
+      margin-top: 5px;
+      width: 100%;
+    }
+  </style>
 </head>
 <body>
   <header>
     <h1>🏃 Mijn Atleten</h1>
-    <nav>
-      <a href="manager.html">⬅️ Terug naar Manager</a>
-    </nav>
+    <nav><a href="manager.html">⬅️ Terug naar Manager</a></nav>
   </header>
 
   <main>
-    <input type="text" id="zoekInput" placeholder="🔎 Zoek op naam, sport of onderdeel" />
-    <div id="atletenContainer"></div>
+    <div id="atletenContainer" class="atleten-container"></div>
   </main>
 
   <footer>
@@ -24,75 +64,93 @@
   </footer>
 
   <script>
-    const atleten = JSON.parse(localStorage.getItem("atleten")) || [];
-    const user = JSON.parse(localStorage.getItem("loggedInUser"));
-    const statCategorieen = JSON.parse(localStorage.getItem("statcategorieen")) || {};
-    const container = document.getElementById("atletenContainer");
-    const zoekInput = document.getElementById("zoekInput");
+const loggedIn = JSON.parse(localStorage.getItem("loggedInUser"));
+const alleAtleten = JSON.parse(localStorage.getItem("atleten")) || [];
+const combinaties = JSON.parse(localStorage.getItem("combinaties")) || [];
 
-    function toonAtleten() {
-      container.innerHTML = "";
-      const zoekterm = zoekInput.value.toLowerCase();
+const container = document.getElementById("atletenContainer");
 
-      const eigenAtleten = atleten.filter(a => a.owner === user.email);
-      const gefilterd = eigenAtleten.filter(a =>
-        a.naam.toLowerCase().includes(zoekterm) ||
-        a.sport?.toLowerCase().includes(zoekterm) ||
-        a.onderdeel?.toLowerCase().includes(zoekterm)
-      );
+const mijnAtleten = alleAtleten.filter(a => a.owner === loggedIn.email);
 
-      if (gefilterd.length === 0) {
-        container.innerHTML = "<p>Geen atleten gevonden.</p>";
-        return;
-      }
+function getLabel(atleet) {
+  return `${atleet.sport} – ${atleet.discipline ? atleet.discipline + " – " : ""}${atleet.onderdeel} (${atleet.geslacht})`;
+}
 
-      gefilterd.forEach(a => {
-        const div = document.createElement("div");
-        div.className = "atleet-box";
-        div.innerHTML = `
-          <h3>${a.naam}</h3>
-          <p><strong>Sport:</strong> ${a.sport}</p>
-          <p><strong>Onderdeel:</strong> ${a.onderdeel || 'Onbekend'}</p>
-          <p><strong>Leeftijd:</strong> ${a.leeftijd}</p>
-          <div><strong>Stats:</strong></div>
-          <ul id="stats-${a.id}"></ul>
-          <p>
-            <a href="training.html?id=${a.id}">🏋️ Train</a> |
-            <a href="scouting.html">🔍 Scout</a> |
-            <button onclick="ontslaAtleet('${a.id}')">❌ Ontsla</button>
-          </p>
-        `;
-        container.appendChild(div);
+function getMogelijkeCombinaties(atleet) {
+  const sleutel = `${atleet.sport}__${atleet.discipline || ""}__${atleet.geslacht}__${atleet.onderdeel}`;
+  return combinaties.filter(c => c.van === sleutel).map(c => ({
+    value: c.naar,
+    label: c.naarLabel
+  })).filter(extra => {
+    return !(atleet.extraOnderdelen || []).some(e => {
+      return `${e.sport}__${e.discipline || ""}__${e.geslacht}__${e.onderdeel}` === extra.value;
+    });
+  });
+}
 
-        // Stats tonen
-        const statList = document.getElementById(`stats-${a.id}`);
-        const sleutel = `${a.sport} - ${a.geslacht || "Mannen"} - ${a.onderdeel}`;
-        const statNamen = statCategorieen[sleutel] || Object.keys(a.stats || {});
+function toonAtleten() {
+  container.innerHTML = "";
+  mijnAtleten.forEach((atleet, index) => {
+    const kaart = document.createElement("div");
+    kaart.className = "atleet-kaart";
 
-        statNamen.forEach(stat => {
-          const li = document.createElement("li");
-          const waarde =
-            a.stats && a.stats[stat] !== undefined
-              ? Math.round(a.stats[stat])
-              : '–';
-          li.textContent = `${stat}: ${waarde}`;
-          statList.appendChild(li);
-        });
+    const naam = document.createElement("h3");
+    naam.textContent = `🏅 ${atleet.naam}`;
+    kaart.appendChild(naam);
+
+    kaart.innerHTML += `
+      <p>🎽 ${getLabel(atleet)}</p>
+      <p>📊 Leeftijd: ${atleet.leeftijd}</p>
+      <p>📈 Snelheid: ${Math.round(atleet.stats.snelheid)}</p>
+      <p>📈 Techniek: ${Math.round(atleet.stats.techniek)}</p>
+      <p>📈 Kracht: ${Math.round(atleet.stats.kracht)}</p>
+    `;
+
+    const extraBlok = document.createElement("div");
+    extraBlok.className = "extra-onderdelen";
+    extraBlok.innerHTML = "<strong>➕ Extra Onderdelen:</strong>";
+    const lijst = document.createElement("ul");
+    (atleet.extraOnderdelen || []).forEach(o => {
+      const li = document.createElement("li");
+      li.textContent = getLabel(o);
+      lijst.appendChild(li);
+    });
+    extraBlok.appendChild(lijst);
+    kaart.appendChild(extraBlok);
+
+    const opties = getMogelijkeCombinaties(atleet);
+    if (opties.length > 0) {
+      const selectieDiv = document.createElement("div");
+      selectieDiv.className = "extra-selectie";
+      const select = document.createElement("select");
+      opties.forEach(opt => {
+        const el = document.createElement("option");
+        el.value = opt.value;
+        el.textContent = opt.label;
+        select.appendChild(el);
       });
-    }
-
-    zoekInput.addEventListener("input", toonAtleten);
-    toonAtleten();
-
-    function ontslaAtleet(id) {
-      if (!confirm("Weet je zeker dat je deze atleet wilt ontslaan?")) return;
-      const index = atleten.findIndex(a => a.id === id);
-      if (index > -1) {
-        atleten.splice(index, 1);
-        localStorage.setItem("atleten", JSON.stringify(atleten));
+      const knop = document.createElement("button");
+      knop.textContent = "➕ Toevoegen";
+      knop.addEventListener("click", () => {
+        const gekozen = select.value;
+        const [s, d, g, o] = gekozen.split("__");
+        if (!atleet.extraOnderdelen) atleet.extraOnderdelen = [];
+        atleet.extraOnderdelen.push({ sport: s, discipline: d, geslacht: g, onderdeel: o });
+        alleAtleten[alleAtleten.findIndex(a => a.id === atleet.id)] = atleet;
+        localStorage.setItem("atleten", JSON.stringify(alleAtleten));
         toonAtleten();
-      }
+      });
+
+      selectieDiv.appendChild(select);
+      selectieDiv.appendChild(knop);
+      kaart.appendChild(selectieDiv);
     }
-  </script>
+
+    container.appendChild(kaart);
+  });
+}
+
+toonAtleten();
+</script>
 </body>
 </html>
