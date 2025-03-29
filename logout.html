@@ -2,20 +2,31 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Uitloggen...</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Uitloggen</title>
+  <link rel="stylesheet" href="css/style.css">
   <script>
-    // Verwijder alle gebruikersdata
-    localStorage.removeItem("user");
-
-    // Eventueel: ook sessiegegevens resetten
-    // localStorage.removeItem("tijdelijkeData");
-
-    // Redirect naar homepage
-    window.location.href = "index.html";
+    // Uitlogactie direct uitvoeren
+    window.onload = function() {
+      localStorage.removeItem("loggedInUser");
+      setTimeout(() => {
+        window.location.href = "index.html";
+      }, 2500);
+    };
   </script>
 </head>
 <body>
-  <p>Bezig met uitloggen...</p>
+  <header>
+    <h1>🚪 Uitloggen</h1>
+  </header>
+
+  <main>
+    <p>Je bent uitgelogd. Je wordt automatisch teruggestuurd naar de homepagina...</p>
+    <p><a href="index.html">👉 Of klik hier om direct terug te keren</a></p>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Sport Manager Simulatie</p>
+  </footer>
 </body>
 </html>
