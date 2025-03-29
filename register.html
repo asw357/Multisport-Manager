@@ -36,7 +36,7 @@
     <p data-i18n="footer">&copy; 2025 Multisport-Manager – Jouw sport, jouw strategie.</p>
   </footer>
   <script>
-    // 🌐 Taalkeuze
+    // 🌐 Taal
     const taalDiv = document.getElementById("taalkeuze");
     const talen = ["nl", "en", "fr", "de"];
     const actieveTaal = localStorage.getItem("taal") || "nl";
@@ -73,10 +73,14 @@
         return;
       }
 
-      const countryQueue = JSON.parse(localStorage.getItem("countryQueue")) || [];
-      if (countryQueue.length === 0) {
-        melding.textContent = "Geen landen meer beschikbaar.";
-        return;
+      // ✅ Landentoewijzing met fallback
+      let countryQueue = JSON.parse(localStorage.getItem("countryQueue"));
+
+      if (!Array.isArray(countryQueue) || countryQueue.length === 0) {
+        countryQueue = [
+          "Australië", "Bulgarije", "Chili", "Denemarken", "IJsland", "Duitsland", "Frankrijk", "Griekenland"
+        ];
+        localStorage.setItem("countryQueue", JSON.stringify(countryQueue));
       }
 
       const toegewezenLand = countryQueue.shift();
@@ -94,12 +98,11 @@
 
       localStorage.setItem("user", JSON.stringify(user));
 
-      // Toevoegen aan accounts
+      // Voeg toe aan accounts
       const accounts = JSON.parse(localStorage.getItem("accounts")) || [];
       accounts.push(user);
       localStorage.setItem("accounts", JSON.stringify(accounts));
 
-      // ✅ Altijd naar index.html, geen redirect naar admin!
       window.location.href = "index.html";
     });
   </script>
