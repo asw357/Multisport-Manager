@@ -6,6 +6,45 @@
   <title data-i18n="manager-title">Managerpagina – Multisport-Manager</title>
   <link rel="stylesheet" href="css/style.css" />
   <script src="language.js"></script>
+  <style>
+    .manager-container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f5f5f5;
+      border-radius: 8px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+    }
+
+    .manager-info p {
+      font-size: 1.1em;
+      margin: 10px 0;
+    }
+
+    .stat {
+      background: #fff;
+      padding: 10px 15px;
+      border-radius: 6px;
+      display: inline-block;
+      margin: 10px 10px 10px 0;
+      box-shadow: 0 0 4px rgba(0,0,0,0.05);
+    }
+
+    .actions a {
+      display: inline-block;
+      margin: 10px 10px 0 0;
+      padding: 10px 15px;
+      background-color: #0077cc;
+      color: white;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .actions a:hover {
+      background-color: #005fa3;
+    }
+  </style>
 </head>
 <body>
   <header>
@@ -16,20 +55,18 @@
     <div id="taalkeuze"></div>
   </header>
 
-  <main>
-    <section id="managerInfo">
-      <p><strong data-i18n="player-name-label">Speler:</strong> <span id="spelerNaam">...</span></p>
-      <p><strong data-i18n="player-country-label">Land:</strong> <span id="land">...</span></p>
-      <p><strong data-i18n="player-mp-label">MP:</strong> <span id="mp">0</span></p>
+  <main class="manager-container">
+    <section class="manager-info">
+      <h2 data-i18n="overview">📋 Jouw gegevens</h2>
+      <p><span class="stat"><strong data-i18n="player-name-label">Speler:</strong> <span id="spelerNaam">...</span></span></p>
+      <p><span class="stat"><strong data-i18n="player-country-label">Land:</strong> <span id="land">...</span></span></p>
+      <p><span class="stat"><strong data-i18n="player-mp-label">MP:</strong> <span id="mp">0</span></span></p>
     </section>
 
-    <section>
-      <h2 data-i18n="manager-actions">📂 Acties</h2>
-      <ul>
-        <li><a href="athletes.html" data-i18n="to-athletes">👥 Atletenbeheer</a></li>
-        <li><a href="tactics.html" data-i18n="to-tactics">🎯 Wedstrijdtactieken</a></li>
-        <!-- Hier kun je later profiel, resultaten, etc. toevoegen -->
-      </ul>
+    <section class="actions">
+      <h2 data-i18n="manager-actions">🎮 Acties</h2>
+      <a href="athletes.html" data-i18n="to-athletes">👥 Atletenbeheer</a>
+      <a href="tactics.html" data-i18n="to-tactics">🎯 Wedstrijdtactieken</a>
     </section>
   </main>
 
@@ -58,10 +95,10 @@
       vertaalPagina();
     }
 
-    // 👤 Gebruiker tonen
+    // 👤 Gebruiker ophalen
     const user = JSON.parse(localStorage.getItem("user"));
     if (!user) {
-      window.location.href = "login.html"; // Gebruiker moet ingelogd zijn
+      window.location.href = "login.html"; // 🔐 Alleen toegankelijk na login
     } else {
       document.getElementById("spelerNaam").textContent = user.gebruikersnaam || "Onbekend";
       document.getElementById("land").textContent = user.land || "?";
