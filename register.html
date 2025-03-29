@@ -65,38 +65,38 @@
       return `${voornamen[Math.floor(Math.random() * voornamen.length)]} ${achternamen[Math.floor(Math.random() * achternamen.length)]}`;
     }
 
-    function genereerAtleten(gebruiker) {
-      const sporten = JSON.parse(localStorage.getItem("sportonderdelen")) || [];
-      const limieten = JSON.parse(localStorage.getItem("limieten")) || {};
-      const alleAtleten = JSON.parse(localStorage.getItem("atleten")) || [];
+   function genereerAtleten(gebruiker) {
+  const onderdelen = JSON.parse(localStorage.getItem("sportonderdelen")) || [];
+  const limieten = JSON.parse(localStorage.getItem("limieten")) || [];
+  const alleAtleten = JSON.parse(localStorage.getItem("atleten")) || [];
+  let nieuwe = [];
 
-      let nieuwe = [];
+  onderdelen.forEach(s => {
+    const sleutel = `${s.sport}__${s.discipline || ""}__${s.geslacht}__${s.onderdeel}`;
+    const limiet = limieten.find(l => l.sleutel === sleutel);
+    const startAantal = limiet?.start || 0;
 
-      sporten.forEach(s => {
-        const sleutel = `${s.sport} - ${s.geslacht} - ${s.onderdeel}`;
-        const limiet = limieten[sleutel];
-        const start = limiet?.start || 0;
-
-        for (let i = 0; i < start; i++) {
-          nieuwe.push({
-            id: Date.now() + Math.random(),
-            naam: genereerNaam(gebruiker.land),
-            leeftijd: Math.floor(Math.random() * 10) + 18,
-            sport: s.sport,
-            geslacht: s.geslacht,
-            onderdeel: s.onderdeel,
-            owner: gebruiker.email,
-            stats: {
-              snelheid: Math.random() * 100,
-              kracht: Math.random() * 100,
-              techniek: Math.random() * 100
-            }
-          });
+    for (let i = 0; i < startAantal; i++) {
+      nieuwe.push({
+        id: Date.now() + Math.random(),
+        naam: genereerNaam(gebruiker.land),
+        leeftijd: Math.floor(Math.random() * 10) + 18,
+        sport: s.sport,
+        discipline: s.discipline || "",
+        geslacht: s.geslacht,
+        onderdeel: s.onderdeel,
+        owner: gebruiker.email,
+        stats: {
+          snelheid: Math.random() * 100,
+          kracht: Math.random() * 100,
+          techniek: Math.random() * 100
         }
       });
-
-      localStorage.setItem("atleten", JSON.stringify([...alleAtleten, ...nieuwe]));
     }
+  });
+
+  localStorage.setItem("atleten", JSON.stringify([...alleAtleten, ...nieuwe]));
+}
 
     document.getElementById("registerForm").addEventListener("submit", function (e) {
       e.preventDefault();
