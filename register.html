@@ -55,9 +55,19 @@
   </footer>
 
   <script>
-    const landenQueue = JSON.parse(localStorage.getItem("country_queue")) || [
-      "Australië", "Bulgarije", "Chili", "Denemarken", "IJsland", "Duitsland", "Frankrijk", "Griekenland"
-    ];
+<script>
+    async function fetchJSON(path) {
+      const res = await fetch(path);
+      return await res.json();
+    }
+
+    async function postData(path, data) {
+      await fetch(path, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+    }
 
     function genereerNaam(land) {
       const voornamen = ["Alex", "Liam", "Sven", "Noah", "Julian", "Max", "Kai"];
@@ -65,53 +75,54 @@
       return `${voornamen[Math.floor(Math.random() * voornamen.length)]} ${achternamen[Math.floor(Math.random() * achternamen.length)]}`;
     }
 
-   function genereerAtleten(gebruiker) {
-  const onderdelen = JSON.parse(localStorage.getItem("sportonderdelen")) || [];
-  const limieten = JSON.parse(localStorage.getItem("limieten")) || [];
-  const alleAtleten = JSON.parse(localStorage.getItem("atleten")) || [];
-  let nieuwe = [];
+    async function genereerAtleten(gebruiker) {
+      const onderdelen = await fetchJSON("data/sportonderdelen.json");
+      const limieten = await fetchJSON("data/limieten.json");
+      const huidigeAtleten = await fetchJSON("data/atleten.json");
+      let nieuwe = [];
 
-  onderdelen.forEach(s => {
-    const sleutel = `${s.sport}__${s.discipline || ""}__${s.geslacht}__${s.onderdeel}`;
-    const limiet = limieten.find(l => l.sleutel === sleutel);
-    const startAantal = limiet?.start || 0;
+      onderdelen.forEach(s => {
+        const sleutel = `${s.sport}__${s.discipline || ""}__${s.geslacht}__${s.onderdeel}`;
+        const limiet = limieten.find(l => l.sleutel === sleutel);
+        const startAantal = limiet?.start || 0;
 
-    for (let i = 0; i < startAantal; i++) {
-      nieuwe.push({
-        id: Date.now() + Math.random(),
-        naam: genereerNaam(gebruiker.land),
-        leeftijd: Math.floor(Math.random() * 10) + 18,
-        sport: s.sport,
-        discipline: s.discipline || "",
-        geslacht: s.geslacht,
-        onderdeel: s.onderdeel,
-        owner: gebruiker.email,
-        stats: {
-          snelheid: Math.random() * 100,
-          kracht: Math.random() * 100,
-          techniek: Math.random() * 100
+        for (let i = 0; i < startAantal; i++) {
+          nieuwe.push({
+            id: Date.now() + Math.random(),
+            naam: genereerNaam(gebruiker.land),
+            leeftijd: Math.floor(Math.random() * 10) + 18,
+            sport: s.sport,
+            discipline: s.discipline || "",
+            geslacht: s.geslacht,
+            onderdeel: s.onderdeel,
+            owner: gebruiker.email,
+            stats: {
+              snelheid: Math.random() * 100,
+              kracht: Math.random() * 100,
+              techniek: Math.random() * 100
+            }
+          });
         }
       });
+
+      const totaal = [...huidigeAtleten, ...nieuwe];
+      await postData("data/atleten.json", totaal);
     }
-  });
 
-  localStorage.setItem("atleten", JSON.stringify([...alleAtleten, ...nieuwe]));
-}
-
-    document.getElementById("registerForm").addEventListener("submit", function (e) {
+    document.getElementById("registerForm").addEventListener("submit", async function (e) {
       e.preventDefault();
       const gebruikersnaam = document.getElementById("gebruikersnaam").value;
       const email = document.getElementById("email").value;
       const wachtwoord = document.getElementById("wachtwoord").value;
 
-      const users = JSON.parse(localStorage.getItem("users")) || [];
+      const users = await fetchJSON("data/users.json");
       if (users.find(u => u.email === email)) {
         alert("Er bestaat al een account met dit e-mailadres.");
         return;
       }
 
+      let landenQueue = await fetchJSON("data/country_queue.json");
       const land = landenQueue.shift() || "Landloos";
-      localStorage.setItem("country_queue", JSON.stringify(landenQueue));
 
       const nieuweGebruiker = {
         gebruikersnaam,
@@ -122,12 +133,15 @@
       };
 
       users.push(nieuweGebruiker);
-      localStorage.setItem("users", JSON.stringify(users));
-      localStorage.setItem("loggedInUser", JSON.stringify(nieuweGebruiker));
 
-      genereerAtleten(nieuweGebruiker);
+      await postData("data/users.json", users);
+      await postData("data/country_queue.json", landenQueue);
+
+      await genereerAtleten(nieuweGebruiker);
+
+      localStorage.setItem("loggedInUser", JSON.stringify(nieuweGebruiker));
       window.location.href = "manager.html";
     });
-  </script>
+</script>
 </body>
 </html>
