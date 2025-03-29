@@ -8,7 +8,7 @@
 </head>
 <body>
   <header>
-    <h1>🧠 Admin – Simulatieregels per Sportonderdeel</h1>
+    <h1>🧠 Admin – Simulatieregels per Onderdeel</h1>
     <nav>
       <a href="admin.html">⬅️ Terug naar Admin</a>
     </nav>
@@ -16,114 +16,98 @@
 
   <main>
     <section>
-      <h2>⚙️ Kies Sport + Onderdeel</h2>
-      <label for="sportSelect">Sport:</label>
-      <select id="sportSelect"></select><br/>
-
-      <label for="onderdeelSelect">Onderdeel:</label>
-      <select id="onderdeelSelect"></select><br/>
-    </section>
-
-    <section>
-      <h2>🔧 Simulatieregels instellen</h2>
+      <h2>📌 Selecteer Editie, Sport & Onderdeel</h2>
       <form id="logicaForm">
+        <label for="editieSelect">Editie (optioneel):</label>
+        <select id="editieSelect">
+          <option value="">-- Algemeen toepassen --</option>
+        </select><br/>
+
+        <label for="sportSelect">Sport:</label>
+        <select id="sportSelect" required></select><br/>
+
+        <label for="onderdeelSelect">Onderdeel:</label>
+        <select id="onderdeelSelect" required></select><br/>
+        
         <label for="type">Simulatietype:</label>
         <select id="type" required>
           <option value="standaard">Standaard (1 score)</option>
           <option value="meerdere_pogingen">Meerdere pogingen</option>
-          <option value="serie_punten">Serie met puntentelling</option>
-          <option value="gemiddelde_score">Gemiddelde score</option>
-          <option value="custom">Custom uitleg</option>
+          <option value="puntenklassement">Puntenklassement</option>
+          <option value="best_of">Best of</option>
+          <option value="tijdvergelijking">Tijdvergelijking</option>
+          <option value="custom">Custom</option>
         </select><br/>
 
         <label for="instellingen">Instellingen (JSON):</label><br/>
-        <textarea id="instellingen" rows="4" cols="50" placeholder='Bijv: {"pogingen": 3}'></textarea><br/>
+        <textarea id="instellingen" rows="4" cols="60" placeholder='Bijv: {"pogingen": 3, "om_de_beurt": true}'></textarea><br/>
 
         <label for="uitleg">Uitleg voor verslag/speler:</label><br/>
-        <textarea id="uitleg" rows="3" cols="50" placeholder="Bijv: Elke atleet krijgt 3 pogingen, beste telt."></textarea><br/>
+        <textarea id="uitleg" rows="3" cols="60" placeholder="Bijv: Elke atleet krijgt 3 pogingen, beste telt."></textarea><br/>
 
         <button type="submit">💾 Opslaan logica</button>
       </form>
     </section>
 
     <section>
-      <h2>📋 Huidige Instellingen</h2>
-      <div id="logicaWeergave"></div>
+      <h2>📋 Bestaande Logica’s</h2>
+      <div id="logicaTabel"></div>
+      <button onclick="exporteerLogica()">📤 Exporteer alle logica</button>
+      <input type="file" id="importInput" accept=".json" />
     </section>
   </main>
 
   <footer>
     <p>&copy; 2025 Sport Manager Simulatie</p>
   </footer>
-
   <script>
-    const sporten = JSON.parse(localStorage.getItem("sportonderdelen")) || [];
-    const sportSelect = document.getElementById("sportSelect");
-    const onderdeelSelect = document.getElementById("onderdeelSelect");
-    const instellingen = document.getElementById("instellingen");
-    const uitleg = document.getElementById("uitleg");
-    const type = document.getElementById("type");
-    const logicaForm = document.getElementById("logicaForm");
-    const logicaWeergave = document.getElementById("logicaWeergave");
-
+    const edities = JSON.parse(localStorage.getItem("edities")) || [];
+    const onderdelen = JSON.parse(localStorage.getItem("sportonderdelen")) || [];
     let sportlogica = JSON.parse(localStorage.getItem("sportlogica")) || {};
 
-    // Vul sporten
-    const uniekeSporten = [...new Set(sporten.map(s => s.sport))];
-    uniekeSporten.forEach(sport => {
+    const editieSelect = document.getElementById("editieSelect");
+    const sportSelect = document.getElementById("sportSelect");
+    const onderdeelSelect = document.getElementById("onderdeelSelect");
+    const logicaForm = document.getElementById("logicaForm");
+    const type = document.getElementById("type");
+    const instellingen = document.getElementById("instellingen");
+    const uitleg = document.getElementById("uitleg");
+    const logicaTabel = document.getElementById("logicaTabel");
+    const importInput = document.getElementById("importInput");
+
+    // Laad edities
+    edities.forEach(e => {
       const opt = document.createElement("option");
-      opt.value = sport;
-      opt.textContent = sport;
+      opt.value = e.id;
+      opt.textContent = e.naam;
+      editieSelect.appendChild(opt);
+    });
+
+    // Laad sporten
+    const uniekeSporten = [...new Set(onderdelen.map(o => o.sport))];
+    uniekeSporten.forEach(s => {
+      const opt = document.createElement("option");
+      opt.value = s;
+      opt.textContent = s;
       sportSelect.appendChild(opt);
     });
 
-    // Vul onderdelen per sport
+    // Laad onderdelen per sport
     sportSelect.addEventListener("change", () => {
-      const gekozen = sportSelect.value;
       onderdeelSelect.innerHTML = "";
-      const gefilterd = sporten.filter(o => o.sport === gekozen);
+      const gekozen = sportSelect.value;
+      const gefilterd = onderdelen.filter(o => o.sport === gekozen);
       gefilterd.forEach(o => {
         const opt = document.createElement("option");
-        opt.value = JSON.stringify(o); // sla object op
+        opt.value = `${o.geslacht} - ${o.onderdeel}`;
         opt.textContent = `${o.geslacht} - ${o.onderdeel}`;
         onderdeelSelect.appendChild(opt);
       });
     });
 
-    onderdeelSelect.addEventListener("change", toonHuidigeLogica);
-
-    function maakSleutel() {
-      const sport = sportSelect.value;
-      if (!onderdeelSelect.value) return "";
-      const onderdeel = JSON.parse(onderdeelSelect.value);
-      return `${sport} - ${onderdeel.geslacht} - ${onderdeel.onderdeel}`;
-    }
-
-    function toonHuidigeLogica() {
-      const sleutel = maakSleutel();
-      const l = sportlogica[sleutel];
-      if (!sleutel) return;
-      if (!l) {
-        logicaWeergave.innerHTML = "<p>Geen specifieke logica ingesteld voor dit onderdeel.</p>";
-        instellingen.value = "";
-        uitleg.value = "";
-        type.value = "standaard";
-        return;
-      }
-      type.value = l.type || "standaard";
-      instellingen.value = JSON.stringify(l.instellingen || {}, null, 2);
-      uitleg.value = l.uitleg || "";
-      logicaWeergave.innerHTML = `
-        <p><strong>Type:</strong> ${l.type}</p>
-        <p><strong>Instellingen:</strong> <pre>${JSON.stringify(l.instellingen, null, 2)}</pre></p>
-        <p><strong>Uitleg:</strong> ${l.uitleg}</p>
-      `;
-    }
-
     logicaForm.addEventListener("submit", e => {
       e.preventDefault();
-      const sleutel = maakSleutel();
-      if (!sleutel) return alert("Kies eerst een sport en onderdeel.");
+      const sleutel = getSleutel();
 
       try {
         const parsed = instellingen.value ? JSON.parse(instellingen.value) : {};
@@ -134,11 +118,76 @@
         };
         localStorage.setItem("sportlogica", JSON.stringify(sportlogica));
         alert("Logica opgeslagen!");
-        toonHuidigeLogica();
+        toonLogicaTabel();
       } catch (err) {
-        alert("Instellingen zijn geen geldige JSON.");
+        alert("Fout in JSON-instellingen. Corrigeer deze eerst.");
       }
     });
+
+    function getSleutel() {
+      const editieId = editieSelect.value;
+      const onderdeelKey = `${sportSelect.value} - ${onderdeelSelect.value}`;
+      return editieId ? `${editieId} | ${onderdeelKey}` : `ALGEMEEN | ${onderdeelKey}`;
+    }
+
+    function toonLogicaTabel() {
+      if (Object.keys(sportlogica).length === 0) {
+        logicaTabel.innerHTML = "<p>Geen opgeslagen logica gevonden.</p>";
+        return;
+      }
+
+      let html = "<table><tr><th>Sleutel</th><th>Type</th><th>Uitleg</th><th>Acties</th></tr>";
+      Object.entries(sportlogica).forEach(([sleutel, config]) => {
+        html += `
+          <tr>
+            <td>${sleutel}</td>
+            <td>${config.type}</td>
+            <td>${config.uitleg}</td>
+            <td><button onclick="verwijderLogica('${sleutel}')">🗑️ Verwijder</button></td>
+          </tr>
+        `;
+      });
+      html += "</table>";
+      logicaTabel.innerHTML = html;
+    }
+
+    function verwijderLogica(sleutel) {
+      if (!confirm(`Weet je zeker dat je de logica voor "${sleutel}" wilt verwijderen?`)) return;
+      delete sportlogica[sleutel];
+      localStorage.setItem("sportlogica", JSON.stringify(sportlogica));
+      toonLogicaTabel();
+    }
+
+    function exporteerLogica() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(sportlogica, null, 2));
+      const link = document.createElement("a");
+      link.setAttribute("href", dataStr);
+      link.setAttribute("download", "sportlogica_export.json");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    }
+
+    importInput.addEventListener("change", () => {
+      const file = importInput.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        try {
+          const data = JSON.parse(e.target.result);
+          sportlogica = { ...sportlogica, ...data };
+          localStorage.setItem("sportlogica", JSON.stringify(sportlogica));
+          alert("Import succesvol!");
+          toonLogicaTabel();
+        } catch (err) {
+          alert("Fout bij importeren: ongeldige JSON.");
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    // Init
+    toonLogicaTabel();
   </script>
 </body>
 </html>
