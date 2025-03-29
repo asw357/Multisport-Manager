@@ -10,7 +10,7 @@
       max-width: 400px;
       margin: auto;
       padding: 20px;
-      background: #f2f2f2;
+      background: #f9f9f9;
       border-radius: 8px;
     }
     label {
@@ -27,7 +27,6 @@
       padding: 10px;
       width: 100%;
     }
-    .error { color: red; margin-top: 10px; }
   </style>
 </head>
 <body>
@@ -45,7 +44,6 @@
       <input type="password" id="wachtwoord" required />
 
       <button type="submit">➡️ Inloggen</button>
-      <p class="error" id="errorMsg"></p>
     </form>
   </main>
 
@@ -54,21 +52,25 @@
   </footer>
 
   <script>
-    document.getElementById("loginForm").addEventListener("submit", function (e) {
+    async function fetchJSON(path) {
+      const res = await fetch(path);
+      return await res.json();
+    }
+
+    document.getElementById("loginForm").addEventListener("submit", async function (e) {
       e.preventDefault();
-      const email = document.getElementById("email").value.trim();
-      const wachtwoord = document.getElementById("wachtwoord").value.trim();
-      const errorMsg = document.getElementById("errorMsg");
+      const email = document.getElementById("email").value;
+      const wachtwoord = document.getElementById("wachtwoord").value;
 
-      const users = JSON.parse(localStorage.getItem("users")) || [];
-      const gebruiker = users.find(u => u.email === email && u.wachtwoord === wachtwoord);
+      const users = await fetchJSON("data/users.json");
+      const match = users.find(u => u.email === email && u.wachtwoord === wachtwoord);
 
-      if (!gebruiker) {
-        errorMsg.textContent = "Foutieve inloggegevens.";
+      if (!match) {
+        alert("❌ Foutieve inloggegevens.");
         return;
       }
 
-      localStorage.setItem("loggedInUser", JSON.stringify(gebruiker));
+      localStorage.setItem("loggedInUser", JSON.stringify(match));
       window.location.href = "manager.html";
     });
   </script>
