@@ -59,7 +59,7 @@
         </div>
 
         <button type="submit">💾 Opslaan</button>
-        <button type="button" onclick="genereerStandaardLimieten()">⚙️ Genereer standaardlimieten</button>
+        <button type="button" id="genereerBtn">⚙️ Genereer standaardlimieten</button>
       </form>
     </section>
 
@@ -72,6 +72,7 @@
   <footer>
     <p>&copy; 2025 Sport Manager Simulatie</p>
   </footer>
+
 <script>
   const onderdelen = JSON.parse(localStorage.getItem("sportonderdelen")) || [];
   let limieten = JSON.parse(localStorage.getItem("limieten")) || [];
@@ -88,7 +89,8 @@
   const limietenOverzicht = document.getElementById("limietenOverzicht");
   const form = document.getElementById("limietForm");
 
-  // Init sportselect
+  const genereerBtn = document.getElementById("genereerBtn");
+
   const uniekeSporten = [...new Set(onderdelen.map(o => o.sport))].sort();
   uniekeSporten.forEach(sport => {
     const opt = document.createElement("option");
@@ -233,6 +235,8 @@
     alert("Standaardlimieten toegevoegd.");
     toonOverzicht();
   }
+
+  document.getElementById("genereerBtn").addEventListener("click", genereerStandaardLimieten);
 
   // Init
   updateDisciplineSelect();
