@@ -13,7 +13,6 @@
   const teamGrootte = document.getElementById("teamGrootte");
   const limietenOverzicht = document.getElementById("limietenOverzicht");
   const form = document.getElementById("limietForm");
-
   const genereerBtn = document.getElementById("genereerBtn");
 
   const uniekeSporten = [...new Set(onderdelen.map(o => o.sport))].sort();
@@ -71,40 +70,13 @@
     return `${s}__${d || ""}__${g}__${o}`;
   }
 
-  form.addEventListener("submit", e => {
-    e.preventDefault();
-    const sport = sportSelect.value;
-    const discipline = disciplineSelect.value;
-    const onderdeel = onderdeelSelect.value;
-    const geslacht = geslachtSelect.value;
-    const sleutel = maakSleutel(sport, discipline, geslacht, onderdeel);
+  function toonIcon(teamsport) {
+    return teamsport ? "🧑‍🤝‍🧑" : "🏃";
+  }
 
-    const bestaat = limieten.find(l => l.sleutel === sleutel);
-    const obj = {
-      sleutel,
-      sport,
-      discipline,
-      geslacht,
-      onderdeel,
-      max: parseInt(maxAantal.value),
-      start: parseInt(startAantal.value),
-      teamsport: isTeamsport.checked,
-      teamgrootte: isTeamsport.checked ? parseInt(teamGrootte.value) || 0 : null
-    };
-
-    if (bestaat) {
-      Object.assign(bestaat, obj);
-    } else {
-      limieten.push(obj);
-    }
-
-    localStorage.setItem("limieten", JSON.stringify(limieten));
-    form.reset();
-    teamGrootteWrapper.style.display = "none";
-    toonOverzicht();
-  });
-
-  document.getElementById("genereerBtn").addEventListener("click", genereerStandaardLimieten);
+  function kleurVoor(teamsport) {
+    return teamsport ? "#eef7ff" : "#f4fef0";
+  }
   function toonOverzicht() {
     if (limieten.length === 0) {
       limietenOverzicht.innerHTML = "<p>Geen limieten ingesteld.</p>";
@@ -115,14 +87,15 @@
       <table>
         <thead>
           <tr>
+            <th title="Type sport (individueel of team)">🏷️</th>
             <th>Sport</th>
             <th>Discipline</th>
             <th>Geslacht</th>
             <th>Onderdeel</th>
-            <th title="Maximaal aantal atleten per land">Max 🧑‍🤝‍🧑</th>
-            <th title="Aantal atleten per speler bij registratie">Start 🏁</th>
-            <th title="Is dit een teamsport?">Team?</th>
-            <th title="Aantal spelers in team (indien teamsport)">Grootte</th>
+            <th title="Maximaal aantal atleten per land">Max</th>
+            <th title="Aantal atleten bij registratie">Start</th>
+            <th title="Is het een teamsport?">Team</th>
+            <th title="Aantal spelers per team">Teamgrootte</th>
             <th>Acties</th>
           </tr>
         </thead>
@@ -130,15 +103,13 @@
     `;
 
     limieten.forEach((l, i) => {
-      const icoon = l.teamsport ? "🧑‍🤝‍🧑" : "🏃";
-      const kleur = l.teamsport ? "#e0f0ff" : "#eaffea";
-
       html += `
-        <tr style="background:${kleur}">
+        <tr style="background:${kleurVoor(l.teamsport)}" id="rij-${i}">
+          <td>${toonIcon(l.teamsport)}</td>
           <td>${l.sport}</td>
           <td>${l.discipline || "-"}</td>
           <td>${l.geslacht}</td>
-          <td>${icoon} ${l.onderdeel}</td>
+          <td>${l.onderdeel}</td>
           <td>${l.max}</td>
           <td>${l.start}</td>
           <td>${l.teamsport ? "✅" : "❌"}</td>
@@ -154,91 +125,3 @@
     html += "</tbody></table>";
     limietenOverzicht.innerHTML = html;
   }
-
-  function bewerkLimiet(index) {
-    const l = limieten[index];
-    const rij = document.querySelectorAll("#limietenOverzicht table tbody tr")[index];
-
-    rij.innerHTML = `
-      <td><input value="${l.sport}" disabled></td>
-      <td><input value="${l.discipline || ""}" disabled></td>
-      <td><input value="${l.geslacht}" disabled></td>
-      <td><input value="${l.onderdeel}" disabled></td>
-      <td><input type="number" id="editMax" value="${l.max}" min="1"></td>
-      <td><input type="number" id="editStart" value="${l.start}" min="0"></td>
-      <td>
-        <select id="editTeam">
-          <option value="false" ${!l.teamsport ? "selected" : ""}>❌</option>
-          <option value="true" ${l.teamsport ? "selected" : ""}>✅</option>
-        </select>
-      </td>
-      <td><input type="number" id="editGrootte" value="${l.teamgrootte || ""}" ${l.teamsport ? "" : "disabled"}></td>
-      <td>
-        <button onclick="opslaanLimiet(${index})">💾</button>
-        <button onclick="toonOverzicht()">❌</button>
-      </td>
-    `;
-
-    const teamSelect = document.getElementById("editTeam");
-    const grootteInput = document.getElementById("editGrootte");
-
-    teamSelect.addEventListener("change", () => {
-      grootteInput.disabled = teamSelect.value === "false";
-    });
-  }
-
-  function opslaanLimiet(index) {
-    const l = limieten[index];
-    const max = parseInt(document.getElementById("editMax").value);
-    const start = parseInt(document.getElementById("editStart").value);
-    const teamsport = document.getElementById("editTeam").value === "true";
-    const teamgrootte = teamsport ? parseInt(document.getElementById("editGrootte").value) || 0 : null;
-
-    l.max = max;
-    l.start = start;
-    l.teamsport = teamsport;
-    l.teamgrootte = teamgrootte;
-
-    localStorage.setItem("limieten", JSON.stringify(limieten));
-    toonOverzicht();
-  }
-
-  function verwijderLimiet(i) {
-    if (!confirm("Weet je zeker dat je deze limiet wilt verwijderen?")) return;
-    limieten.splice(i, 1);
-    localStorage.setItem("limieten", JSON.stringify(limieten));
-    toonOverzicht();
-  }
-
-  function genereerStandaardLimieten() {
-    const nogNietIngesteld = onderdelen.filter(o => {
-      const sleutel = maakSleutel(o.sport, o.discipline, o.geslacht, o.onderdeel);
-      return !limieten.some(l => l.sleutel === sleutel);
-    });
-
-    nogNietIngesteld.forEach(o => {
-      const sleutel = maakSleutel(o.sport, o.discipline, o.geslacht, o.onderdeel);
-      limieten.push({
-        sleutel,
-        sport: o.sport,
-        discipline: o.discipline || "",
-        geslacht: o.geslacht,
-        onderdeel: o.onderdeel,
-        max: 3,
-        start: 1,
-        teamsport: false,
-        teamgrootte: null
-      });
-    });
-
-    localStorage.setItem("limieten", JSON.stringify(limieten));
-    alert("Standaardlimieten toegevoegd.");
-    toonOverzicht();
-  }
-
-  // Init
-  updateDisciplineSelect();
-  toonOverzicht();
-</script>
-</body>
-</html>
