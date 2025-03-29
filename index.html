@@ -10,9 +10,13 @@
 <body>
   <header>
     <h1 data-i18n="heading">🏅 Multisport-Manager</h1>
+
+    <!-- 🌐 Taalkeuze -->
     <div id="taalkeuze"></div>
+
+    <!-- 📌 Navigatie met knoppen -->
     <nav id="navigatie">
-      <!-- Dynamisch ingevuld via JS -->
+      <!-- Wordt dynamisch ingevuld -->
     </nav>
   </header>
 
@@ -43,8 +47,9 @@
   <footer>
     <p data-i18n="footer">&copy; 2025 Multisport-Manager – Jouw sport, jouw strategie.</p>
   </footer>
+
   <script>
-    // 🌐 Taalinstellingen
+    // 🌐 Taalkeuze
     const taalDiv = document.getElementById("taalkeuze");
     const talen = ["nl", "en", "fr", "de"];
     const actieveTaal = localStorage.getItem("taal") || "nl";
@@ -65,9 +70,10 @@
       vertaalPagina();
     }
 
-    // 🏁 Landenrij laden
+    // 🌍 Landen tonen
     const landendiv = document.getElementById("landenVlaggen");
     const landenQueue = JSON.parse(localStorage.getItem("countryQueue")) || [];
+
     if (landenQueue.length > 0) {
       landenQueue.slice(0, 12).forEach(land => {
         const span = document.createElement("span");
@@ -79,22 +85,21 @@
       landendiv.innerHTML = "<p data-i18n='no-countries'>Er zijn nog geen landen toegewezen.</p>";
     }
 
-        const nav = document.getElementById("navigatie");
+    // 👥 Navigatie dynamisch op basis van user
+    const nav = document.getElementById("navigatie");
     const user = JSON.parse(localStorage.getItem("user"));
 
-    nav.innerHTML = ""; // Zorg dat we met een schone slate beginnen
+    nav.innerHTML = ""; // Schoon
 
     if (user) {
       const vlag = user.land ? `🏳️ ${user.land}` : "";
       const spelernaam = user.gebruikersnaam || user.email || "Speler";
 
-      // 👤 Managerpagina
       const managerLink = document.createElement("a");
       managerLink.href = "manager.html";
       managerLink.innerHTML = `👤 Managerpagina (${spelernaam}) – ${vlag} – ${user.mp || 0} MP`;
       nav.appendChild(managerLink);
 
-      // 🛠️ Admin (alleen juiste e-mailadres)
       if (user.email === "wilcoboesveld12@hotmail.com") {
         const adminLink = document.createElement("a");
         adminLink.href = "admin.html";
@@ -102,13 +107,11 @@
         nav.appendChild(adminLink);
       }
 
-      // 🚪 Uitloggen
       const logoutLink = document.createElement("a");
       logoutLink.href = "logout.html";
       logoutLink.textContent = "🚪 Uitloggen";
       nav.appendChild(logoutLink);
     } else {
-      // 🔓 Niet ingelogd
       const loginLink = document.createElement("a");
       loginLink.href = "login.html";
       loginLink.textContent = "🔐 Inloggen";
@@ -119,6 +122,6 @@
       registerLink.textContent = "🆕 Registreren";
       nav.appendChild(registerLink);
     }
-</script>
+  </script>
 </body>
 </html>
