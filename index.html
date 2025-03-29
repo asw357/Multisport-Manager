@@ -79,21 +79,22 @@
       landendiv.innerHTML = "<p data-i18n='no-countries'>Er zijn nog geen landen toegewezen.</p>";
     }
 
-    // 🔐 Navigatie aanpassen op basis van loginstatus
-    const nav = document.getElementById("navigatie");
+        const nav = document.getElementById("navigatie");
     const user = JSON.parse(localStorage.getItem("user"));
 
-    if (user) {
-      // 👤 Ingelogde speler
-      const vlag = user.land ? `🏳️ ${user.land}` : "";
-      const speler = user.gebruikersnaam || user.email || "Speler";
+    nav.innerHTML = ""; // Zorg dat we met een schone slate beginnen
 
+    if (user) {
+      const vlag = user.land ? `🏳️ ${user.land}` : "";
+      const spelernaam = user.gebruikersnaam || user.email || "Speler";
+
+      // 👤 Managerpagina
       const managerLink = document.createElement("a");
       managerLink.href = "manager.html";
-      managerLink.innerHTML = `👤 ${speler} – ${vlag} – ${user.mp || 0} MP`;
+      managerLink.innerHTML = `👤 Managerpagina (${spelernaam}) – ${vlag} – ${user.mp || 0} MP`;
       nav.appendChild(managerLink);
 
-      // 🛠️ Admin (enkel bij specifiek e-mailadres)
+      // 🛠️ Admin (alleen juiste e-mailadres)
       if (user.email === "wilcoboesveld12@hotmail.com") {
         const adminLink = document.createElement("a");
         adminLink.href = "admin.html";
@@ -101,11 +102,11 @@
         nav.appendChild(adminLink);
       }
 
+      // 🚪 Uitloggen
       const logoutLink = document.createElement("a");
       logoutLink.href = "logout.html";
       logoutLink.textContent = "🚪 Uitloggen";
       nav.appendChild(logoutLink);
-
     } else {
       // 🔓 Niet ingelogd
       const loginLink = document.createElement("a");
@@ -118,6 +119,3 @@
       registerLink.textContent = "🆕 Registreren";
       nav.appendChild(registerLink);
     }
-  </script>
-</body>
-</html>
