@@ -29,7 +29,7 @@
         </select><br/>
 
         <label for="onderdeel">Onderdeel:</label>
-        <input type="text" id="onderdeel" required placeholder="Bijv. 100m, Dubbelspan, Laser Radial" /><br/>
+        <input type="text" id="onderdeel" required placeholder="Bijv. 100m, Eénarmig, Touwtrekken" /><br/>
 
         <button type="submit">➕ Toevoegen</button>
       </form>
@@ -44,92 +44,105 @@
   <footer>
     <p>&copy; 2025 Sport Manager Simulatie</p>
   </footer>
-  <script>
-    let onderdelen = JSON.parse(localStorage.getItem("sportonderdelen")) || [];
+<script>
+  let onderdelen = JSON.parse(localStorage.getItem("sportonderdelen")) || [];
 
-    const sportForm = document.getElementById("sportForm");
-    const sportInput = document.getElementById("sportSelect");
-    const sportLijst = document.getElementById("sportLijst");
-    const geslachtInput = document.getElementById("geslacht");
-    const onderdeelInput = document.getElementById("onderdeel");
-    const onderdelenLijst = document.getElementById("onderdelenLijst");
+  const sportForm = document.getElementById("sportForm");
+  const sportInput = document.getElementById("sportSelect");
+  const sportLijst = document.getElementById("sportLijst");
+  const geslachtInput = document.getElementById("geslacht");
+  const onderdeelInput = document.getElementById("onderdeel");
+  const onderdelenLijst = document.getElementById("onderdelenLijst");
 
-    // Genereer datalist met unieke sporten
-    function updateSportLijst() {
-      const uniekeSporten = [...new Set(onderdelen.map(o => o.sport))].sort();
-      sportLijst.innerHTML = "";
-      uniekeSporten.forEach(sport => {
-        const opt = document.createElement("option");
-        opt.value = sport;
-        sportLijst.appendChild(opt);
-      });
+  function updateSportLijst() {
+    const uniekeSporten = [...new Set(onderdelen.map(o => o.sport))].sort();
+    sportLijst.innerHTML = "";
+    uniekeSporten.forEach(sport => {
+      const opt = document.createElement("option");
+      opt.value = sport;
+      sportLijst.appendChild(opt);
+    });
+  }
+
+  function toonOnderdelen() {
+    onderdelenLijst.innerHTML = "";
+
+    if (onderdelen.length === 0) {
+      onderdelenLijst.innerHTML = "<p>Er zijn nog geen onderdelen toegevoegd.</p>";
+      return;
     }
 
-    function toonOnderdelen() {
-      onderdelenLijst.innerHTML = "";
-
-      if (onderdelen.length === 0) {
-        onderdelenLijst.innerHTML = "<p>Er zijn nog geen onderdelen toegevoegd.</p>";
-        return;
+    const gesorteerd = [...onderdelen].sort((a, b) => {
+      if (a.sport === b.sport) {
+        return a.onderdeel.localeCompare(b.onderdeel);
       }
-
-      const gesorteerd = [...onderdelen].sort((a, b) => {
-        if (a.sport === b.sport) {
-          return a.onderdeel.localeCompare(b.onderdeel);
-        }
-        return a.sport.localeCompare(b.sport);
-      });
-
-      const perSport = {};
-      gesorteerd.forEach(o => {
-        if (!perSport[o.sport]) perSport[o.sport] = [];
-        perSport[o.sport].push(o);
-      });
-
-      for (const [sport, items] of Object.entries(perSport)) {
-        const blok = document.createElement("div");
-        blok.className = "sport-blok";
-        blok.innerHTML = `<h3>${sport}</h3>`;
-        const ul = document.createElement("ul");
-        items.forEach(item => {
-          const li = document.createElement("li");
-          li.textContent = `${item.geslacht} – ${item.onderdeel}`;
-          ul.appendChild(li);
-        });
-        blok.appendChild(ul);
-        onderdelenLijst.appendChild(blok);
-      }
-    }
-
-    sportForm.addEventListener("submit", e => {
-      e.preventDefault();
-      const sport = sportInput.value.trim();
-      const geslacht = geslachtInput.value;
-      const onderdeel = onderdeelInput.value.trim();
-
-      if (!sport || !geslacht || !onderdeel) {
-        alert("Vul alle velden in.");
-        return;
-      }
-
-      const bestaatAl = onderdelen.some(o =>
-        o.sport === sport && o.geslacht === geslacht && o.onderdeel === onderdeel
-      );
-      if (bestaatAl) {
-        alert("Dit onderdeel bestaat al.");
-        return;
-      }
-
-      onderdelen.push({ sport, geslacht, onderdeel });
-      localStorage.setItem("sportonderdelen", JSON.stringify(onderdelen));
-      sportForm.reset();
-      updateSportLijst();
-      toonOnderdelen();
+      return a.sport.localeCompare(b.sport);
     });
 
-    // Init
+    const perSport = {};
+    gesorteerd.forEach(o => {
+      if (!perSport[o.sport]) perSport[o.sport] = [];
+      perSport[o.sport].push(o);
+    });
+
+    for (const [sport, items] of Object.entries(perSport)) {
+      const blok = document.createElement("div");
+      blok.className = "sport-blok";
+      blok.innerHTML = `<h3>${sport}</h3>`;
+      const ul = document.createElement("ul");
+      items.forEach((item, index) => {
+        const li = document.createElement("li");
+        li.innerHTML = `
+          ${item.geslacht} – ${item.onderdeel}
+          <button onclick="verwijderOnderdeel('${item.sport}', '${item.geslacht}', '${item.onderdeel}')">🗑️</button>
+        `;
+        ul.appendChild(li);
+      });
+      blok.appendChild(ul);
+      onderdelenLijst.appendChild(blok);
+    }
+  }
+
+  function verwijderOnderdeel(sport, geslacht, onderdeel) {
+    if (!confirm(`Weet je zeker dat je "${geslacht} – ${onderdeel}" uit ${sport} wilt verwijderen?`)) return;
+
+    onderdelen = onderdelen.filter(o =>
+      !(o.sport === sport && o.geslacht === geslacht && o.onderdeel === onderdeel)
+    );
+    localStorage.setItem("sportonderdelen", JSON.stringify(onderdelen));
     updateSportLijst();
     toonOnderdelen();
-  </script>
+  }
+
+  sportForm.addEventListener("submit", e => {
+    e.preventDefault();
+    const sport = sportInput.value.trim();
+    const geslacht = geslachtInput.value;
+    const onderdeel = onderdeelInput.value.trim();
+
+    if (!sport || !geslacht || !onderdeel) {
+      alert("Vul alle velden in.");
+      return;
+    }
+
+    const bestaatAl = onderdelen.some(o =>
+      o.sport === sport && o.geslacht === geslacht && o.onderdeel === onderdeel
+    );
+    if (bestaatAl) {
+      alert("Dit onderdeel bestaat al.");
+      return;
+    }
+
+    onderdelen.push({ sport, geslacht, onderdeel });
+    localStorage.setItem("sportonderdelen", JSON.stringify(onderdelen));
+    sportForm.reset();
+    updateSportLijst();
+    toonOnderdelen();
+  });
+
+  // Init
+  updateSportLijst();
+  toonOnderdelen();
+</script>
 </body>
 </html>
