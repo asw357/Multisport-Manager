@@ -2,74 +2,80 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Inloggen</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title data-i18n="login-title">Inloggen – Multisport-Manager</title>
   <link rel="stylesheet" href="css/style.css" />
-  <style>
-    form {
-      max-width: 400px;
-      margin: auto;
-      padding: 20px;
-      background: #f2f2f2;
-      border-radius: 8px;
-    }
-    label {
-      display: block;
-      margin-top: 10px;
-    }
-    input {
-      width: 100%;
-      padding: 8px;
-      margin-top: 5px;
-    }
-    button {
-      margin-top: 15px;
-      padding: 10px;
-      width: 100%;
-    }
-    .error { color: red; margin-top: 10px; }
-  </style>
+  <script src="language.js"></script>
 </head>
 <body>
   <header>
-    <h1>🔐 Inloggen</h1>
-    <nav><a href="index.html">⬅️ Terug naar Home</a></nav>
+    <h1 data-i18n="login-heading">🔐 Inloggen</h1>
+    <nav>
+      <a href="index.html" data-i18n="back-home">⬅️ Terug naar Home</a>
+    </nav>
+    <div id="taalkeuze"></div>
   </header>
 
   <main>
     <form id="loginForm">
-      <label for="email">E-mailadres</label>
-      <input type="email" id="email" required />
+      <label for="email" data-i18n="email">E-mailadres:</label><br/>
+      <input type="email" id="email" required /><br/>
 
-      <label for="wachtwoord">Wachtwoord</label>
-      <input type="password" id="wachtwoord" required />
+      <label for="password" data-i18n="password">Wachtwoord:</label><br/>
+      <input type="password" id="password" required /><br/>
 
-      <button type="submit">➡️ Inloggen</button>
-      <p class="error" id="errorMsg"></p>
+      <button type="submit" data-i18n="login-button">Inloggen</button>
     </form>
+    <p id="melding" style="color: red;"></p>
   </main>
 
   <footer>
-    <p>&copy; 2025 Sport Manager Simulatie – Inloggen</p>
+    <p data-i18n="footer">&copy; 2025 Multisport-Manager – Jouw sport, jouw strategie.</p>
   </footer>
-
   <script>
-    document.getElementById("loginForm").addEventListener("submit", function (e) {
+    // 🌐 Taalkeuze
+    const taalDiv = document.getElementById("taalkeuze");
+    const talen = ["nl", "en", "fr", "de"];
+    const actieveTaal = localStorage.getItem("taal") || "nl";
+
+    talen.forEach(taal => {
+      const knop = document.createElement("button");
+      knop.textContent = taal.toUpperCase();
+      knop.style.marginRight = "5px";
+      if (taal === actieveTaal) knop.disabled = true;
+      knop.addEventListener("click", () => {
+        localStorage.setItem("taal", taal);
+        location.reload();
+      });
+      taalDiv.appendChild(knop);
+    });
+
+    if (typeof vertaalPagina === "function") {
+      vertaalPagina();
+    }
+
+    // 🔐 Inloggen
+    const loginForm = document.getElementById("loginForm");
+    const melding = document.getElementById("melding");
+
+    loginForm.addEventListener("submit", e => {
       e.preventDefault();
-      const email = document.getElementById("email").value.trim();
-      const wachtwoord = document.getElementById("wachtwoord").value.trim();
-      const errorMsg = document.getElementById("errorMsg");
 
-      const users = JSON.parse(localStorage.getItem("users")) || [];
-      const gebruiker = users.find(u => u.email === email && u.wachtwoord === wachtwoord);
+      const email = document.getElementById("email").value.trim().toLowerCase();
+      const password = document.getElementById("password").value;
 
-      if (!gebruiker) {
-        errorMsg.textContent = "Foutieve inloggegevens.";
+      const accounts = JSON.parse(localStorage.getItem("accounts")) || [];
+      const account = accounts.find(acc => acc.email === email && acc.wachtwoord === password);
+
+      if (!account) {
+        melding.textContent = "Foutieve inloggegevens.";
         return;
       }
 
-      localStorage.setItem("loggedInUser", JSON.stringify(gebruiker));
-      window.location.href = "manager.html";
+      localStorage.setItem("user", JSON.stringify(account));
+
+      // ✅ Geen admin-redirect meer, gewoon terug naar homepage
+      window.location.href = "index.html";
     });
   </script>
 </body>
