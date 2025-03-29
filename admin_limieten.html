@@ -125,6 +125,13 @@
     html += "</tbody></table>";
     limietenOverzicht.innerHTML = html;
   }
+
+  function verwijderLimiet(i) {
+    if (!confirm("Weet je zeker dat je deze limiet wilt verwijderen?")) return;
+    limieten.splice(i, 1);
+    localStorage.setItem("limieten", JSON.stringify(limieten));
+    toonOverzicht();
+  }
   function bewerkLimiet(index) {
     const l = limieten[index];
     const rij = document.getElementById(`rij-${index}`);
@@ -185,3 +192,71 @@
     localStorage.setItem("limieten", JSON.stringify(limieten));
     toonOverzicht();
   }
+
+  function genereerStandaardLimieten() {
+    const nogNietIngesteld = onderdelen.filter(o => {
+      const sleutel = maakSleutel(o.sport, o.discipline, o.geslacht, o.onderdeel);
+      return !limieten.some(l => l.sleutel === sleutel);
+    });
+
+    nogNietIngesteld.forEach(o => {
+      const sleutel = maakSleutel(o.sport, o.discipline, o.geslacht, o.onderdeel);
+      limieten.push({
+        sleutel,
+        sport: o.sport,
+        discipline: o.discipline || "",
+        geslacht: o.geslacht,
+        onderdeel: o.onderdeel,
+        max: 3,
+        start: 1,
+        teamsport: false,
+        teamgrootte: null
+      });
+    });
+
+    localStorage.setItem("limieten", JSON.stringify(limieten));
+    alert("Standaardlimieten toegevoegd.");
+    toonOverzicht();
+  }
+
+  form.addEventListener("submit", e => {
+    e.preventDefault();
+    const sport = sportSelect.value;
+    const discipline = disciplineSelect.value;
+    const onderdeel = onderdeelSelect.value;
+    const geslacht = geslachtSelect.value;
+    const sleutel = maakSleutel(sport, discipline, geslacht, onderdeel);
+
+    const bestaat = limieten.find(l => l.sleutel === sleutel);
+    const obj = {
+      sleutel,
+      sport,
+      discipline,
+      geslacht,
+      onderdeel,
+      max: parseInt(maxAantal.value),
+      start: parseInt(startAantal.value),
+      teamsport: isTeamsport.checked,
+      teamgrootte: isTeamsport.checked ? parseInt(teamGrootte.value) || 0 : null
+    };
+
+    if (bestaat) {
+      Object.assign(bestaat, obj);
+    } else {
+      limieten.push(obj);
+    }
+
+    localStorage.setItem("limieten", JSON.stringify(limieten));
+    form.reset();
+    teamGrootteWrapper.style.display = "none";
+    toonOverzicht();
+  });
+
+  genereerBtn.addEventListener("click", genereerStandaardLimieten);
+
+  // Init
+  updateDisciplineSelect();
+  toonOverzicht();
+</script>
+</body>
+</html>
