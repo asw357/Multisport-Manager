@@ -2,131 +2,105 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Registreren</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title data-i18n="register-title">Registreren – Multisport-Manager</title>
   <link rel="stylesheet" href="css/style.css" />
-  <style>
-    form {
-      max-width: 400px;
-      margin: auto;
-      padding: 20px;
-      background: #f9f9f9;
-      border-radius: 8px;
-    }
-    label {
-      display: block;
-      margin-top: 10px;
-    }
-    input {
-      width: 100%;
-      padding: 8px;
-      margin-top: 5px;
-    }
-    button {
-      margin-top: 15px;
-      padding: 10px;
-      width: 100%;
-    }
-  </style>
+  <script src="language.js"></script>
 </head>
 <body>
   <header>
-    <h1>📋 Registreren</h1>
-    <nav><a href="index.html">⬅️ Terug naar Home</a></nav>
+    <h1 data-i18n="register-heading">🆕 Registreren</h1>
+    <nav>
+      <a href="index.html" data-i18n="back-home">⬅️ Terug naar Home</a>
+    </nav>
+    <div id="taalkeuze"></div>
   </header>
 
   <main>
     <form id="registerForm">
-      <label for="gebruikersnaam">Gebruikersnaam</label>
-      <input type="text" id="gebruikersnaam" required />
+      <label for="username" data-i18n="username">Gebruikersnaam:</label><br/>
+      <input type="text" id="username" required /><br/>
 
-      <label for="email">E-mailadres</label>
-      <input type="email" id="email" required />
+      <label for="email" data-i18n="email">E-mailadres:</label><br/>
+      <input type="email" id="email" required /><br/>
 
-      <label for="wachtwoord">Wachtwoord</label>
-      <input type="password" id="wachtwoord" required />
+      <label for="password" data-i18n="password">Wachtwoord:</label><br/>
+      <input type="password" id="password" required /><br/>
 
-      <button type="submit">✅ Registreren</button>
+      <button type="submit" data-i18n="register-button">Account aanmaken</button>
     </form>
+    <p id="melding" style="color: red;"></p>
   </main>
 
   <footer>
-    <p>&copy; 2025 Sport Manager Simulatie – Registratie</p>
+    <p data-i18n="footer">&copy; 2025 Multisport-Manager – Jouw sport, jouw strategie.</p>
   </footer>
-
   <script>
-    const landenQueue = JSON.parse(localStorage.getItem("country_queue")) || [
-      "Australië", "Bulgarije", "Chili", "Denemarken", "IJsland", "Duitsland", "Frankrijk", "Griekenland"
-    ];
+    // 🌐 Taalkeuze
+    const taalDiv = document.getElementById("taalkeuze");
+    const talen = ["nl", "en", "fr", "de"];
+    const actieveTaal = localStorage.getItem("taal") || "nl";
 
-    function genereerNaam(land) {
-      const voornamen = ["Alex", "Liam", "Sven", "Noah", "Julian", "Max", "Kai"];
-      const achternamen = ["Jansen", "Kovacs", "Nguyen", "Petrov", "Dimitrov", "Smith", "Garcia"];
-      return `${voornamen[Math.floor(Math.random() * voornamen.length)]} ${achternamen[Math.floor(Math.random() * achternamen.length)]}`;
-    }
-
-    function genereerAtleten(gebruiker) {
-      const sporten = JSON.parse(localStorage.getItem("sportonderdelen")) || [];
-      const limieten = JSON.parse(localStorage.getItem("limieten")) || {};
-      const alleAtleten = JSON.parse(localStorage.getItem("atleten")) || [];
-
-      let nieuwe = [];
-
-      sporten.forEach(s => {
-        const sleutel = `${s.sport} - ${s.geslacht} - ${s.onderdeel}`;
-        const limiet = limieten[sleutel];
-        const start = limiet?.start || 0;
-
-        for (let i = 0; i < start; i++) {
-          nieuwe.push({
-            id: Date.now() + Math.random(),
-            naam: genereerNaam(gebruiker.land),
-            leeftijd: Math.floor(Math.random() * 10) + 18,
-            sport: s.sport,
-            geslacht: s.geslacht,
-            onderdeel: s.onderdeel,
-            owner: gebruiker.email,
-            stats: {
-              snelheid: Math.random() * 100,
-              kracht: Math.random() * 100,
-              techniek: Math.random() * 100
-            }
-          });
-        }
+    talen.forEach(taal => {
+      const knop = document.createElement("button");
+      knop.textContent = taal.toUpperCase();
+      knop.style.marginRight = "5px";
+      if (taal === actieveTaal) knop.disabled = true;
+      knop.addEventListener("click", () => {
+        localStorage.setItem("taal", taal);
+        location.reload();
       });
+      taalDiv.appendChild(knop);
+    });
 
-      localStorage.setItem("atleten", JSON.stringify([...alleAtleten, ...nieuwe]));
+    if (typeof vertaalPagina === "function") {
+      vertaalPagina();
     }
 
-    document.getElementById("registerForm").addEventListener("submit", function (e) {
-      e.preventDefault();
-      const gebruikersnaam = document.getElementById("gebruikersnaam").value;
-      const email = document.getElementById("email").value;
-      const wachtwoord = document.getElementById("wachtwoord").value;
+    // 📝 Registratie
+    const form = document.getElementById("registerForm");
+    const melding = document.getElementById("melding");
 
-      const users = JSON.parse(localStorage.getItem("users")) || [];
-      if (users.find(u => u.email === email)) {
-        alert("Er bestaat al een account met dit e-mailadres.");
+    form.addEventListener("submit", e => {
+      e.preventDefault();
+
+      const gebruikersnaam = document.getElementById("username").value.trim();
+      const email = document.getElementById("email").value.trim().toLowerCase();
+      const wachtwoord = document.getElementById("password").value;
+
+      if (!gebruikersnaam || !email || !wachtwoord) {
+        melding.textContent = "Vul alle velden in.";
         return;
       }
 
-      const land = landenQueue.shift() || "Landloos";
-      localStorage.setItem("country_queue", JSON.stringify(landenQueue));
+      const countryQueue = JSON.parse(localStorage.getItem("countryQueue")) || [];
+      if (countryQueue.length === 0) {
+        melding.textContent = "Geen landen meer beschikbaar.";
+        return;
+      }
 
-      const nieuweGebruiker = {
+      const toegewezenLand = countryQueue.shift();
+      localStorage.setItem("countryQueue", JSON.stringify(countryQueue));
+
+      const startMp = 50;
+
+      const user = {
         gebruikersnaam,
         email,
         wachtwoord,
-        land,
-        mp: 100
+        land: toegewezenLand,
+        mp: startMp
       };
 
-      users.push(nieuweGebruiker);
-      localStorage.setItem("users", JSON.stringify(users));
-      localStorage.setItem("loggedInUser", JSON.stringify(nieuweGebruiker));
+      localStorage.setItem("user", JSON.stringify(user));
 
-      genereerAtleten(nieuweGebruiker);
-      window.location.href = "manager.html";
+      // Toevoegen aan accounts
+      const accounts = JSON.parse(localStorage.getItem("accounts")) || [];
+      accounts.push(user);
+      localStorage.setItem("accounts", JSON.stringify(accounts));
+
+      // ✅ Altijd naar index.html, geen redirect naar admin!
+      window.location.href = "index.html";
     });
   </script>
 </body>
