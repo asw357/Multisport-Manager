@@ -6,8 +6,16 @@
   <title>Admin – Limieten & Startatleten</title>
   <link rel="stylesheet" href="css/style.css" />
   <style>
-    .limiet-blok { margin-bottom: 20px; }
-    .acties button { margin-right: 5px; }
+    .limieten-blok {
+      margin-bottom: 20px;
+    }
+    .inline-edit input,
+    .inline-edit select {
+      margin: 3px;
+    }
+    .acties button {
+      margin-right: 5px;
+    }
   </style>
 </head>
 <body>
@@ -20,31 +28,38 @@
     <section>
       <h2>➕ Limiet instellen</h2>
       <form id="limietForm">
+        <label for="sportSelect">Sport:</label>
+        <select id="sportSelect" required></select><br/>
+
+        <label for="disciplineSelect">Discipline:</label>
+        <select id="disciplineSelect"></select><br/>
+
         <label for="onderdeelSelect">Onderdeel:</label>
         <select id="onderdeelSelect" required></select><br/>
 
-        <label for="maxPerLand">Maximaal per land:</label>
-        <input type="number" id="maxPerLand" required min="1" /><br/>
-
-        <label for="startAtleten">Startatleten bij registratie:</label>
-        <input type="number" id="startAtleten" required min="0" /><br/>
-
-        <label for="isTeamsport">Is teamsport?</label>
-        <input type="checkbox" id="isTeamsport" /><br/>
-
-        <label for="teamGrootte">Aantal atleten per team (indien teamsport):</label>
-        <input type="number" id="teamGrootte" min="1" /><br/>
-
-        <label for="profielSelect">Snelle invoer via profiel:</label>
-        <select id="profielSelect">
-          <option value="">-- Geen profiel --</option>
-          <option value="sprint">Sprintonderdeel (max 3 / start 1)</option>
-          <option value="duur">Duuronderdeel (max 4 / start 1)</option>
-          <option value="teamsport">Teamsport (max 1 / start 1)</option>
+        <label for="geslachtSelect">Geslacht:</label>
+        <select id="geslachtSelect" required>
+          <option value="Mannen">Mannen</option>
+          <option value="Vrouwen">Vrouwen</option>
+          <option value="Gemengd">Gemengd</option>
         </select><br/>
 
-        <button type="button" id="genereerStandaard">⚙️ Pas standaardlimiet toe</button>
-        <button type="submit">💾 Opslaan limiet</button>
+        <label for="maxAantal">Maximaal aantal atleten per land:</label>
+        <input type="number" id="maxAantal" min="1" required><br/>
+
+        <label for="startAantal">Aantal startatleten per speler:</label>
+        <input type="number" id="startAantal" min="0" required><br/>
+
+        <label for="isTeamsport">Is dit een teamsport?</label>
+        <input type="checkbox" id="isTeamsport"><br/>
+
+        <div id="teamGrootteWrapper" style="display:none;">
+          <label for="teamGrootte">Aantal spelers per team:</label>
+          <input type="number" id="teamGrootte" min="1"><br/>
+        </div>
+
+        <button type="submit">💾 Opslaan</button>
+        <button type="button" onclick="genereerStandaardLimieten()">⚙️ Genereer standaardlimieten</button>
       </form>
     </section>
 
@@ -61,124 +76,167 @@
   const onderdelen = JSON.parse(localStorage.getItem("sportonderdelen")) || [];
   let limieten = JSON.parse(localStorage.getItem("limieten")) || [];
 
-  const limietForm = document.getElementById("limietForm");
+  const sportSelect = document.getElementById("sportSelect");
+  const disciplineSelect = document.getElementById("disciplineSelect");
   const onderdeelSelect = document.getElementById("onderdeelSelect");
-  const maxPerLand = document.getElementById("maxPerLand");
-  const startAtleten = document.getElementById("startAtleten");
+  const geslachtSelect = document.getElementById("geslachtSelect");
+  const maxAantal = document.getElementById("maxAantal");
+  const startAantal = document.getElementById("startAantal");
   const isTeamsport = document.getElementById("isTeamsport");
+  const teamGrootteWrapper = document.getElementById("teamGrootteWrapper");
   const teamGrootte = document.getElementById("teamGrootte");
-  const profielSelect = document.getElementById("profielSelect");
-  const genereerStandaard = document.getElementById("genereerStandaard");
-  const overzicht = document.getElementById("limietenOverzicht");
+  const limietenOverzicht = document.getElementById("limietenOverzicht");
+  const form = document.getElementById("limietForm");
 
-  function maakSleutel(o) {
-    return `${o.sport}__${o.discipline || ""}__${o.geslacht}__${o.onderdeel}`;
+  // Init sportselect
+  const uniekeSporten = [...new Set(onderdelen.map(o => o.sport))].sort();
+  uniekeSporten.forEach(sport => {
+    const opt = document.createElement("option");
+    opt.value = sport;
+    opt.textContent = sport;
+    sportSelect.appendChild(opt);
+  });
+
+  sportSelect.addEventListener("change", updateDisciplineSelect);
+  disciplineSelect.addEventListener("change", updateOnderdeelSelect);
+  isTeamsport.addEventListener("change", () => {
+    teamGrootteWrapper.style.display = isTeamsport.checked ? "block" : "none";
+  });
+
+  function updateDisciplineSelect() {
+    const gekozenSport = sportSelect.value;
+    const opties = onderdelen
+      .filter(o => o.sport === gekozenSport)
+      .map(o => o.discipline || "")
+      .filter((v, i, a) => a.indexOf(v) === i)
+      .sort();
+
+    disciplineSelect.innerHTML = "<option value=''>– Geen –</option>";
+    opties.forEach(d => {
+      const opt = document.createElement("option");
+      opt.value = d;
+      opt.textContent = d || "– Geen –";
+      disciplineSelect.appendChild(opt);
+    });
+    updateOnderdeelSelect();
   }
 
-  function vulDropdown() {
-    const gesorteerd = [...onderdelen].sort((a, b) => {
-      if (a.sport !== b.sport) return a.sport.localeCompare(b.sport);
-      if ((a.discipline || "") !== (b.discipline || "")) return (a.discipline || "").localeCompare(b.discipline || "");
-      return a.onderdeel.localeCompare(b.onderdeel);
-    });
+  function updateOnderdeelSelect() {
+    const gekozenSport = sportSelect.value;
+    const gekozenDiscipline = disciplineSelect.value;
 
-    gesorteerd.forEach(o => {
+    const opties = onderdelen
+      .filter(o => o.sport === gekozenSport && (o.discipline || "") === gekozenDiscipline)
+      .map(o => o.onderdeel)
+      .filter((v, i, a) => a.indexOf(v) === i)
+      .sort();
+
+    onderdeelSelect.innerHTML = "";
+    opties.forEach(o => {
       const opt = document.createElement("option");
-      opt.value = maakSleutel(o);
-      opt.textContent = `${o.sport}${o.discipline ? " – " + o.discipline : ""} – ${o.geslacht} – ${o.onderdeel}`;
+      opt.value = o;
+      opt.textContent = o;
       onderdeelSelect.appendChild(opt);
     });
   }
 
-  genereerStandaard.addEventListener("click", () => {
-    maxPerLand.value = 3;
-    startAtleten.value = 1;
-    isTeamsport.checked = false;
-    teamGrootte.value = "";
-  });
+  function maakSleutel(s, d, g, o) {
+    return `${s}__${d || ""}__${g}__${o}`;
+  }
 
-  profielSelect.addEventListener("change", () => {
-    const profiel = profielSelect.value;
-    if (profiel === "sprint") {
-      maxPerLand.value = 3;
-      startAtleten.value = 1;
-      isTeamsport.checked = false;
-      teamGrootte.value = "";
-    } else if (profiel === "duur") {
-      maxPerLand.value = 4;
-      startAtleten.value = 1;
-      isTeamsport.checked = false;
-      teamGrootte.value = "";
-    } else if (profiel === "teamsport") {
-      maxPerLand.value = 1;
-      startAtleten.value = 1;
-      isTeamsport.checked = true;
-      teamGrootte.value = 6;
-    }
-  });
-
-  limietForm.addEventListener("submit", e => {
+  form.addEventListener("submit", e => {
     e.preventDefault();
-    const sleutel = onderdeelSelect.value;
-    if (!sleutel) return alert("Selecteer een onderdeel.");
+    const sport = sportSelect.value;
+    const discipline = disciplineSelect.value;
+    const onderdeel = onderdeelSelect.value;
+    const geslacht = geslachtSelect.value;
+    const sleutel = maakSleutel(sport, discipline, geslacht, onderdeel);
 
-    const bestaande = limieten.find(l => l.sleutel === sleutel);
-    const data = {
+    const bestaat = limieten.find(l => l.sleutel === sleutel);
+    const obj = {
       sleutel,
-      maxPerLand: parseInt(maxPerLand.value),
-      startAtleten: parseInt(startAtleten.value),
-      isTeamsport: isTeamsport.checked,
-      teamGrootte: isTeamsport.checked ? parseInt(teamGrootte.value || "1") : null
+      sport,
+      discipline,
+      geslacht,
+      onderdeel,
+      max: parseInt(maxAantal.value),
+      start: parseInt(startAantal.value),
+      teamsport: isTeamsport.checked,
+      teamgrootte: isTeamsport.checked ? parseInt(teamGrootte.value) || 0 : null
     };
 
-    if (bestaande) {
-      Object.assign(bestaande, data);
+    if (bestaat) {
+      Object.assign(bestaat, obj);
     } else {
-      limieten.push(data);
+      limieten.push(obj);
     }
 
     localStorage.setItem("limieten", JSON.stringify(limieten));
-    toonLimieten();
-    limietForm.reset();
+    form.reset();
+    teamGrootteWrapper.style.display = "none";
+    toonOverzicht();
   });
 
-  function toonLimieten() {
-    overzicht.innerHTML = "";
-
+  function toonOverzicht() {
     if (limieten.length === 0) {
-      overzicht.innerHTML = "<p>Er zijn nog geen limieten ingesteld.</p>";
+      limietenOverzicht.innerHTML = "<p>Geen limieten ingesteld.</p>";
       return;
     }
 
-    const ul = document.createElement("ul");
-    limieten.forEach(l => {
-      const li = document.createElement("li");
-      const o = onderdelen.find(o => maakSleutel(o) === l.sleutel);
-      const titel = o ? `${o.sport}${o.discipline ? " – " + o.discipline : ""} – ${o.geslacht} – ${o.onderdeel}` : l.sleutel;
-
-      li.innerHTML = `
-        <strong>${titel}</strong>: Max ${l.maxPerLand}, Start ${l.startAtleten}
-        ${l.isTeamsport ? `, Teamgrootte: ${l.teamGrootte}` : ""}
-        <span class="acties">
-          <button onclick="verwijderLimiet('${l.sleutel}')">🗑️ Verwijder</button>
-        </span>
-      `;
-      ul.appendChild(li);
+    let html = "<table><tr><th>Sport</th><th>Discipline</th><th>Geslacht</th><th>Onderdeel</th><th>Max</th><th>Start</th><th>Teamsport</th><th>Teamgrootte</th><th>Acties</th></tr>";
+    limieten.forEach((l, i) => {
+      html += `<tr>
+        <td>${l.sport}</td>
+        <td>${l.discipline || "-"}</td>
+        <td>${l.geslacht}</td>
+        <td>${l.onderdeel}</td>
+        <td>${l.max}</td>
+        <td>${l.start}</td>
+        <td>${l.teamsport ? "✅" : "❌"}</td>
+        <td>${l.teamsport ? l.teamgrootte : "-"}</td>
+        <td><button onclick="verwijderLimiet(${i})">🗑️</button></td>
+      </tr>`;
     });
-
-    overzicht.appendChild(ul);
+    html += "</table>";
+    limietenOverzicht.innerHTML = html;
   }
 
-  function verwijderLimiet(sleutel) {
+  function verwijderLimiet(i) {
     if (!confirm("Weet je zeker dat je deze limiet wilt verwijderen?")) return;
-    limieten = limieten.filter(l => l.sleutel !== sleutel);
+    limieten.splice(i, 1);
     localStorage.setItem("limieten", JSON.stringify(limieten));
-    toonLimieten();
+    toonOverzicht();
+  }
+
+  function genereerStandaardLimieten() {
+    const nogNietIngesteld = onderdelen.filter(o => {
+      const sleutel = maakSleutel(o.sport, o.discipline, o.geslacht, o.onderdeel);
+      return !limieten.some(l => l.sleutel === sleutel);
+    });
+
+    nogNietIngesteld.forEach(o => {
+      const sleutel = maakSleutel(o.sport, o.discipline, o.geslacht, o.onderdeel);
+      limieten.push({
+        sleutel,
+        sport: o.sport,
+        discipline: o.discipline || "",
+        geslacht: o.geslacht,
+        onderdeel: o.onderdeel,
+        max: 3,
+        start: 1,
+        teamsport: false,
+        teamgrootte: null
+      });
+    });
+
+    localStorage.setItem("limieten", JSON.stringify(limieten));
+    alert("Standaardlimieten toegevoegd.");
+    toonOverzicht();
   }
 
   // Init
-  vulDropdown();
-  toonLimieten();
+  updateDisciplineSelect();
+  toonOverzicht();
 </script>
 </body>
 </html>
