@@ -3,66 +3,65 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Multisport-Manager</title>
+  <title data-i18n="title">Multisport-Manager</title>
   <link rel="stylesheet" href="css/style.css" />
   <script src="language.js"></script>
 </head>
 <body>
   <header>
-    <h1>🏅 Multisport-Manager</h1>
+    <h1 data-i18n="heading">🏅 Multisport-Manager</h1>
     <div id="taalkeuze"></div>
     <nav>
-      <a href="login.html">🔐 Inloggen</a>
-      <a href="register.html">🆕 Registreren</a>
+      <a href="login.html" data-i18n="login">🔐 Inloggen</a>
+      <a href="register.html" data-i18n="register">🆕 Registreren</a>
     </nav>
   </header>
 
   <main>
     <section>
-      <h2>🌍 Welkom bij de Multisport-Manager</h2>
-      <p>
+      <h2 data-i18n="welcome-title">🌍 Welkom bij de Multisport-Manager</h2>
+      <p data-i18n="welcome-text">
         Leid jouw land naar internationale sportglorie in deze realistische en meeslepende multiplayer-managementgame.  
         Ontdek tientallen sporten, stel je team samen, en strijd tegen managers over de hele wereld.  
         📅 Toernooien spelen zich af in real-time — net als in het echt!
       </p>
-      <a href="regels.html">📖 Lees de spelregels en uitleg</a>
+      <a href="regels.html" data-i18n="read-rules">📖 Lees de spelregels en uitleg</a>
     </section>
 
     <section>
-      <h2>📰 Laatste nieuws</h2>
+      <h2 data-i18n="news">📰 Laatste nieuws</h2>
       <ul id="nieuwsHeadlines">
-        <li>🎉 Eerste editie is in voorbereiding...</li>
-        <li>📢 Registreer nu en ontvang start-MP!</li>
-        <li>⚙️ Admins werken hard aan nieuwe simulatie-opties.</li>
+        <li data-i18n="news1">🎉 Eerste editie is in voorbereiding...</li>
+        <li data-i18n="news2">📢 Registreer nu en ontvang start-MP!</li>
+        <li data-i18n="news3">⚙️ Admins werken hard aan nieuwe simulatie-opties.</li>
       </ul>
     </section>
 
     <section>
-      <h2>🌐 Deelnemende landen</h2>
+      <h2 data-i18n="countries">🌐 Deelnemende landen</h2>
       <div id="landenVlaggen" class="vlaggenrij"></div>
     </section>
   </main>
 
   <footer>
-    <p>&copy; 2025 Multisport-Manager – Jouw sport, jouw strategie.</p>
+    <p data-i18n="footer">&copy; 2025 Multisport-Manager – Jouw sport, jouw strategie.</p>
   </footer>
   <script>
-    // 🌍 Laad vlaggen uit landenlijst
     const landendiv = document.getElementById("landenVlaggen");
     const landenQueue = JSON.parse(localStorage.getItem("countryQueue")) || [];
 
     if (landenQueue.length > 0) {
       landenQueue.slice(0, 12).forEach(land => {
         const span = document.createElement("span");
-        span.textContent = `🏳️‍🌈 ${land}`; // Plaats hier je vlag-emoji's of afbeeldingen
+        span.textContent = `🏳️‍🌈 ${land}`;
         span.style.marginRight = "10px";
         landendiv.appendChild(span);
       });
     } else {
-      landendiv.innerHTML = "<p>Er zijn nog geen landen toegewezen.</p>";
+      landendiv.innerHTML = "<p data-i18n='no-countries'>Er zijn nog geen landen toegewezen.</p>";
     }
 
-    // 🌐 Taalkeuze laden (vereist language.js)
+    // 🌐 Taalkeuze bovenaan
     const taalDiv = document.getElementById("taalkeuze");
     const talen = ["nl", "en", "fr", "de"];
     const actieveTaal = localStorage.getItem("taal") || "nl";
@@ -78,6 +77,11 @@
       });
       taalDiv.appendChild(knop);
     });
+
+    // 🌍 Roep vertaling aan
+    if (typeof vertaalPagina === "function") {
+      vertaalPagina(); // uit language.js
+    }
   </script>
 </body>
 </html>
