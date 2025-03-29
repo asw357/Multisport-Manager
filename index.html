@@ -3,122 +3,111 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title data-i18n="title">Multisport-Manager</title>
-  <link rel="stylesheet" href="css/style.css" />
-  <script src="language.js"></script>
+  <title>Sport Manager Simulatie</title>
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <header>
-    <h1 data-i18n="heading">🏅 Multisport-Manager</h1>
-    <div id="taalkeuze"></div>
-    <nav id="navigatie">
-      <!-- Wordt dynamisch gevuld door JS -->
+    <h1>🏅 <span data-i18n="welkom">Welkom bij Sport Manager Simulatie</span></h1>
+    <div style="position: absolute; top: 10px; right: 10px;">
+      <label for="taalKeuze" style="font-weight: bold;">🌍</label>
+      <select id="taalKeuze">
+        <option value="nl">🇳🇱 NL</option>
+        <option value="en">🇬🇧 EN</option>
+        <option value="de">🇩🇪 DE</option>
+        <option value="fr">🇫🇷 FR</option>
+      </select>
+    </div>
+    <nav>
+      <ul id="navLinks">
+        <li><a href="register.html" data-i18n="registreren">📋 Registreren</a></li>
+        <li><a href="login.html" data-i18n="inloggen">🔐 Inloggen</a></li>
+        <li><a href="contact.html">✉️ Contact</a></li>
+      </ul>
     </nav>
   </header>
 
   <main>
     <section>
-      <h2 data-i18n="welcome-title">🌍 Welkom bij de Multisport-Manager</h2>
-      <p data-i18n="welcome-text">
-        Leid jouw land naar internationale sportglorie in deze realistische en meeslepende multiplayer-managementgame. Ontdek tientallen sporten, stel je team samen, en strijd tegen managers over de hele wereld. 📅 Toernooien spelen zich af in real-time — net als in het echt!
+      <p data-i18n="intro">
+        Stap in de rol van manager van jouw nationale team en leid jouw land naar glorie!  
+        Stel atleten op, scout nieuw talent, pas tactieken toe en win medailles!  
+        Lees ook de <a href="regels.html">Regels & Uitleg</a> voordat je begint.
       </p>
-      <a href="regels.html" data-i18n="read-rules">📖 Lees de spelregels en uitleg</a>
     </section>
 
     <section>
-      <h2 data-i18n="news">📰 Laatste nieuws</h2>
-      <ul id="nieuwsHeadlines">
-        <li data-i18n="news1">🎉 Eerste editie is in voorbereiding...</li>
-        <li data-i18n="news2">📢 Registreer nu en ontvang start-MP!</li>
-        <li data-i18n="news3">⚙️ Admins werken hard aan nieuwe simulatie-opties.</li>
-      </ul>
+      <h2 data-i18n="nieuws">📰 Laatste Nieuws</h2>
+      <ul id="nieuwsHeadlines"></ul>
+      <p><a href="nieuws.html">Meer nieuws bekijken ➜</a></p>
     </section>
 
     <section>
-      <h2 data-i18n="countries">🌐 Deelnemende landen</h2>
-      <div id="landenVlaggen" class="vlaggenrij"></div>
+      <h2 data-i18n="volgende">⏰ Volgende Live Wedstrijd</h2>
+      <div id="volgendeWedstrijd"></div>
     </section>
   </main>
 
   <footer>
-    <p data-i18n="footer">&copy; 2025 Multisport-Manager – Jouw sport, jouw strategie.</p>
+    <p>&copy; 2025 Sport Manager Simulatie</p>
   </footer>
+
+  <script src="language.js"></script>
   <script>
-    // 🌐 Taalkeuze
-    const taalDiv = document.getElementById("taalkeuze");
-    const talen = ["nl", "en", "fr", "de"];
-    const actieveTaal = localStorage.getItem("taal") || "nl";
-
-    talen.forEach(taal => {
-      const knop = document.createElement("button");
-      knop.textContent = taal.toUpperCase();
-      knop.style.marginRight = "5px";
-      if (taal === actieveTaal) knop.disabled = true;
-      knop.addEventListener("click", () => {
-        localStorage.setItem("taal", taal);
-        location.reload();
-      });
-      taalDiv.appendChild(knop);
-    });
-
-    if (typeof vertaalPagina === "function") {
-      vertaalPagina();
-    }
-
-    // 🌍 Landenrij
-    const landendiv = document.getElementById("landenVlaggen");
-    const landenQueue = JSON.parse(localStorage.getItem("countryQueue")) || [];
-    if (landenQueue.length > 0) {
-      landenQueue.slice(0, 12).forEach(land => {
-        const span = document.createElement("span");
-        span.textContent = `🏳️‍🌈 ${land}`;
-        span.style.marginRight = "10px";
-        landendiv.appendChild(span);
-      });
-    } else {
-      landendiv.innerHTML = "<p data-i18n='no-countries'>Er zijn nog geen landen toegewezen.</p>";
-    }
-
-    // 👤 Navigatie: login/logout/manager/admin
-    const nav = document.getElementById("navigatie");
-    nav.innerHTML = "";
-    const user = JSON.parse(localStorage.getItem("user"));
+    const user = JSON.parse(localStorage.getItem("loggedInUser"));
+    const nav = document.getElementById("navLinks");
 
     if (user) {
-      const vlag = user.land ? `🏳️ ${user.land}` : "";
-      const spelernaam = user.gebruikersnaam || user.email || "Speler";
-
-      // 👤 Managerlink
-      const managerLink = document.createElement("a");
-      managerLink.href = "manager.html";
-      managerLink.innerHTML = `👤 ${spelernaam} – ${vlag} – ${user.mp || 0} MP`;
-      nav.appendChild(managerLink);
-
-      // 🛠️ Admin (alleen juiste e-mailadres)
+      nav.innerHTML = `
+        <li><a href="manager.html" data-i18n="manager">👤 Managerpagina</a></li>
+        <li><a href="edities.html">📅 Edities</a></li>
+        <li><a href="logout.html" data-i18n="uitloggen">🚪 Uitloggen</a></li>
+      `;
       if (user.email === "wilcoboesveld12@hotmail.com") {
-        const adminLink = document.createElement("a");
-        adminLink.href = "admin.html";
-        adminLink.textContent = "🛠️ Admin";
-        nav.appendChild(adminLink);
+        nav.innerHTML += `<li><a href="admin.html">⚙️ Admin</a></li>`;
       }
-
-      // 🚪 Logout
-      const logoutLink = document.createElement("a");
-      logoutLink.href = "logout.html";
-      logoutLink.textContent = "🚪 Uitloggen";
-      nav.appendChild(logoutLink);
-    } else {
-      // 🔐 Login/Register
-      const loginLink = document.createElement("a");
-      loginLink.href = "login.html";
-      loginLink.textContent = "🔐 Inloggen";
-      nav.appendChild(loginLink);
-
-      const registerLink = document.createElement("a");
-      registerLink.href = "register.html";
-      registerLink.textContent = "🆕 Registreren";
-      nav.appendChild(registerLink);
     }
+
+    const headlinesList = document.getElementById("nieuwsHeadlines");
+    const nieuws = JSON.parse(localStorage.getItem("nieuwsfeed")) || [];
+    const recent = nieuws.sort((a, b) => new Date(b.datum) - new Date(a.datum)).slice(0, 3);
+    recent.forEach(n => {
+      const li = document.createElement("li");
+      li.innerHTML = `<strong>[${n.categorie}]</strong> ${n.titel}`;
+      headlinesList.appendChild(li);
+    });
+
+    // Volgende live wedstrijd tonen
+    const schema = JSON.parse(localStorage.getItem("wedstrijdschema")) || [];
+    const vandaag = new Date();
+    const vandaagStr = vandaag.toISOString().split("T")[0];
+    const nu = vandaag.getHours() + ":" + String(vandaag.getMinutes()).padStart(2, '0');
+    const vandaagWedstrijden = schema.filter(w => w.datum === vandaagStr);
+    const nogTeSpelen = vandaagWedstrijden.filter(w => w.tijd >= nu);
+    const volgende = nogTeSpelen.sort((a, b) => a.tijd.localeCompare(b.tijd))[0];
+
+    const container = document.getElementById("volgendeWedstrijd");
+    if (volgende) {
+      container.innerHTML = `
+        <p><strong>${volgende.sport} – ${volgende.onderdeel}</strong><br>
+        Tijd: ${volgende.tijd} | Dag ${volgende.dag}</p>
+        <a href="live_wedstrijd.html?sport=${encodeURIComponent(volgende.sport)}&onderdeel=${encodeURIComponent(volgende.onderdeel)}">▶️ Volg live</a>
+      `;
+    } else {
+      container.innerHTML = `<p>Er zijn vandaag geen geplande live wedstrijden meer.</p>`;
+    }
+
+    // 🌍 Taal opslaan en laden
+    const taalDropdown = document.getElementById("taalKeuze");
+    const opgeslagenTaal = localStorage.getItem("taal") || "nl";
+    taalDropdown.value = opgeslagenTaal;
+    translatePage(opgeslagenTaal);
+
+    taalDropdown.addEventListener("change", e => {
+      const gekozen = e.target.value;
+      localStorage.setItem("taal", gekozen);
+      translatePage(gekozen);
+    });
   </script>
 </body>
 </html>
