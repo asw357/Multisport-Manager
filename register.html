@@ -29,14 +29,16 @@
 
       <button type="submit" data-i18n="register-button">Account aanmaken</button>
     </form>
+
     <p id="melding" style="color: red;"></p>
+    <p id="toewijzing" style="color: green; font-weight: bold;"></p>
   </main>
 
   <footer>
     <p data-i18n="footer">&copy; 2025 Multisport-Manager – Jouw sport, jouw strategie.</p>
   </footer>
   <script>
-    // 🌐 Taal
+    // 🌐 Taalkeuze
     const taalDiv = document.getElementById("taalkeuze");
     const talen = ["nl", "en", "fr", "de"];
     const actieveTaal = localStorage.getItem("taal") || "nl";
@@ -60,6 +62,7 @@
     // 📝 Registratie
     const form = document.getElementById("registerForm");
     const melding = document.getElementById("melding");
+    const toewijzing = document.getElementById("toewijzing");
 
     form.addEventListener("submit", e => {
       e.preventDefault();
@@ -73,9 +76,7 @@
         return;
       }
 
-      // ✅ Landentoewijzing met fallback
       let countryQueue = JSON.parse(localStorage.getItem("countryQueue"));
-
       if (!Array.isArray(countryQueue) || countryQueue.length === 0) {
         countryQueue = [
           "Australië", "Bulgarije", "Chili", "Denemarken", "IJsland", "Duitsland", "Frankrijk", "Griekenland"
@@ -98,12 +99,17 @@
 
       localStorage.setItem("user", JSON.stringify(user));
 
-      // Voeg toe aan accounts
       const accounts = JSON.parse(localStorage.getItem("accounts")) || [];
       accounts.push(user);
       localStorage.setItem("accounts", JSON.stringify(accounts));
 
-      window.location.href = "index.html";
+      // ✅ Visuele bevestiging van toewijzing
+      toewijzing.textContent = `Je bent toegewezen aan: ${toegewezenLand} 🇺🇳 – Je begint met ${startMp} MP`;
+
+      // ⏳ Optioneel: paar seconden wachten voor redirect
+      setTimeout(() => {
+        window.location.href = "index.html";
+      }, 2000);
     });
   </script>
 </body>
