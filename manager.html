@@ -1,109 +1,72 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title data-i18n="manager-title">Managerpagina – Multisport-Manager</title>
-  <link rel="stylesheet" href="css/style.css" />
-  <script src="language.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manager Home</title>
+  <link rel="stylesheet" href="css/style.css">
   <style>
-    .manager-container {
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 20px;
-      background: #f5f5f5;
-      border-radius: 8px;
-      box-shadow: 0 0 8px rgba(0,0,0,0.1);
-    }
-
-    .manager-info p {
-      font-size: 1.1em;
-      margin: 10px 0;
-    }
-
-    .stat {
-      background: #fff;
-      padding: 10px 15px;
-      border-radius: 6px;
-      display: inline-block;
-      margin: 10px 10px 10px 0;
-      box-shadow: 0 0 4px rgba(0,0,0,0.05);
-    }
-
-    .actions a {
-      display: inline-block;
-      margin: 10px 10px 0 0;
-      padding: 10px 15px;
-      background-color: #0077cc;
-      color: white;
-      border-radius: 5px;
-      text-decoration: none;
-      font-weight: bold;
-    }
-
-    .actions a:hover {
-      background-color: #005fa3;
-    }
+    .container { max-width: 800px; margin: auto; padding: 20px; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .info { text-align: left; }
+    .vlag-mp { display: flex; gap: 15px; align-items: center; }
+    .buttonbar a { display: inline-block; margin: 10px 10px 0 0; padding: 10px 15px; background: #eee; border-radius: 6px; text-decoration: none; }
+    .buttonbar a:hover { background: #ddd; }
   </style>
 </head>
 <body>
   <header>
-    <h1 data-i18n="manager-heading">👤 Managerpagina</h1>
+    <div class="topbar">
+      <h1>👤 Manager Home</h1>
+      <div class="vlag-mp">
+        <span id="landVlag">🏳️</span>
+        <strong id="mpDisplay">0 MP</strong>
+      </div>
+    </div>
     <nav>
-      <a href="index.html" data-i18n="back-home">⬅️ Terug naar Home</a>
+      <a href="index.html">⬅️ Terug naar Home</a>
+      <a href="instellingen.html">⚙️ Instellingen</a>
+      <a href="profiel.html">🔐 Profiel</a>
+      <a href="logout.html">🚪 Uitloggen</a>
     </nav>
-    <div id="taalkeuze"></div>
   </header>
 
-  <main class="manager-container">
-    <section class="manager-info">
-      <h2 data-i18n="overview">📋 Jouw gegevens</h2>
-      <p><span class="stat"><strong data-i18n="player-name-label">Speler:</strong> <span id="spelerNaam">...</span></span></p>
-      <p><span class="stat"><strong data-i18n="player-country-label">Land:</strong> <span id="land">...</span></span></p>
-      <p><span class="stat"><strong data-i18n="player-mp-label">MP:</strong> <span id="mp">0</span></span></p>
-    </section>
+  <main class="container">
+    <div class="info">
+      <p><strong>Speler:</strong> <span id="naam"></span></p>
+      <p><strong>Land:</strong> <span id="land"></span></p>
+    </div>
 
-    <section class="actions">
-      <h2 data-i18n="manager-actions">🎮 Acties</h2>
-      <a href="athletes.html" data-i18n="to-athletes">👥 Atletenbeheer</a>
-      <a href="tactics.html" data-i18n="to-tactics">🎯 Wedstrijdtactieken</a>
-    </section>
+    <div class="buttonbar">
+      <a href="athletes.html">🏃 Atletenbeheer</a>
+      <a href="tactics.html">🧠 Wedstrijdtactieken</a>
+      <a href="training.html">🏋️ Training</a>
+      <a href="scouting.html">🔍 Scouten</a>
+      <a href="edities.html">📅 Edities & Schema</a>
+      <a href="medaillespiegel.html">🥇 Medaillespiegel</a>
+      <a href="records.html">📈 Records</a>
+      <a href="nieuws.html">📰 Nieuws</a>
+    </div>
   </main>
 
   <footer>
-    <p data-i18n="footer">&copy; 2025 Multisport-Manager – Jouw sport, jouw strategie.</p>
+    <p>&copy; 2025 Sport Manager Simulatie – Manager</p>
   </footer>
+
   <script>
-    // 🌐 Taalkeuze
-    const taalDiv = document.getElementById("taalkeuze");
-    const talen = ["nl", "en", "fr", "de"];
-    const actieveTaal = localStorage.getItem("taal") || "nl";
+    const user = JSON.parse(localStorage.getItem("loggedInUser"));
+    const spelerNaam = user?.gebruikersnaam || user?.naam || "Geen naam beschikbaar";
+    document.getElementById("naam").textContent = spelerNaam;
+    document.getElementById("land").textContent = user?.land || "?";
+    document.getElementById("mpDisplay").textContent = `${user?.mp || 0} MP`;
 
-    talen.forEach(taal => {
-      const knop = document.createElement("button");
-      knop.textContent = taal.toUpperCase();
-      knop.style.marginRight = "5px";
-      if (taal === actieveTaal) knop.disabled = true;
-      knop.addEventListener("click", () => {
-        localStorage.setItem("taal", taal);
-        location.reload();
-      });
-      taalDiv.appendChild(knop);
-    });
+    const vlagIcon = {
+      "Australië": "🇦🇺", "Bulgarije": "🇧🇬", "Chili": "🇨🇱",
+      "Denemarken": "🇩🇰", "IJsland": "🇮🇸", "Duitsland": "🇩🇪",
+      "Frankrijk": "🇫🇷", "Griekenland": "🇬🇷"
+    };
 
-    if (typeof vertaalPagina === "function") {
-      vertaalPagina();
-    }
-
-    // 👤 Gebruiker ophalen
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (!user) {
-      window.location.href = "login.html"; // 🔐 Alleen toegankelijk na login
-    } else {
-      document.getElementById("spelerNaam").textContent = user.gebruikersnaam || "Onbekend";
-      document.getElementById("land").textContent = user.land || "?";
-      document.getElementById("mp").textContent = user.mp ?? 0;
-    }
+    document.getElementById("landVlag").textContent = vlagIcon[user?.land] || "🏳️";
   </script>
 </body>
 </html>
