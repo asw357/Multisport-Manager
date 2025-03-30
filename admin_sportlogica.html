@@ -2,192 +2,108 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Admin – Simulatieregels per Onderdeel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>📚 Admin – Sportlogica Instellen</title>
   <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    form, table { max-width: 800px; margin: auto; }
+    input, select, textarea {
+      width: 100%;
+      padding: 6px;
+      margin: 5px 0;
+    }
+    button {
+      padding: 8px 12px;
+      margin-top: 10px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 30px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 6px;
+    }
+    th {
+      background-color: #f0f0f0;
+    }
+  </style>
 </head>
 <body>
   <header>
-    <h1>🧠 Admin – Simulatieregels per Onderdeel</h1>
-    <nav>
-      <a href="admin.html">⬅️ Terug naar Admin</a>
-    </nav>
+    <h1>📚 Admin – Sportlogica Instellen</h1>
+    <nav><a href="admin.html">⬅️ Terug naar Admin</a></nav>
   </header>
 
   <main>
-    <section>
-      <h2>📌 Selecteer Editie, Sport & Onderdeel</h2>
-      <form id="logicaForm">
-        <label for="editieSelect">Editie (optioneel):</label>
-        <select id="editieSelect">
-          <option value="">-- Algemeen toepassen --</option>
-        </select><br/>
+    <form id="logicaForm">
+      <label for="sport">Sport</label>
+      <input type="text" id="sport" required />
+      <label for="discipline">Discipline (optioneel)</label>
+      <input type="text" id="discipline" />
+      <label for="onderdeel">Onderdeel</label>
+      <input type="text" id="onderdeel" required />
+      <label for="regels">Unieke Logica of Uitleg</label>
+      <textarea id="regels" rows="4" required></textarea>
+      <button type="submit">➕ Toevoegen</button>
+    </form>
 
-        <label for="sportSelect">Sport:</label>
-        <select id="sportSelect" required></select><br/>
-
-        <label for="onderdeelSelect">Onderdeel:</label>
-        <select id="onderdeelSelect" required></select><br/>
-        
-        <label for="type">Simulatietype:</label>
-        <select id="type" required>
-          <option value="standaard">Standaard (1 score)</option>
-          <option value="meerdere_pogingen">Meerdere pogingen</option>
-          <option value="puntenklassement">Puntenklassement</option>
-          <option value="best_of">Best of</option>
-          <option value="tijdvergelijking">Tijdvergelijking</option>
-          <option value="custom">Custom</option>
-        </select><br/>
-
-        <label for="instellingen">Instellingen (JSON):</label><br/>
-        <textarea id="instellingen" rows="4" cols="60" placeholder='Bijv: {"pogingen": 3, "om_de_beurt": true}'></textarea><br/>
-
-        <label for="uitleg">Uitleg voor verslag/speler:</label><br/>
-        <textarea id="uitleg" rows="3" cols="60" placeholder="Bijv: Elke atleet krijgt 3 pogingen, beste telt."></textarea><br/>
-
-        <button type="submit">💾 Opslaan logica</button>
-      </form>
-    </section>
-
-    <section>
-      <h2>📋 Bestaande Logica’s</h2>
-      <div id="logicaTabel"></div>
-      <button onclick="exporteerLogica()">📤 Exporteer alle logica</button>
-      <input type="file" id="importInput" accept=".json" />
-    </section>
+    <h2>⚙️ Ingevoerde Logica per Sportonderdeel</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Sport</th>
+          <th>Discipline</th>
+          <th>Onderdeel</th>
+          <th>Logica / Uitleg</th>
+          <th>Actie</th>
+        </tr>
+      </thead>
+      <tbody id="logicaTabel"></tbody>
+    </table>
   </main>
-
-  <footer>
-    <p>&copy; 2025 Sport Manager Simulatie</p>
-  </footer>
   <script>
-    const edities = JSON.parse(localStorage.getItem("edities")) || [];
-    const onderdelen = JSON.parse(localStorage.getItem("sportonderdelen")) || [];
-    let sportlogica = JSON.parse(localStorage.getItem("sportlogica")) || {};
+    async function laadLogica() {
+      const { data } = await supabase.from("sportlogica").select("*");
+      const tbody = document.getElementById("logicaTabel");
+      tbody.innerHTML = "";
 
-    const editieSelect = document.getElementById("editieSelect");
-    const sportSelect = document.getElementById("sportSelect");
-    const onderdeelSelect = document.getElementById("onderdeelSelect");
-    const logicaForm = document.getElementById("logicaForm");
-    const type = document.getElementById("type");
-    const instellingen = document.getElementById("instellingen");
-    const uitleg = document.getElementById("uitleg");
-    const logicaTabel = document.getElementById("logicaTabel");
-    const importInput = document.getElementById("importInput");
-
-    // Laad edities
-    edities.forEach(e => {
-      const opt = document.createElement("option");
-      opt.value = e.id;
-      opt.textContent = e.naam;
-      editieSelect.appendChild(opt);
-    });
-
-    // Laad sporten
-    const uniekeSporten = [...new Set(onderdelen.map(o => o.sport))];
-    uniekeSporten.forEach(s => {
-      const opt = document.createElement("option");
-      opt.value = s;
-      opt.textContent = s;
-      sportSelect.appendChild(opt);
-    });
-
-    // Laad onderdelen per sport
-    sportSelect.addEventListener("change", () => {
-      onderdeelSelect.innerHTML = "";
-      const gekozen = sportSelect.value;
-      const gefilterd = onderdelen.filter(o => o.sport === gekozen);
-      gefilterd.forEach(o => {
-        const opt = document.createElement("option");
-        opt.value = `${o.geslacht} - ${o.onderdeel}`;
-        opt.textContent = `${o.geslacht} - ${o.onderdeel}`;
-        onderdeelSelect.appendChild(opt);
-      });
-    });
-
-    logicaForm.addEventListener("submit", e => {
-      e.preventDefault();
-      const sleutel = getSleutel();
-
-      try {
-        const parsed = instellingen.value ? JSON.parse(instellingen.value) : {};
-        sportlogica[sleutel] = {
-          type: type.value,
-          instellingen: parsed,
-          uitleg: uitleg.value.trim()
-        };
-        localStorage.setItem("sportlogica", JSON.stringify(sportlogica));
-        alert("Logica opgeslagen!");
-        toonLogicaTabel();
-      } catch (err) {
-        alert("Fout in JSON-instellingen. Corrigeer deze eerst.");
-      }
-    });
-
-    function getSleutel() {
-      const editieId = editieSelect.value;
-      const onderdeelKey = `${sportSelect.value} - ${onderdeelSelect.value}`;
-      return editieId ? `${editieId} | ${onderdeelKey}` : `ALGEMEEN | ${onderdeelKey}`;
-    }
-
-    function toonLogicaTabel() {
-      if (Object.keys(sportlogica).length === 0) {
-        logicaTabel.innerHTML = "<p>Geen opgeslagen logica gevonden.</p>";
-        return;
-      }
-
-      let html = "<table><tr><th>Sleutel</th><th>Type</th><th>Uitleg</th><th>Acties</th></tr>";
-      Object.entries(sportlogica).forEach(([sleutel, config]) => {
-        html += `
-          <tr>
-            <td>${sleutel}</td>
-            <td>${config.type}</td>
-            <td>${config.uitleg}</td>
-            <td><button onclick="verwijderLogica('${sleutel}')">🗑️ Verwijder</button></td>
-          </tr>
+      data.forEach(row => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${row.sport}</td>
+          <td>${row.discipline || ""}</td>
+          <td>${row.onderdeel}</td>
+          <td>${row.regels}</td>
+          <td><button onclick="verwijderLogica('${row.id}')">🗑️</button></td>
         `;
+        tbody.appendChild(tr);
       });
-      html += "</table>";
-      logicaTabel.innerHTML = html;
     }
 
-    function verwijderLogica(sleutel) {
-      if (!confirm(`Weet je zeker dat je de logica voor "${sleutel}" wilt verwijderen?`)) return;
-      delete sportlogica[sleutel];
-      localStorage.setItem("sportlogica", JSON.stringify(sportlogica));
-      toonLogicaTabel();
+    async function verwijderLogica(id) {
+      await supabase.from("sportlogica").delete().eq("id", id);
+      laadLogica();
     }
 
-    function exporteerLogica() {
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(sportlogica, null, 2));
-      const link = document.createElement("a");
-      link.setAttribute("href", dataStr);
-      link.setAttribute("download", "sportlogica_export.json");
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-    }
-
-    importInput.addEventListener("change", () => {
-      const file = importInput.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        try {
-          const data = JSON.parse(e.target.result);
-          sportlogica = { ...sportlogica, ...data };
-          localStorage.setItem("sportlogica", JSON.stringify(sportlogica));
-          alert("Import succesvol!");
-          toonLogicaTabel();
-        } catch (err) {
-          alert("Fout bij importeren: ongeldige JSON.");
-        }
+    document.getElementById("logicaForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const nieuwe = {
+        sport: document.getElementById("sport").value,
+        discipline: document.getElementById("discipline").value,
+        onderdeel: document.getElementById("onderdeel").value,
+        regels: document.getElementById("regels").value
       };
-      reader.readAsText(file);
+      await supabase.from("sportlogica").insert([nieuwe]);
+      this.reset();
+      laadLogica();
     });
 
-    // Init
-    toonLogicaTabel();
+    laadLogica();
   </script>
 </body>
 </html>
