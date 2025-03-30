@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🌐 Taalinstellingen</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="js/language.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    .taalkeuze {
+      max-width: 400px;
+      margin: auto;
+      background: #f9f9f9;
+      padding: 20px;
+      border-radius: 6px;
+      text-align: center;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 5px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🌐 Kies jouw taal</h1>
+    <nav><a href="index.html">⬅️ Terug naar Home</a></nav>
+  </header>
+
+  <main>
+    <div class="taalkeuze">
+      <p>Selecteer een taal:</p>
+      <button onclick="setLanguage('nl')">🇳🇱 Nederlands</button>
+      <button onclick="setLanguage('en')">🇬🇧 English</button>
+      <button onclick="setLanguage('de')">🇩🇪 Deutsch</button>
+      <button onclick="setLanguage('fr')">🇫🇷 Français</button>
+    </div>
+  </main>
+
+  <script>
+    function setLanguage(lang) {
+      localStorage.setItem("site_language", lang);
+      alert("Taal is aangepast! Pagina wordt opnieuw geladen.");
+      location.reload();
+    }
+  </script>
+</body>
+</html>
