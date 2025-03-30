@@ -2,68 +2,76 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Deelname & Resultaten</title>
-  <link rel="stylesheet" href="css/style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>📊 Editie Resultaten</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    .resultaat {
+      margin: 12px 0;
+      padding: 10px;
+      background: #f4f4f4;
+      border-radius: 6px;
+    }
+    h2 {
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 5px;
+    }
+  </style>
 </head>
 <body>
   <header>
-    <h1>📜 Jouw Resultaten per Editie</h1>
-    <nav>
-      <ul>
-        <li><a href="manager.html">⬅️ Terug naar Manager Home</a></li>
-      </ul>
-    </nav>
+    <h1>📊 Editie Resultaten</h1>
+    <nav><a href="edities.html">⬅️ Terug naar Edities</a></nav>
   </header>
 
   <main>
-    <section id="resultatenContainer">
-      <!-- Dynamisch gevuld -->
-    </section>
+    <div id="resultatenLijst">🔄 Resultaten laden...</div>
   </main>
-
-  <footer>
-    <p>&copy; 2025 Sport Manager Simulatie – Resultaten</p>
-  </footer>
-
   <script>
-    const user = JSON.parse(localStorage.getItem("loggedInUser"));
-    if (!user) {
-      alert("Niet ingelogd.");
-      window.location.href = "login.html";
-    }
+    async function laadResultaten() {
+      const params = new URLSearchParams(window.location.search);
+      const editieId = params.get("editie");
 
-    const resultContainer = document.getElementById("resultatenContainer");
-    const logs = JSON.parse(localStorage.getItem("editie_resultaten_log")) || [];
-
-    function toonResultaten() {
-      const mijnResultaten = logs.filter(entry => entry.email === user.email);
-
-      if (mijnResultaten.length === 0) {
-        resultContainer.innerHTML = "<p>Je hebt nog geen deelname aan een editie geregistreerd.</p>";
+      if (!editieId) {
+        document.getElementById("resultatenLijst").innerHTML = "Geen editie gespecificeerd.";
         return;
       }
 
-      const perEditie = {};
+      const { data: resultaten } = await supabase
+        .from("wedstrijd_resultaten")
+        .select("*, atleten:atleet_id(naam, land, sport, onderdeel)")
+        .eq("editie_id", editieId)
+        .order("wedstrijd_id", { ascending: true })
+        .order("positie", { ascending: true });
 
-      mijnResultaten.forEach(r => {
-        if (!perEditie[r.editie]) perEditie[r.editie] = [];
-        perEditie[r.editie].push(r);
+      const lijst = document.getElementById("resultatenLijst");
+      lijst.innerHTML = "";
+
+      if (!resultaten || resultaten.length === 0) {
+        lijst.innerHTML = "📭 Geen resultaten beschikbaar voor deze editie.";
+        return;
+      }
+
+      let currentWedstrijd = null;
+      let html = "";
+
+      resultaten.forEach((r, i) => {
+        if (r.wedstrijd_id !== currentWedstrijd) {
+          if (i !== 0) html += "</ol>";
+          html += `<div class="resultaat"><h2>${r.atleten.sport} – ${r.atleten.onderdeel}</h2><ol>`;
+          currentWedstrijd = r.wedstrijd_id;
+        }
+        html += `<li>${r.atleten.naam} (${r.atleten.land}) – Score: ${r.score.toFixed(2)}</li>`;
       });
 
-      for (const editie in perEditie) {
-        const lijst = perEditie[editie];
-        const div = document.createElement("div");
-        div.innerHTML = `<h3>${editie}</h3><ul>` +
-          lijst.map(r =>
-            `<li><strong>${r.onderdeel}</strong>: ${r.resultaat} ${r.medaille ? `– 🏅 ${r.medaille}` : ""}</li>`
-          ).join("") +
-        "</ul>";
-        resultContainer.appendChild(div);
-      }
+      html += "</ol></div>";
+      lijst.innerHTML = html;
     }
 
-    document.addEventListener("DOMContentLoaded", toonResultaten);
+    laadResultaten();
   </script>
 </body>
 </html>
