@@ -2,116 +2,115 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Tactiekinstellingen Beheren</title>
-  <link rel="stylesheet" href="css/style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>⚙️ Admin – Tactieken Beheren</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+    }
+    form, table {
+      max-width: 800px;
+      margin: 20px auto;
+    }
+    input, select, textarea {
+      width: 100%;
+      margin-top: 5px;
+      margin-bottom: 10px;
+      padding: 6px;
+    }
+    button {
+      padding: 8px 12px;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+    }
+    th {
+      background: #eee;
+    }
+  </style>
 </head>
 <body>
   <header>
-    <h1>🎯 Tactiekinstellingen</h1>
-    <nav>
-      <ul>
-        <li><a href="admin.html">⬅️ Terug naar Admin Dashboard</a></li>
-      </ul>
-    </nav>
+    <h1>⚙️ Admin – Tactieken Beheren</h1>
+    <nav><a href="admin.html">⬅️ Terug naar Admin</a></nav>
   </header>
 
   <main>
-    <section>
-      <form id="tacticForm">
-        <label for="tacticSport">Kies sportonderdeel:</label><br />
-        <select id="tacticSport" required></select><br />
-        <label for="tacticNaam">Tactieknaam:</label><br />
-        <input type="text" id="tacticNaam" required><br />
-        <label for="tacticEffect">Effect (tekst):</label><br />
-        <input type="text" id="tacticEffect" required><br />
-        <label for="tacticRisico">Risico op fout (%):</label><br />
-        <input type="number" id="tacticRisico" value="0"><br /><br />
-        <button type="submit">Toevoegen</button>
-      </form>
-    </section>
+    <form id="tactiekForm">
+      <label for="sport">Sport</label>
+      <input type="text" id="sport" required />
+      <label for="onderdeel">Onderdeel</label>
+      <input type="text" id="onderdeel" required />
+      <label for="tactiek">Tactieknaam</label>
+      <input type="text" id="tactiek" required />
+      <label for="effect">Effect / Beschrijving</label>
+      <textarea id="effect" rows="2" required></textarea>
+      <button type="submit">➕ Tactiek toevoegen</button>
+    </form>
 
-    <section>
-      <h2>Ingevoerde Tactieken</h2>
-      <ul id="tacticList">
-        <!-- Lijst met tactieken -->
-      </ul>
-    </section>
+    <h2>Bestaande Tactieken</h2>
+    <table id="tactiekTabel">
+      <thead>
+        <tr>
+          <th>Sport</th>
+          <th>Onderdeel</th>
+          <th>Tactiek</th>
+          <th>Effect</th>
+          <th>Actie</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
   </main>
 
-  <footer>
-    <p>&copy; 2025 Sport Manager Simulatie – Tactiekenbeheer</p>
-  </footer>
-
   <script>
-    const ADMIN_EMAIL = "wilcoboesveld12@hotmail.com";
-    const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
-    if (!loggedInUser || loggedInUser.email !== ADMIN_EMAIL) {
-      alert("Toegang geweigerd.");
-      window.location.href = "index.html";
-    }
+    async function laadTactieken() {
+      const { data } = await supabase.from("tactieken").select("*");
+      const tbody = document.querySelector("#tactiekTabel tbody");
+      tbody.innerHTML = "";
 
-    const tacticForm = document.getElementById("tacticForm");
-    const tacticList = document.getElementById("tacticList");
-    const tacticSport = document.getElementById("tacticSport");
-
-    function laadSportonderdelen() {
-      const onderdelen = JSON.parse(localStorage.getItem("sportonderdelen")) || [];
-      tacticSport.innerHTML = "";
-      onderdelen.forEach((s) => {
-        const optie = document.createElement("option");
-        optie.value = `${s.sport} - ${s.geslacht} - ${s.onderdeel}`;
-        optie.textContent = optie.value;
-        tacticSport.appendChild(optie);
+      data.forEach(row => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${row.sport}</td>
+          <td>${row.onderdeel}</td>
+          <td>${row.tactiek}</td>
+          <td>${row.effect}</td>
+          <td><button onclick="verwijderTactiek('${row.id}')">🗑️ Verwijder</button></td>
+        `;
+        tbody.appendChild(tr);
       });
     }
 
-    function updateTacticList() {
-      const data = JSON.parse(localStorage.getItem("tactieken")) || {};
-      tacticList.innerHTML = "";
-      for (const sport in data) {
-        data[sport].forEach((t, i) => {
-          const li = document.createElement("li");
-          li.innerHTML = `
-            <strong>${sport}</strong> – ${t.naam}: ${t.effect} (Risico: ${t.risico}%)
-            <button onclick="verwijderTactiek('${sport}', ${i})" style="margin-left:10px">❌</button>
-          `;
-          tacticList.appendChild(li);
-        });
-      }
+    async function verwijderTactiek(id) {
+      await supabase.from("tactieken").delete().eq("id", id);
+      laadTactieken();
     }
 
-    function verwijderTactiek(sport, index) {
-      const data = JSON.parse(localStorage.getItem("tactieken")) || {};
-      if (data[sport]) {
-        data[sport].splice(index, 1);
-        if (data[sport].length === 0) delete data[sport];
-        localStorage.setItem("tactieken", JSON.stringify(data));
-        updateTacticList();
-      }
-    }
-
-    tacticForm.addEventListener("submit", function (e) {
+    document.getElementById("tactiekForm").addEventListener("submit", async function (e) {
       e.preventDefault();
-      const sport = tacticSport.value;
-      const naam = document.getElementById("tacticNaam").value.trim();
-      const effect = document.getElementById("tacticEffect").value.trim();
-      const risico = parseInt(document.getElementById("tacticRisico").value);
+      const tactiek = {
+        sport: document.getElementById("sport").value,
+        onderdeel: document.getElementById("onderdeel").value,
+        tactiek: document.getElementById("tactiek").value,
+        effect: document.getElementById("effect").value
+      };
 
-      if (!sport || !naam || !effect || isNaN(risico)) return;
-
-      const tactieken = JSON.parse(localStorage.getItem("tactieken")) || {};
-      if (!tactieken[sport]) tactieken[sport] = [];
-      tactieken[sport].push({ naam, effect, risico });
-      localStorage.setItem("tactieken", JSON.stringify(tactieken));
-      tacticForm.reset();
-      updateTacticList();
+      await supabase.from("tactieken").insert([tactiek]);
+      this.reset();
+      laadTactieken();
     });
 
-    document.addEventListener("DOMContentLoaded", () => {
-      laadSportonderdelen();
-      updateTacticList();
-    });
+    laadTactieken();
   </script>
 </body>
 </html>
