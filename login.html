@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Inloggen</title>
   <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="js/supabaseClient.js"></script>
   <style>
     form {
       max-width: 400px;
@@ -52,25 +54,23 @@
   </footer>
 
   <script>
-    async function fetchJSON(path) {
-      const res = await fetch(path);
-      return await res.json();
-    }
-
     document.getElementById("loginForm").addEventListener("submit", async function (e) {
       e.preventDefault();
       const email = document.getElementById("email").value;
       const wachtwoord = document.getElementById("wachtwoord").value;
 
-      const users = await fetchJSON("data/users.json");
-      const match = users.find(u => u.email === email && u.wachtwoord === wachtwoord);
+      const { data: users, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("email", email)
+        .eq("wachtwoord", wachtwoord);
 
-      if (!match) {
+      if (error || !users || users.length === 0) {
         alert("❌ Foutieve inloggegevens.");
         return;
       }
 
-      localStorage.setItem("loggedInUser", JSON.stringify(match));
+      localStorage.setItem("loggedInUser", JSON.stringify(users[0]));
       window.location.href = "manager.html";
     });
   </script>
