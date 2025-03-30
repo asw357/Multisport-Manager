@@ -2,215 +2,128 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Admin – Sporten & Onderdelen</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🏅 Sporten & Onderdelen Beheren</title>
   <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="js/supabaseClient.js"></script>
   <style>
-    .inline-edit input,
-    .inline-edit select {
-      margin: 2px;
+    body { font-family: sans-serif; padding: 20px; }
+    form, table {
+      max-width: 800px;
+      margin: auto;
     }
-    .acties button {
-      margin-right: 5px;
+    input, select, button {
+      margin: 5px;
+      padding: 8px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 30px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 6px;
+      text-align: left;
+    }
+    th {
+      background: #f0f0f0;
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>🏅 Admin – Sporten & Onderdelen</h1>
+    <h1>🏅 Sporten & Onderdelen</h1>
     <nav><a href="admin.html">⬅️ Terug naar Admin</a></nav>
   </header>
 
   <main>
-    <section>
-      <h2>➕ Nieuw Onderdeel Toevoegen</h2>
-      <form id="sportForm">
-        <label for="sportSelect">Sport:</label>
-        <input list="sportLijst" id="sportSelect" required placeholder="Typ of kies sport" />
-        <datalist id="sportLijst"></datalist><br/>
+    <form id="sportForm">
+      <select id="categorie" required></select>
+      <input type="text" id="discipline" placeholder="Discipline (optioneel)" />
+      <select id="geslacht" required>
+        <option value="">Geslacht</option>
+        <option value="Mannen">Mannen</option>
+        <option value="Vrouwen">Vrouwen</option>
+        <option value="Gemengd">Gemengd</option>
+      </select>
+      <input type="text" id="onderdeel" placeholder="Onderdeel" required />
+      <button type="submit">➕ Toevoegen</button>
+    </form>
 
-        <label for="discipline">Discipline (optioneel):</label>
-        <input type="text" id="discipline" placeholder="Bijv. Baan, Weg, Sprint, Classic"><br/>
-
-        <label for="geslacht">Geslacht:</label>
-        <select id="geslacht" required>
-          <option value="">-- Kies --</option>
-          <option value="Mannen">Mannen</option>
-          <option value="Vrouwen">Vrouwen</option>
-          <option value="Gemengd">Gemengd</option>
-        </select><br/>
-
-        <label for="onderdeel">Onderdeel:</label>
-        <input type="text" id="onderdeel" required placeholder="Bijv. 100m, Dubbelspan"><br/>
-
-        <button type="submit">➕ Toevoegen</button>
-      </form>
-    </section>
-
-    <section>
-      <h2>📋 Overzicht van Sporten, Disciplines & Onderdelen</h2>
-      <div id="onderdelenLijst"></div>
-    </section>
+    <table>
+      <thead>
+        <tr>
+          <th>Sport</th><th>Discipline</th><th>Geslacht</th><th>Onderdeel</th><th>Acties</th>
+        </tr>
+      </thead>
+      <tbody id="sportTabel"></tbody>
+    </table>
   </main>
+  <script>
+    let alleSporten = [];
 
-  <footer>
-    <p>&copy; 2025 Sport Manager Simulatie</p>
-  </footer>
-<script>
-  let onderdelen = JSON.parse(localStorage.getItem("sportonderdelen")) || [];
-
-  const sportForm = document.getElementById("sportForm");
-  const sportInput = document.getElementById("sportSelect");
-  const disciplineInput = document.getElementById("discipline");
-  const geslachtInput = document.getElementById("geslacht");
-  const onderdeelInput = document.getElementById("onderdeel");
-  const sportLijst = document.getElementById("sportLijst");
-  const onderdelenLijst = document.getElementById("onderdelenLijst");
-
-  function updateSportLijst() {
-    const uniekeSporten = [...new Set(onderdelen.map(o => o.sport))].sort();
-    sportLijst.innerHTML = "";
-    uniekeSporten.forEach(s => {
-      const opt = document.createElement("option");
-      opt.value = s;
-      sportLijst.appendChild(opt);
-    });
-  }
-
-  function maakSleutel(o) {
-    return `${o.sport}__${o.discipline || ""}__${o.geslacht}__${o.onderdeel}`;
-  }
-
-  function toonOnderdelen() {
-    onderdelenLijst.innerHTML = "";
-
-    if (onderdelen.length === 0) {
-      onderdelenLijst.innerHTML = "<p>Er zijn nog geen onderdelen toegevoegd.</p>";
-      return;
+    async function laadSporten() {
+      const { data } = await supabase.from("sportonderdelen").select("*").order("sport, discipline, geslacht, onderdeel");
+      alleSporten = data || [];
+      toonSporten();
+      laadCategorieSuggesties();
     }
 
-    const gesorteerd = [...onderdelen].sort((a, b) => {
-      if (a.sport !== b.sport) return a.sport.localeCompare(b.sport);
-      if ((a.discipline || "") !== (b.discipline || "")) return (a.discipline || "").localeCompare(b.discipline || "");
-      return a.onderdeel.localeCompare(b.onderdeel);
-    });
-
-    const gegroepeerd = {};
-    gesorteerd.forEach(o => {
-      const key = `${o.sport}||${o.discipline || ""}`;
-      if (!gegroepeerd[key]) gegroepeerd[key] = [];
-      gegroepeerd[key].push({ ...o, sleutel: maakSleutel(o) });
-    });
-
-    for (const [key, items] of Object.entries(gegroepeerd)) {
-      const [sport, discipline] = key.split("||");
-      const div = document.createElement("div");
-      div.className = "sport-blok";
-      div.innerHTML = `<h3>${sport}${discipline ? " – " + discipline : ""}</h3>`;
-      const ul = document.createElement("ul");
-
-      items.forEach(item => {
-        const li = document.createElement("li");
-        li.setAttribute("data-sleutel", item.sleutel);
-        li.innerHTML = `
-          <span><strong>${item.geslacht}</strong> – ${item.onderdeel}</span>
-          <span class="acties">
-            <button onclick="bewerkOnderdeel('${item.sleutel}')">✏️</button>
-            <button onclick="verwijderOnderdeel('${item.sleutel}')">🗑️</button>
-          </span>
+    function toonSporten() {
+      const tabel = document.getElementById("sportTabel");
+      tabel.innerHTML = "";
+      alleSporten.forEach((s, index) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${s.sport}</td>
+          <td>${s.discipline || "-"}</td>
+          <td>${s.geslacht}</td>
+          <td>${s.onderdeel}</td>
+          <td>
+            <button onclick="verwijder(${s.id})">🗑️</button>
+          </td>
         `;
-        ul.appendChild(li);
+        tabel.appendChild(tr);
       });
-
-      div.appendChild(ul);
-      onderdelenLijst.appendChild(div);
-    }
-  }
-
-  function bewerkOnderdeel(sleutel) {
-    const o = onderdelen.find(o => maakSleutel(o) === sleutel);
-    const li = onderdelenLijst.querySelector(`li[data-sleutel="${sleutel}"]`);
-    li.innerHTML = `
-      <div class="inline-edit">
-        <input type="text" value="${o.sport}" id="editSport">
-        <input type="text" value="${o.discipline || ""}" id="editDiscipline" placeholder="Discipline">
-        <select id="editGeslacht">
-          <option ${o.geslacht === "Mannen" ? "selected" : ""}>Mannen</option>
-          <option ${o.geslacht === "Vrouwen" ? "selected" : ""}>Vrouwen</option>
-          <option ${o.geslacht === "Gemengd" ? "selected" : ""}>Gemengd</option>
-        </select>
-        <input type="text" value="${o.onderdeel}" id="editOnderdeel">
-        <button onclick="opslaanBewerking('${sleutel}')">💾</button>
-        <button onclick="toonOnderdelen()">❌</button>
-      </div>
-    `;
-  }
-
-  function opslaanBewerking(sleutel) {
-    const o = onderdelen.find(o => maakSleutel(o) === sleutel);
-    const sport = document.getElementById("editSport").value.trim();
-    const discipline = document.getElementById("editDiscipline").value.trim();
-    const geslacht = document.getElementById("editGeslacht").value;
-    const onderdeel = document.getElementById("editOnderdeel").value.trim();
-
-    if (!sport || !geslacht || !onderdeel) {
-      alert("Vul minimaal sport, geslacht en onderdeel in.");
-      return;
     }
 
-    const nieuweSleutel = `${sport}__${discipline}__${geslacht}__${onderdeel}`;
-    const bestaatAl = onderdelen.some(o => maakSleutel(o) === nieuweSleutel && maakSleutel(o) !== sleutel);
-    if (bestaatAl) {
-      alert("Dit onderdeel bestaat al.");
-      return;
+    async function verwijder(id) {
+      await supabase.from("sportonderdelen").delete().eq("id", id);
+      laadSporten();
     }
 
-    o.sport = sport;
-    o.discipline = discipline || "";
-    o.geslacht = geslacht;
-    o.onderdeel = onderdeel;
-    localStorage.setItem("sportonderdelen", JSON.stringify(onderdelen));
-    updateSportLijst();
-    toonOnderdelen();
-  }
+    async function voegToe(event) {
+      event.preventDefault();
+      const sport = document.getElementById("categorie").value.trim();
+      const discipline = document.getElementById("discipline").value.trim();
+      const geslacht = document.getElementById("geslacht").value;
+      const onderdeel = document.getElementById("onderdeel").value.trim();
 
-  function verwijderOnderdeel(sleutel) {
-    if (!confirm("Weet je zeker dat je dit onderdeel wilt verwijderen?")) return;
-    onderdelen = onderdelen.filter(o => maakSleutel(o) !== sleutel);
-    localStorage.setItem("sportonderdelen", JSON.stringify(onderdelen));
-    updateSportLijst();
-    toonOnderdelen();
-  }
+      if (!sport || !geslacht || !onderdeel) return alert("Vul alles in!");
 
-  sportForm.addEventListener("submit", e => {
-    e.preventDefault();
-    const sport = sportInput.value.trim();
-    const discipline = disciplineInput.value.trim();
-    const geslacht = geslachtInput.value;
-    const onderdeel = onderdeelInput.value.trim();
-
-    if (!sport || !geslacht || !onderdeel) {
-      alert("Vul minimaal sport, geslacht en onderdeel in.");
-      return;
+      const { error } = await supabase.from("sportonderdelen").insert([{ sport, discipline, geslacht, onderdeel }]);
+      if (!error) {
+        document.getElementById("sportForm").reset();
+        laadSporten();
+      }
     }
 
-    const sleutel = `${sport}__${discipline}__${geslacht}__${onderdeel}`;
-    const bestaatAl = onderdelen.some(o => maakSleutel(o) === sleutel);
-    if (bestaatAl) {
-      alert("Dit onderdeel bestaat al.");
-      return;
+    function laadCategorieSuggesties() {
+      const categorieSelect = document.getElementById("categorie");
+      const unieke = [...new Set(alleSporten.map(s => s.sport))];
+      categorieSelect.innerHTML = '<option value="">Kies of typ sport</option>';
+      unieke.forEach(cat => {
+        const option = document.createElement("option");
+        option.value = cat;
+        option.textContent = cat;
+        categorieSelect.appendChild(option);
+      });
     }
 
-    onderdelen.push({ sport, discipline, geslacht, onderdeel });
-    localStorage.setItem("sportonderdelen", JSON.stringify(onderdelen));
-    sportForm.reset();
-    updateSportLijst();
-    toonOnderdelen();
-  });
-
-  // Init
-  updateSportLijst();
-  toonOnderdelen();
-</script>
+    document.getElementById("sportForm").addEventListener("submit", voegToe);
+    laadSporten();
+  </script>
 </body>
 </html>
