@@ -3,93 +3,96 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Manager Home</title>
+  <title>🏠 Manager Home</title>
   <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="js/supabaseClient.js"></script>
   <style>
-    body {
-      font-family: sans-serif;
-      padding: 20px;
+    body { font-family: sans-serif; padding: 20px; }
+    header, main {
+      max-width: 800px;
+      margin: auto;
     }
-    .dashboard {
-      background: #f4f4f4;
-      padding: 20px;
-      border-radius: 10px;
-      margin-bottom: 30px;
-    }
-    .dashboard h2 {
-      margin-top: 0;
-    }
-    .info-blok {
-      font-size: 18px;
-      margin: 10px 0;
-    }
-    .knoppen {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 15px;
-    }
-    .knoppen a {
-      background: #007acc;
-      color: white;
-      padding: 12px 20px;
-      border-radius: 6px;
-      text-decoration: none;
-      font-weight: bold;
-      font-size: 16px;
-      display: inline-block;
-      transition: background 0.3s;
-    }
-    .knoppen a:hover {
-      background: #005fa3;
-    }
-    .nieuws {
-      margin-top: 30px;
-      background: #fff8e1;
+    .info-box {
+      background: #f0f0f0;
       padding: 15px;
-      border-left: 6px solid #ffc107;
-      border-radius: 5px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+    }
+    nav a {
+      display: inline-block;
+      margin-right: 10px;
+      padding: 8px 12px;
+      background: #0077cc;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+    }
+    .flag {
+      width: 24px;
+      height: 16px;
+      vertical-align: middle;
+      margin-left: 6px;
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>📋 Managerpagina</h1>
-    <nav><a href="index.html">⬅️ Terug naar Home</a></nav>
+    <h1>🏠 Managerpagina</h1>
+    <div id="userInfo" class="info-box">🔄 Gebruikersinfo laden...</div>
+    <nav>
+      <a href="athletes.html">👥 Atletenbeheer</a>
+      <a href="training.html">🏋️ Training</a>
+      <a href="scouting.html">🔍 Scouten</a>
+      <a href="tactics.html">🎯 Tactieken</a>
+      <a href="logout.html">🚪 Uitloggen</a>
+    </nav>
   </header>
 
   <main>
-    <section class="dashboard">
-      <h2>👤 Manager</h2>
-      <div class="info-blok" id="managerInfo">Bezig met laden...</div>
-    </section>
-
-    <section class="knoppen">
-      <a href="athletes.html">🏃 Atletenbeheer</a>
-      <a href="training.html">🎓 Training</a>
-      <a href="scouting.html">🔍 Scouten</a>
-      <a href="tactics.html">🧠 Tactieken</a>
-      <a href="profiel.html">🧾 Profiel</a>
-    </section>
-
-    <section class="nieuws">
-      <strong>📢 Nieuws:</strong>
-      <p>De volgende editie start binnenkort. Vergeet je atleten niet te trainen!</p>
-    </section>
+    <h2>📊 Statistieken & Overzicht</h2>
+    <div id="managerStats" class="info-box">Even geduld...</div>
   </main>
-
-  <footer>
-    <p>&copy; 2025 Sport Manager Simulatie</p>
-  </footer>
-
   <script>
-    const gebruiker = JSON.parse(localStorage.getItem("loggedInUser"));
-    const vlag = gebruiker.land === "Landloos" ? "🏳️" : "🌍";
-    const infoHTML = `
-      ${vlag} <strong>${gebruiker.gebruikersnaam}</strong><br>
-      🏳️ Land: ${gebruiker.land}<br>
-      💰 MP: ${gebruiker.mp}
-    `;
-    document.getElementById("managerInfo").innerHTML = infoHTML;
+    async function laadManagerGegevens() {
+      const userData = localStorage.getItem("loggedInUser");
+      if (!userData) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      const gebruiker = JSON.parse(userData);
+      const userDiv = document.getElementById("userInfo");
+      const vlagUrl = `https://flagcdn.com/h20/${gebruiker.land.toLowerCase().slice(0, 2)}.png`;
+
+      userDiv.innerHTML = `👤 <strong>${gebruiker.gebruikersnaam}</strong> (${gebruiker.land}) 
+        <img src="${vlagUrl}" class="flag" alt="${gebruiker.land}"> 
+        | 💰 MP: ${gebruiker.mp}`;
+
+      const { data: atleten } = await supabase.from("atleten").select("*").eq("owner", gebruiker.email);
+      const aantal = atleten.length;
+      const gemiddelden = { snelheid: 0, kracht: 0, techniek: 0 };
+
+      atleten.forEach(a => {
+        gemiddelden.snelheid += a.stats?.snelheid || 0;
+        gemiddelden.kracht += a.stats?.kracht || 0;
+        gemiddelden.techniek += a.stats?.techniek || 0;
+      });
+
+      const statBox = document.getElementById("managerStats");
+      if (aantal > 0) {
+        statBox.innerHTML = `
+          👥 Aantal atleten: ${aantal}<br/>
+          📈 Gemiddelde Snelheid: ${(gemiddelden.snelheid / aantal).toFixed(1)}<br/>
+          💪 Gemiddelde Kracht: ${(gemiddelden.kracht / aantal).toFixed(1)}<br/>
+          🧠 Gemiddelde Techniek: ${(gemiddelden.techniek / aantal).toFixed(1)}
+        `;
+      } else {
+        statBox.innerHTML = "Er zijn nog geen atleten gekoppeld aan jouw account.";
+      }
+    }
+
+    laadManagerGegevens();
   </script>
 </body>
 </html>
