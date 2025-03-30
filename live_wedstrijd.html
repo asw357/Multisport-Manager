@@ -3,222 +3,82 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Live Wedstrijd Simulatie</title>
+  <title>🏁 Live Wedstrijd Simulatie</title>
   <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="js/supabaseClient.js"></script>
   <style>
-    #commentaarBox {
+    body { font-family: sans-serif; padding: 20px; }
+    .wedstrijd {
       background: #f9f9f9;
-      border: 1px solid #ccc;
-      padding: 10px;
-      height: 300px;
-      overflow-y: auto;
-      margin-top: 10px;
+      padding: 20px;
+      border-radius: 6px;
+      margin-bottom: 20px;
     }
-    .highlight { font-weight: bold; color: green; }
-    .dq { color: red; font-weight: bold; }
-    .progress-bar {
-      font-family: monospace;
-      white-space: pre;
-      background: #eee;
-      margin: 3px 0;
-      padding: 2px;
+    h2 {
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 5px;
+    }
+    .resultaat {
+      font-weight: bold;
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
   <header>
-    <h1 id="wedstrijdTitel">📺 Live Wedstrijd Simulatie</h1>
+    <h1>🏁 Live Wedstrijd Simulatie</h1>
     <nav><a href="edities.html">⬅️ Terug naar Edities</a></nav>
   </header>
 
   <main>
-    <section>
-      <button onclick="startSimulatie()">▶️ Start simulatie</button>
-      <div id="commentaarBox"></div>
-      <h3>Voortgang</h3>
-      <div id="balken"></div>
-      <h3>Uitslag</h3>
-      <ol id="uitslag"></ol>
-    </section>
+    <div class="wedstrijd">
+      <label for="wedstrijd_id">Wedstrijd ID:</label>
+      <input type="text" id="wedstrijd_id" placeholder="Bijv. 2025011001" />
+      <button onclick="startSimulatie()">▶️ Start Simulatie</button>
+      <div id="liveVerslag" style="margin-top: 20px;"></div>
+    </div>
   </main>
-
-  <footer>
-    <p>&copy; 2025 Sport Manager Simulatie</p>
-  </footer>
-
   <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const sportParam = urlParams.get("sport") || "Onbekend sport";
-    const onderdeelParam = urlParams.get("onderdeel") || "Onbekend onderdeel";
-    document.getElementById("wedstrijdTitel").innerText = `📺 ${sportParam} – ${onderdeelParam}`;
+    async function startSimulatie() {
+      const wedstrijdId = document.getElementById("wedstrijd_id").value;
+      if (!wedstrijdId) return alert("Geef een geldig Wedstrijd ID op");
 
-    let deelnemers = [];
-    let wedstrijdLengte = 100;
-    let seconden = 0;
-    let interval;
-    let gefinished = [];
+      const verslag = document.getElementById("liveVerslag");
+      verslag.innerHTML = "🔄 Laden...";
 
-    const commentaarBox = document.getElementById("commentaarBox");
-    const uitslagBox = document.getElementById("uitslag");
-    const balkenDiv = document.getElementById("balken");
-
-    function log(text, type = "") {
-      const p = document.createElement("p");
-      p.innerHTML = text;
-      if (type) p.classList.add(type);
-      commentaarBox.appendChild(p);
-      commentaarBox.scrollTop = commentaarBox.scrollHeight;
-    }
-
-    function startSimulatie() {
-      const alleAtleten = JSON.parse(localStorage.getItem("atleten")) || [];
-      deelnemers = alleAtleten.filter(a => a.sport === `${sportParam} – ${onderdeelParam}`);
-
-      if (deelnemers.length === 0) {
-        commentaarBox.innerHTML = "<p>❌ Geen deelnemers gevonden voor deze wedstrijd.</p>";
+      // Haal atleten op voor deze wedstrijd
+      const { data: atleten } = await supabase.from("atleten").select("*").eq("wedstrijd_id", wedstrijdId);
+      if (!atleten || atleten.length === 0) {
+        verslag.innerHTML = "❌ Geen deelnemers gevonden voor deze wedstrijd.";
         return;
       }
 
-      deelnemers.forEach(d => {
-        d.afstand = 0;
-        d.verslag = [];
-        d.geDQd = false;
-        const leeftijdImpact = Math.max(0, d.leeftijd - 28) * 0.5;
-        let snelheidScore = (d.stats?.snelheid || 5) * 2 + (d.stats?.kracht || 5) - leeftijdImpact;
-
-        if (d.tactiek === "Snelle start") {
-          snelheidScore += 2;
-          if (Math.random() < 0.1) {
-            d.geDQd = true;
-            d.afstand = -1;
-            d.verslag.push("Valse start! Gediskwalificeerd.");
-            log(`🚨 ${d.naam} maakt een valse start! Gediskwalificeerd.`, "dq");
-          } else {
-            d.verslag.push("Explosieve start gekozen.");
-            log(`${d.naam} kiest voor een explosieve start! ⚡`, "highlight");
-          }
-        } else if (d.tactiek === "Finish focus") {
-          snelheidScore += 1;
-          d.verslag.push("Spaart energie voor eindsprint.");
-          log(`${d.naam} bewaart energie voor een eindsprint. 🏃‍♂️💨`);
-        } else {
-          d.verslag.push("Gebalanceerde aanpak.");
-          log(`${d.naam} kiest voor een gebalanceerde aanpak.`);
-        }
-
-        snelheidScore += Math.random() * 2;
-        d.snelheidScore = snelheidScore;
+      let log = "<h3>Live verslag:</h3><ul>";
+      const resultaten = atleten.map(a => {
+        const randomBoost = Math.random() * 5;
+        const score = (a.stats?.snelheid || 50) + (a.stats?.kracht || 50) + (a.stats?.techniek || 50) + randomBoost;
+        return { ...a, score: score };
       });
 
-      seconden = 0;
-      gefinished = [];
-      commentaarBox.innerHTML = "";
-      uitslagBox.innerHTML = "";
-      balkenDiv.innerHTML = "";
+      resultaten.sort((a, b) => b.score - a.score);
 
-      interval = setInterval(updateRace, 1000);
-    }
-
-    function updateRace() {
-      seconden++;
-      balkenDiv.innerHTML = "";
-
-      deelnemers.forEach(d => {
-        if (d.geDQd || gefinished.includes(d.naam)) return;
-
-        let boost = Math.random() * 3;
-        d.afstand += (d.snelheidScore + boost);
-        d.verslag.push(`Seconde ${seconden}: ${Math.floor(d.afstand)}m bereikt.`);
-
-        const breedte = Math.min(100, Math.floor(d.afstand));
-        let balk = "|" + "#".repeat(breedte / 2) + " ".repeat(50 - breedte / 2) + "|";
-        const div = document.createElement("div");
-        div.className = "progress-bar";
-        div.textContent = `${d.naam.padEnd(10)} ${balk} ${Math.floor(d.afstand)}m`;
-        balkenDiv.appendChild(div);
-
-        if (d.afstand >= wedstrijdLengte && !gefinished.includes(d.naam)) {
-          gefinished.push(d.naam);
-          d.verslag.push(`Finish na ${seconden} seconden.`);
-          d.finishSeconden = seconden;
-          log(`✅ ${d.naam} finisht op ${seconden} seconden!`, "highlight");
-        }
+      resultaten.forEach((a, i) => {
+        log += `<li>${i + 1}. ${a.naam} (${a.land}) – Score: ${a.score.toFixed(2)}</li>`;
       });
 
-      const totaal = deelnemers.length;
-      const klaar = gefinished.length + deelnemers.filter(d => d.geDQd).length;
+      log += "</ul>";
+      verslag.innerHTML = log;
 
-      if (klaar >= totaal) {
-        clearInterval(interval);
-        toonUitslag();
-        verwerkResultaten();
-      }
-    }
+      // Optioneel: sla de uitslag op
+      const uitslagen = resultaten.map((a, i) => ({
+        wedstrijd_id: wedstrijdId,
+        atleet_id: a.id,
+        positie: i + 1,
+        score: a.score
+      }));
 
-    function toonUitslag() {
-      let sorted = [...deelnemers]
-        .filter(d => !d.geDQd)
-        .sort((a, b) => a.finishSeconden - b.finishSeconden);
-
-      sorted = sorted.concat(deelnemers.filter(d => d.geDQd));
-
-      sorted.forEach((d, i) => {
-        const li = document.createElement("li");
-        li.innerHTML = `<strong>${d.naam}</strong> (${d.land})<br />` +
-          (d.geDQd ? '<span class="dq">Gediskwalificeerd</span>' : `Eindtijd: ${d.finishSeconden} sec`) +
-          `<br /><em>Verslag:</em> <ul>` + d.verslag.map(v => `<li>${v}</li>`).join("") + "</ul>";
-        uitslagBox.appendChild(li);
-      });
-    }
-
-    function verwerkResultaten() {
-      const mpInstellingen = JSON.parse(localStorage.getItem("mp_instellingen")) || {};
-      const users = JSON.parse(localStorage.getItem("users")) || [];
-      const records = JSON.parse(localStorage.getItem("records")) || {};
-      const nr = JSON.parse(localStorage.getItem("nationale_records")) || {};
-      const spiegel = JSON.parse(localStorage.getItem("medaillespiegel")) || {};
-
-      const uitslag = deelnemers.filter(d => !d.geDQd).sort((a, b) => a.finishSeconden - b.finishSeconden);
-      uitslag.forEach((d, index) => {
-        const user = users.find(u => u.email === d.owner);
-        if (!user) return;
-
-        // MP op basis van plaats
-        const pos = index + 1;
-        let mp = 0;
-        if (pos === 1) mp = mpInstellingen.goud?.waarde || 60;
-        else if (pos === 2) mp = mpInstellingen.zilver?.waarde || 45;
-        else if (pos === 3) mp = mpInstellingen.brons?.waarde || 30;
-        else if (pos === 4) mp = mpInstellingen.plaats4?.waarde || 20;
-        else if (pos === 5) mp = mpInstellingen.plaats5?.waarde || 10;
-        else if (pos <= 8) mp = mpInstellingen.top8?.waarde || 5;
-
-        user.mp = (user.mp || 0) + mp;
-
-        // Nationaal record check
-        const landKey = `${d.land} – ${sportParam} – ${onderdeelParam}`;
-        if (!nr[landKey] || d.finishSeconden < nr[landKey]) {
-          nr[landKey] = d.finishSeconden;
-        }
-
-        // MR check
-        const mrKey = `${sportParam} – ${onderdeelParam}`;
-        if (!records[mrKey] || d.finishSeconden < records[mrKey]) {
-          records[mrKey] = d.finishSeconden;
-        }
-
-        // Medaillespiegel
-        const medalKey = d.land;
-        if (!spiegel[medalKey]) spiegel[medalKey] = { goud: 0, zilver: 0, brons: 0 };
-        if (pos === 1) spiegel[medalKey].goud++;
-        else if (pos === 2) spiegel[medalKey].zilver++;
-        else if (pos === 3) spiegel[medalKey].brons++;
-      });
-
-      localStorage.setItem("users", JSON.stringify(users));
-      localStorage.setItem("nationale_records", JSON.stringify(nr));
-      localStorage.setItem("records", JSON.stringify(records));
-      localStorage.setItem("medaillespiegel", JSON.stringify(spiegel));
+      await supabase.from("wedstrijd_resultaten").upsert(uitslagen, { onConflict: ["wedstrijd_id", "atleet_id"] });
     }
   </script>
 </body>
