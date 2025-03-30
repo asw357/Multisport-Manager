@@ -1,115 +1,99 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin – Onderdeelcombinaties</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🔁 Admin – Onderdelen Combineren</title>
   <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="js/supabaseClient.js"></script>
   <style>
     body { font-family: sans-serif; padding: 20px; }
-    h1 { margin-bottom: 20px; }
-    label, select, button { display: block; margin-top: 10px; }
-    table { margin-top: 30px; width: 100%; border-collapse: collapse; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-    tr:nth-child(even) { background-color: #f9f9f9; }
-    .acties button { margin-left: 5px; }
+    form, table { max-width: 800px; margin: auto; }
+    input, select {
+      width: 100%;
+      padding: 6px;
+      margin: 5px 0;
+    }
+    button {
+      padding: 8px 12px;
+      margin-top: 10px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 30px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 6px;
+    }
+    th {
+      background-color: #f0f0f0;
+    }
   </style>
 </head>
 <body>
-  <h1>🔗 Admin – Onderdeelcombinaties instellen</h1>
-  <nav><a href="admin.html">⬅️ Terug naar Admin</a></nav>
+  <header>
+    <h1>🔁 Admin – Onderdelen Combineren</h1>
+    <nav><a href="admin.html">⬅️ Terug naar Admin</a></nav>
+  </header>
 
-  <form id="combinatieForm">
-    <label>Hoofdonderdeel:</label>
-    <select id="hoofdSelect" required></select>
+  <main>
+    <form id="comboForm">
+      <label for="van">Onderdeel A</label>
+      <input type="text" id="van" required />
+      <label for="naar">Mag combineren met:</label>
+      <input type="text" id="naar" required />
+      <button type="submit">➕ Toevoegen</button>
+    </form>
 
-    <label>Extra toegestaan onderdeel:</label>
-    <select id="extraSelect" required></select>
+    <h2>📋 Ingevoerde Combinaties</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Onderdeel A</th>
+          <th>Combinatie met</th>
+          <th>Actie</th>
+        </tr>
+      </thead>
+      <tbody id="comboTabel"></tbody>
+    </table>
+  </main>
+  <script>
+    async function laadCombinaties() {
+      const { data } = await supabase.from("combinaties").select("*");
+      const tbody = document.getElementById("comboTabel");
+      tbody.innerHTML = "";
 
-    <button type="submit">➕ Combinatie toevoegen</button>
-  </form>
+      data.forEach(c => {
+        const rij = document.createElement("tr");
+        rij.innerHTML = `
+          <td>${c.van}</td>
+          <td>${c.naar}</td>
+          <td><button onclick="verwijderCombinatie('${c.id}')">🗑️</button></td>
+        `;
+        tbody.appendChild(rij);
+      });
+    }
 
-  <section>
-    <h2>📋 Ingestelde combinaties</h2>
-    <div id="combinatiesOverzicht"></div>
-  </section>
+    async function verwijderCombinatie(id) {
+      await supabase.from("combinaties").delete().eq("id", id);
+      laadCombinaties();
+    }
 
-<script>
-  const onderdelen = JSON.parse(localStorage.getItem("sportonderdelen")) || [];
-  let combinaties = JSON.parse(localStorage.getItem("combinaties")) || [];
-
-  const hoofdSelect = document.getElementById("hoofdSelect");
-  const extraSelect = document.getElementById("extraSelect");
-  const overzichtDiv = document.getElementById("combinatiesOverzicht");
-  const form = document.getElementById("combinatieForm");
-
-  function toonOpties(select) {
-    select.innerHTML = "";
-    const unieke = onderdelen.map(o => ({
-      waarde: `${o.sport}__${o.discipline || ""}__${o.geslacht}__${o.onderdeel}`,
-      label: `${o.sport} – ${o.discipline ? o.discipline + " – " : ""}${o.onderdeel} (${o.geslacht})`
-    })).sort((a, b) => a.label.localeCompare(b.label));
-
-    unieke.forEach(opt => {
-      const el = document.createElement("option");
-      el.value = opt.waarde;
-      el.textContent = opt.label;
-      select.appendChild(el);
+    document.getElementById("comboForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const combinatie = {
+        van: document.getElementById("van").value,
+        naar: document.getElementById("naar").value
+      };
+      await supabase.from("combinaties").insert([combinatie]);
+      this.reset();
+      laadCombinaties();
     });
-  }
 
-  function toonCombinaties() {
-    if (combinaties.length === 0) {
-      overzichtDiv.innerHTML = "<p>Geen combinaties ingesteld.</p>";
-      return;
-    }
-
-    let html = "<table><tr><th>Hoofdonderdeel</th><th>Extra Toegestaan</th><th>Actie</th></tr>";
-    combinaties.forEach((c, i) => {
-      html += `<tr>
-        <td>${c.vanLabel}</td>
-        <td>${c.naarLabel}</td>
-        <td><button onclick="verwijderCombinatie(${i})">🗑️</button></td>
-      </tr>`;
-    });
-    html += "</table>";
-    overzichtDiv.innerHTML = html;
-  }
-
-  function verwijderCombinatie(index) {
-    combinaties.splice(index, 1);
-    localStorage.setItem("combinaties", JSON.stringify(combinaties));
-    toonCombinaties();
-  }
-
-  form.addEventListener("submit", e => {
-    e.preventDefault();
-    const van = hoofdSelect.value;
-    const naar = extraSelect.value;
-    if (van === naar) {
-      alert("Je kunt geen combinatie maken met hetzelfde onderdeel.");
-      return;
-    }
-
-    const bestaat = combinaties.some(c => c.van === van && c.naar === naar);
-    if (bestaat) {
-      alert("Deze combinatie bestaat al.");
-      return;
-    }
-
-    const vanLabel = hoofdSelect.options[hoofdSelect.selectedIndex].textContent;
-    const naarLabel = extraSelect.options[extraSelect.selectedIndex].textContent;
-
-    combinaties.push({ van, naar, vanLabel, naarLabel });
-    localStorage.setItem("combinaties", JSON.stringify(combinaties));
-    toonCombinaties();
-    form.reset();
-  });
-
-  // Init
-  toonOpties(hoofdSelect);
-  toonOpties(extraSelect);
-  toonCombinaties();
-</script>
+    laadCombinaties();
+  </script>
 </body>
 </html>
