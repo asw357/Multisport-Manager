@@ -2,94 +2,70 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title data-i18n="rules-title">Spelregels & Uitleg – Multisport-Manager</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>📘 Regels & Uitleg</title>
   <link rel="stylesheet" href="css/style.css" />
-  <script src="language.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 20px; line-height: 1.6; }
+    h1, h2 {
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 4px;
+    }
+    section {
+      margin-bottom: 30px;
+    }
+  </style>
 </head>
 <body>
   <header>
-    <h1 data-i18n="rules-heading">📖 Spelregels & Uitleg</h1>
-    <nav>
-      <a href="index.html" data-i18n="back-home">⬅️ Terug naar homepage</a>
-    </nav>
-    <div id="taalkeuze"></div>
+    <h1>📘 Regels & Uitleg</h1>
+    <nav><a href="index.html">⬅️ Terug naar Home</a></nav>
   </header>
 
   <main>
     <section>
-      <h2 data-i18n="what-is-game">🎯 Wat is Multisport-Manager?</h2>
-      <p data-i18n="game-desc">
-        Multisport-Manager is een online multiplayer sportmanagementspel waarin je een land bestuurt in realistische sporttoernooien.
-        Je scout atleten, traint hen, bepaalt tactieken en strijdt mee in echte toernooischema’s die zich in real-time afspelen.
-      </p>
+      <h2>🧑‍💼 Manager</h2>
+      <p>Als speler beheer je je eigen landenteam. Je bent verantwoordelijk voor atletenbeheer, training, scouting, tactiek en meer. Alles met als doel de meeste medailles te winnen!</p>
     </section>
 
     <section>
-      <h2 data-i18n="how-to-play">🕹️ Hoe speel je?</h2>
-      <ul>
-        <li data-i18n="step-1">Maak een account aan en krijg automatisch een land toegewezen.</li>
-        <li data-i18n="step-2">Bekijk je team via de Managerpagina.</li>
-        <li data-i18n="step-3">Scout nieuwe atleten, train bestaande, stel tactieken in per wedstrijd.</li>
-        <li data-i18n="step-4">Neem deel aan toernooien (Zomer/Winter/Continentale edities).</li>
-        <li data-i18n="step-5">Verdien MP door prestaties, records en medailles.</li>
-      </ul>
+      <h2>🏅 Medalpoints (MP)</h2>
+      <p>MP zijn je valuta. Je verdient ze door prestaties (zoals medailles of doorgaan naar volgende rondes), en je geeft ze uit aan training, scouting en speciale acties.</p>
     </section>
 
     <section>
-      <h2 data-i18n="about-mp">💰 Wat zijn Medalpoints (MP)?</h2>
-      <p data-i18n="mp-desc">
-        MP is de valuta binnen het spel. Je gebruikt MP om atleten te scouten, te trainen of te vervangen. MP verdien je door successen te behalen zoals medailles, het verbreken van records of deelname aan wedstrijden.
-      </p>
+      <h2>🏋️ Training</h2>
+      <p>Elke atleet kan maximaal 4x trainen per editie. Je kiest uit lichte, normale of zware trainingen, met elk hun eigen risico en kostenniveau.</p>
     </section>
 
     <section>
-      <h2 data-i18n="about-simulation">🏁 Hoe werkt de simulatie?</h2>
-      <p data-i18n="sim-desc">
-        Wedstrijden worden live gespeeld op vaste tijden. Resultaten worden bepaald door atleetstatistieken, toegepaste tactiek en een beetje geluk. Je kunt per wedstrijd vooraf een tactiek kiezen die bij jouw atleten past.
-      </p>
+      <h2>🔍 Scouten</h2>
+      <p>Je kunt per sportonderdeel maximaal 4x scouten en 8 atleten selecteren. Elk voorstel kost MP en laat je zes mogelijke nieuwe atleten zien.</p>
+    </section>
+    <section>
+      <h2>🎯 Tactieken</h2>
+      <p>Voor elke wedstrijd stel je vooraf een tactiek in. Sommige tactieken passen beter bij specifieke atleten. De standaardtactiek wordt gebruikt als je niets kiest.</p>
     </section>
 
     <section>
-      <h2 data-i18n="records-section">📊 Records & Statistieken</h2>
-      <p data-i18n="record-desc">
-        Er zijn Multi Records (MR) en Nationale Records (NR) die automatisch worden bijgehouden. Elke prestatie telt mee voor de geschiedenis van jouw land en atleten.
-      </p>
+      <h2>🏁 Simulatie</h2>
+      <p>Wedstrijden worden op realistische tijden gesimuleerd zoals in een echt toernooi. Resultaten zijn gebaseerd op stats, tactieken en kans.</p>
     </section>
 
     <section>
-      <h2 data-i18n="admin-section">ℹ️ Meer informatie voor admins?</h2>
-      <p data-i18n="admin-note">
-        Admins kunnen alles beheren via de Adminpagina: van limieten, onderdelen en edities tot simulatiegedrag. Voor vragen of feedback neem contact op via de contactpagina.
-      </p>
+      <h2>📈 Records</h2>
+      <p>Er zijn Multi Records (MR) en Nationale Records (NR). Deze worden automatisch bijgewerkt wanneer atleten beter presteren.</p>
+    </section>
+
+    <section>
+      <h2>📊 Statistieken</h2>
+      <p>Atleten hebben sport-specifieke stats die worden beïnvloed door training, leeftijd en blessure. Alles draait om goed management!</p>
+    </section>
+
+    <section>
+      <h2>📋 Admin Functionaliteiten</h2>
+      <p>De beheerder kan limieten en regels instellen, edities beheren, atleten genereren, schema’s maken en de volledige simulatie regelen.</p>
     </section>
   </main>
-
-  <footer>
-    <p data-i18n="footer">&copy; 2025 Multisport-Manager – Jouw sport, jouw strategie.</p>
-  </footer>
-  <script>
-    // 🌐 Taalkeuze bovenaan
-    const taalDiv = document.getElementById("taalkeuze");
-    const talen = ["nl", "en", "fr", "de"];
-    const actieveTaal = localStorage.getItem("taal") || "nl";
-
-    talen.forEach(taal => {
-      const knop = document.createElement("button");
-      knop.textContent = taal.toUpperCase();
-      knop.style.marginRight = "5px";
-      if (taal === actieveTaal) knop.disabled = true;
-      knop.addEventListener("click", () => {
-        localStorage.setItem("taal", taal);
-        location.reload();
-      });
-      taalDiv.appendChild(knop);
-    });
-
-    // 🌍 Vertaal alles op de pagina
-    if (typeof vertaalPagina === "function") {
-      vertaalPagina();
-    }
-  </script>
 </body>
 </html>
