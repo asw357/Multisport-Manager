@@ -2,129 +2,106 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Admin - Edities Beheren</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>📅 Admin – Edities Beheren</title>
   <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    form, table { max-width: 600px; margin: auto; }
+    input, select {
+      width: 100%;
+      padding: 8px;
+      margin: 5px 0;
+    }
+    button { padding: 8px 12px; margin-top: 10px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 30px; }
+    th, td { border: 1px solid #ccc; padding: 6px; }
+    th { background-color: #f0f0f0; }
+  </style>
 </head>
 <body>
   <header>
-    <h1>📅 Admin – Edities beheren</h1>
+    <h1>📅 Admin – Edities Beheren</h1>
     <nav><a href="admin.html">⬅️ Terug naar Admin</a></nav>
   </header>
 
   <main>
-    <section>
-      <h2>➕ Nieuwe Editie toevoegen</h2>
-      <form id="editieForm">
-        <label for="soort">Soort editie:</label>
-        <select id="soort" required>
-          <option value="">-- Kies --</option>
-          <option value="Zomer editie">Zomer editie</option>
-          <option value="Winter editie">Winter editie</option>
-        </select><br/>
+    <form id="editieForm">
+      <label for="type">Soort Editie</label>
+      <select id="type" required>
+        <option value="Zomer">Zomer</option>
+        <option value="Winter">Winter</option>
+      </select>
+      <label for="plaats">Gaststad</label>
+      <input type="text" id="plaats" required />
+      <label for="land">Gastland</label>
+      <input type="text" id="land" required />
+      <label for="startdatum">Startdatum</label>
+      <input type="date" id="startdatum" />
+      <button type="submit">➕ Editie toevoegen</button>
+    </form>
 
-        <label for="stad">Gaststad:</label>
-        <input type="text" id="stad" required><br/>
-
-        <label for="land">Gastland:</label>
-        <input type="text" id="land" required><br/>
-
-        <label for="datum">Startdatum (optioneel):</label>
-        <input type="date" id="datum"><br/>
-
-        <button type="submit">Toevoegen</button>
-      </form>
-    </section>
-
-    <section>
-      <h2>📋 Bestaande Edities</h2>
-      <div id="editieLijst"></div>
-    </section>
+    <h2>Bestaande Edities</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Naam</th>
+          <th>Startdatum</th>
+          <th>Status</th>
+          <th>Acties</th>
+        </tr>
+      </thead>
+      <tbody id="editieTabel"></tbody>
+    </table>
   </main>
-
-  <footer>
-    <p>&copy; 2025 Sport Manager Simulatie</p>
-  </footer>
   <script>
-    const editieForm = document.getElementById("editieForm");
-    const lijst = document.getElementById("editieLijst");
-    let edities = JSON.parse(localStorage.getItem("edities")) || [];
+    async function laadEdities() {
+      const { data } = await supabase.from("edities").select("*").order("nummer", { ascending: true });
+      const tbody = document.getElementById("editieTabel");
+      tbody.innerHTML = "";
 
-    editieForm.addEventListener("submit", e => {
-      e.preventDefault();
-
-      const soort = document.getElementById("soort").value;
-      const stad = document.getElementById("stad").value.trim();
-      const land = document.getElementById("land").value.trim();
-      const datum = document.getElementById("datum").value || "";
-
-      const aantal = edities.filter(e => e.soort === soort).length + 1;
-      const naam = `${soort} ${aantal}`;
-
-      const nieuweEditie = {
-        id: Date.now(),
-        naam,
-        soort,
-        stad,
-        land,
-        datum,
-        actief: false
-      };
-
-      edities.push(nieuweEditie);
-      localStorage.setItem("edities", JSON.stringify(edities));
-      editieForm.reset();
-      toonEdities();
-    });
-
-    function toonEdities() {
-      lijst.innerHTML = "";
-      if (edities.length === 0) {
-        lijst.innerHTML = "<p>Geen edities gevonden.</p>";
-        return;
-      }
-
-      edities.forEach((e, index) => {
-        const div = document.createElement("div");
-        div.className = "editie-blok";
-        div.innerHTML = `
-          <h3>${e.naam}</h3>
-          <label>Stad: <input type="text" value="${e.stad}" onchange="bewerk(${e.id}, 'stad', this.value)"></label><br/>
-          <label>Land: <input type="text" value="${e.land}" onchange="bewerk(${e.id}, 'land', this.value)"></label><br/>
-          <label>Datum: <input type="date" value="${e.datum}" onchange="bewerk(${e.id}, 'datum', this.value)"></label><br/>
-          <label><input type="radio" name="actief" ${e.actief ? "checked" : ""} onchange="markeerActief(${e.id})"> Actieve editie</label><br/>
-          <a href="admin_schema.html?id=${e.id}">📋 Ga naar schema</a><br/>
-          <button onclick="verwijder(${e.id})">🗑️ Verwijder</button>
+      data.forEach(e => {
+        const naam = `${e.type}editie ${e.nummer}`;
+        const rij = document.createElement("tr");
+        rij.innerHTML = `
+          <td>${naam}</td>
+          <td>${e.startdatum || "-"}</td>
+          <td>${e.status || "gepland"}</td>
+          <td><button onclick="verwijderEditie('${e.id}')">🗑️</button></td>
         `;
-        lijst.appendChild(div);
+        tbody.appendChild(rij);
       });
     }
 
-    function bewerk(id, veld, waarde) {
-      const i = edities.findIndex(e => e.id === id);
-      if (i > -1) {
-        edities[i][veld] = waarde;
-        localStorage.setItem("edities", JSON.stringify(edities));
-      }
+    async function verwijderEditie(id) {
+      await supabase.from("edities").delete().eq("id", id);
+      laadEdities();
     }
 
-    function markeerActief(id) {
-      edities = edities.map(e => ({
-        ...e,
-        actief: e.id === id
-      }));
-      localStorage.setItem("edities", JSON.stringify(edities));
-      toonEdities();
-    }
+    document.getElementById("editieForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const type = document.getElementById("type").value;
+      const { data: edities } = await supabase.from("edities").select("nummer").eq("type", type);
+      const nieuwNummer = (edities?.length || 0) + 1;
 
-    function verwijder(id) {
-      if (!confirm("Weet je zeker dat je deze editie wilt verwijderen?")) return;
-      edities = edities.filter(e => e.id !== id);
-      localStorage.setItem("edities", JSON.stringify(edities));
-      toonEdities();
-    }
+      const nieuwe = {
+        type,
+        nummer: nieuwNummer,
+        naam: `${type}editie ${nieuwNummer}`,
+        plaats: document.getElementById("plaats").value,
+        land: document.getElementById("land").value,
+        startdatum: document.getElementById("startdatum").value || null,
+        status: "gepland"
+      };
 
-    toonEdities();
+      await supabase.from("edities").insert([nieuwe]);
+      this.reset();
+      laadEdities();
+    });
+
+    laadEdities();
   </script>
 </body>
 </html>
