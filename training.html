@@ -3,38 +3,32 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🎓 Training</title>
+  <title>🏋️ Training – Mijn Atleten</title>
   <link rel="stylesheet" href="css/style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script src="js/supabaseClient.js"></script>
   <style>
-    body {
-      font-family: sans-serif;
-      padding: 20px;
-    }
+    body { font-family: sans-serif; padding: 20px; }
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 20px;
     }
     th, td {
-      padding: 10px;
+      padding: 8px;
       border: 1px solid #ccc;
     }
     th {
-      background: #f4f4f4;
+      background-color: #f0f0f0;
     }
-    select {
-      width: 100%;
-    }
-    button {
-      padding: 6px 12px;
+    select, button {
+      padding: 6px;
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>🎓 Training</h1>
+    <h1>🏋️ Training – Mijn Atleten</h1>
     <nav><a href="manager.html">⬅️ Terug naar Manager</a></nav>
   </header>
 
@@ -43,95 +37,84 @@
       <thead>
         <tr>
           <th>Naam</th>
-          <th>Leeftijd</th>
           <th>Sport</th>
           <th>Onderdeel</th>
-          <th>Snelheid</th>
-          <th>Kracht</th>
-          <th>Techniek</th>
-          <th>Training</th>
+          <th>Leeftijd</th>
+          <th>Trainingssessies</th>
           <th>Actie</th>
         </tr>
       </thead>
-      <tbody id="atletenTabel">
-        <tr><td colspan="9">Laden...</td></tr>
-      </tbody>
+      <tbody id="tabelAtleten"></tbody>
     </table>
   </main>
-
-  <footer>
-    <p>&copy; 2025 Sport Manager Simulatie – Training</p>
-  </footer>
-
   <script>
-    const gebruiker = JSON.parse(localStorage.getItem("loggedInUser"));
+    let gebruiker;
 
-    const trainingsTypes = {
-      licht: { boost: 1, kosten: 2, blessure: 1 },
-      normaal: { boost: 3, kosten: 5, blessure: 5 },
-      zwaar: { boost: 6, kosten: 10, blessure: 15 }
-    };
+    async function getUser() {
+      const userData = localStorage.getItem("loggedInUser");
+      if (!userData) {
+        alert("Niet ingelogd!");
+        window.location.href = "login.html";
+        return;
+      }
+      gebruiker = JSON.parse(userData);
+    }
 
     async function laadAtleten() {
-      const { data: atleten } = await supabase
-        .from("atleten")
-        .select("*")
-        .eq("owner", gebruiker.email);
-
-      const tbody = document.getElementById("atletenTabel");
+      await getUser();
+      const { data: atleten } = await supabase.from("atleten").select("*").eq("owner", gebruiker.email);
+      const tbody = document.getElementById("tabelAtleten");
       tbody.innerHTML = "";
 
-      atleten.forEach((a) => {
+      atleten.forEach(atleet => {
         const rij = document.createElement("tr");
         rij.innerHTML = `
-          <td>${a.naam}</td>
-          <td>${a.leeftijd}</td>
-          <td>${a.sport}</td>
-          <td>${a.onderdeel}</td>
-          <td>${a.snelheid.toFixed(1)}</td>
-          <td>${a.kracht.toFixed(1)}</td>
-          <td>${a.techniek.toFixed(1)}</td>
+          <td>${atleet.naam}</td>
+          <td>${atleet.sport}</td>
+          <td>${atleet.onderdeel}</td>
+          <td>${atleet.leeftijd}</td>
+          <td>${atleet.training_count || 0}/4</td>
           <td>
-            <select id="keuze-${a.id}">
+            <select id="type-${atleet.id}">
               <option value="licht">Licht</option>
-              <option value="normaal" selected>Normaal</option>
+              <option value="normaal">Normaal</option>
               <option value="zwaar">Zwaar</option>
             </select>
+            <button onclick="trainAtleet('${atleet.id}')">Train</button>
           </td>
-          <td><button onclick="trainAtleet('${a.id}')">Train</button></td>
         `;
         tbody.appendChild(rij);
       });
     }
 
     async function trainAtleet(id) {
-      const select = document.getElementById(`keuze-${id}`);
-      const type = trainingsTypes[select.value];
+      const { data: atleten } = await supabase.from("atleten").select("*").eq("id", id).single();
+      if (!atleten || atleten.training_count >= 4) return alert("Trainingslimiet bereikt!");
 
-      const { data: atleten } = await supabase.from("atleten").select("*").eq("id", id);
-      const atleet = atleten[0];
+      const type = document.getElementById("type-" + id).value;
+      let boost = 0, blessureKans = 0, mpCost = 0;
 
-      const kans = Math.random() * 100;
-      if (kans < type.blessure) {
-        alert(`🚑 ${atleet.naam} raakte geblesseerd! Geen vooruitgang.`);
-        return;
-      }
+      if (type === "licht") { boost = 2; blessureKans = 2; mpCost = 3; }
+      if (type === "normaal") { boost = 5; blessureKans = 5; mpCost = 6; }
+      if (type === "zwaar") { boost = 10; blessureKans = 12; mpCost = 10; }
 
-      const updates = {
-        snelheid: atleet.snelheid + Math.random() * type.boost,
-        kracht: atleet.kracht + Math.random() * type.boost,
-        techniek: atleet.techniek + Math.random() * type.boost
+      const { data: user } = await supabase.from("users").select("*").eq("email", gebruiker.email).single();
+      if (user.mp < mpCost) return alert("Niet genoeg MP!");
+
+      const blessure = Math.random() * 100 < blessureKans;
+      const update = {
+        training_count: (atleten.training_count || 0) + 1,
+        stats: {
+          snelheid: Math.min(100, (atleten.stats?.snelheid || 50) + boost),
+          kracht: Math.min(100, (atleten.stats?.kracht || 50) + boost),
+          techniek: Math.min(100, (atleten.stats?.techniek || 50) + boost)
+        },
+        blessure: blessure
       };
 
-      await supabase.from("atleten").update(updates).eq("id", id);
-
-      // Trek MP af
-      const nieuweMP = gebruiker.mp - type.kosten;
-      gebruiker.mp = nieuweMP > 0 ? nieuweMP : 0;
-      await supabase.from("users").update({ mp: gebruiker.mp }).eq("email", gebruiker.email);
-      localStorage.setItem("loggedInUser", JSON.stringify(gebruiker));
-
-      alert(`✅ ${atleet.naam} heeft getraind (${select.value})`);
+      await supabase.from("atleten").update(update).eq("id", id);
+      await supabase.from("users").update({ mp: user.mp - mpCost }).eq("email", gebruiker.email);
+      alert(blessure ? "Training voltooid, maar atleet raakte geblesseerd!" : "Training succesvol!");
       laadAtleten();
     }
 
