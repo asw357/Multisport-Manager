@@ -1,72 +1,100 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Landentoewijzing Beheer</title>
-  <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🌍 Admin – Landentoewijzing</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="js/supabaseClient.js"></script>
   <style>
-    main { max-width: 600px; margin: auto; padding: 20px; }
-    input, button { padding: 8px; margin-top: 10px; }
-    ul { list-style-type: decimal; padding-left: 20px; }
-    li { margin-bottom: 5px; }
-    button.verwijder { margin-left: 10px; background-color: #e74c3c; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px; }
-    button.verwijder:hover { background-color: #c0392b; }
+    body { font-family: sans-serif; padding: 20px; }
+    form { max-width: 500px; margin: auto; }
+    input {
+      width: 100%;
+      padding: 6px;
+      margin: 5px 0;
+    }
+    button {
+      padding: 8px 12px;
+      margin-top: 10px;
+    }
+    table {
+      width: 100%;
+      margin-top: 30px;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 6px;
+      border: 1px solid #ccc;
+    }
+    th {
+      background-color: #eee;
+    }
   </style>
 </head>
 <body>
   <header>
-    <h1>🌍 Landentoewijzing</h1>
+    <h1>🌍 Admin – Landentoewijzing</h1>
     <nav><a href="admin.html">⬅️ Terug naar Admin</a></nav>
   </header>
 
   <main>
-    <label for="landInput">Voeg land toe:</label><br>
-    <input type="text" id="landInput" placeholder="Bijv. Australië" />
-    <button onclick="voegLandToe()">➕ Toevoegen</button>
+    <form id="landForm">
+      <label for="land">Land toevoegen aan inschrijfvolgorde</label>
+      <input type="text" id="land" required />
+      <button type="submit">➕ Toevoegen</button>
+    </form>
 
-    <h2>Huidige lijst:</h2>
-    <ul id="landenLijst"></ul>
+    <h2>📋 Inschrijfvolgorde Landen</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Land</th>
+          <th>Actie</th>
+        </tr>
+      </thead>
+      <tbody id="landenTabel"></tbody>
+    </table>
   </main>
-
-  <footer>
-    <p>&copy; 2025 Sport Manager Simulatie – Landentoewijzing</p>
-  </footer>
-
   <script>
-    let landen = JSON.parse(localStorage.getItem("country_queue")) || [];
+    let landen = [];
 
-    function toonLanden() {
-      const lijst = document.getElementById("landenLijst");
-      lijst.innerHTML = "";
-      landen.forEach((land, index) => {
-        const li = document.createElement("li");
-        li.textContent = land;
-        const knop = document.createElement("button");
-        knop.className = "verwijder";
-        knop.textContent = "🗑️";
-        knop.onclick = () => {
-          landen.splice(index, 1);
-          localStorage.setItem("country_queue", JSON.stringify(landen));
-          toonLanden();
-        };
-        li.appendChild(knop);
-        lijst.appendChild(li);
+    async function laadLanden() {
+      const { data } = await supabase.from("landentoewijzing").select("*").order("volgorde", { ascending: true });
+      landen = data || [];
+      const tbody = document.getElementById("landenTabel");
+      tbody.innerHTML = "";
+
+      landen.forEach((l, index) => {
+        const rij = document.createElement("tr");
+        rij.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${l.naam}</td>
+          <td><button onclick="verwijderLand('${l.id}')">🗑️</button></td>
+        `;
+        tbody.appendChild(rij);
       });
     }
 
-    function voegLandToe() {
-      const input = document.getElementById("landInput");
-      const nieuwLand = input.value.trim();
-      if (nieuwLand) {
-        landen.push(nieuwLand);
-        localStorage.setItem("country_queue", JSON.stringify(landen));
-        input.value = "";
-        toonLanden();
-      }
+    async function verwijderLand(id) {
+      await supabase.from("landentoewijzing").delete().eq("id", id);
+      laadLanden();
     }
 
-    toonLanden();
+    document.getElementById("landForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const nieuwe = {
+        naam: document.getElementById("land").value,
+        volgorde: landen.length + 1
+      };
+      await supabase.from("landentoewijzing").insert([nieuwe]);
+      this.reset();
+      laadLanden();
+    });
+
+    laadLanden();
   </script>
 </body>
 </html>
