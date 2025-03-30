@@ -2,143 +2,91 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Scouten</title>
-  <link rel="stylesheet" href="css/style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🔍 Scouten</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="js/supabaseClient.js"></script>
 </head>
 <body>
   <header>
     <h1>🔍 Scouten</h1>
-    <nav>
-      <ul>
-        <li><a href="manager.html">⬅️ Terug naar Manager Home</a></li>
-      </ul>
-    </nav>
+    <nav><a href="manager.html">⬅️ Terug naar Manager</a></nav>
   </header>
 
   <main>
-    <section>
-      <form id="scoutForm">
-        <label for="onderdeelSelect">Kies sportonderdeel:</label><br />
-        <select id="onderdeelSelect" required></select><br /><br />
-        <button type="submit">Scouten (kost 25 MP)</button>
-      </form>
-    </section>
+    <label for="sportSelect">Kies sportonderdeel:</label>
+    <select id="sportSelect"></select>
+    <button onclick="scoutAtleten()">🎯 Scout</button>
 
-    <section id="scoutResultaten" style="margin-top:20px;">
-      <!-- Hier komen de gescoute atleten -->
-    </section>
+    <div id="resultaten"></div>
   </main>
 
-  <footer>
-    <p>&copy; 2025 Sport Manager Simulatie – Scouten</p>
-  </footer>
-
   <script>
-    const user = JSON.parse(localStorage.getItem("loggedInUser"));
-    if (!user) {
-      alert("Niet ingelogd.");
-      window.location.href = "login.html";
-    }
+    const gebruiker = JSON.parse(localStorage.getItem("loggedInUser"));
 
-    const onderdelen = JSON.parse(localStorage.getItem("sportonderdelen")) || [];
-    const atleten = JSON.parse(localStorage.getItem("atleten")) || [];
-    const scoutLog = JSON.parse(localStorage.getItem("scout_log")) || {};
-    const resultatenDiv = document.getElementById("scoutResultaten");
-
-    const MAX_SCOUTS_PER_EDITIE = 4;
-    const SCOUT_KOSTEN = 25;
-
-    function vulDropdown() {
-      const select = document.getElementById("onderdeelSelect");
-      onderdelen.forEach(s => {
-        const opt = document.createElement("option");
-        opt.value = `${s.sport} - ${s.geslacht} - ${s.onderdeel}`;
-        opt.textContent = opt.value;
-        select.appendChild(opt);
+    async function laadSporten() {
+      const { data } = await supabase.from("sportonderdelen").select("*");
+      const select = document.getElementById("sportSelect");
+      data.forEach(opt => {
+        const optie = document.createElement("option");
+        optie.value = JSON.stringify(opt);
+        optie.textContent = `${opt.sport} – ${opt.geslacht} – ${opt.onderdeel}`;
+        select.appendChild(optie);
       });
     }
 
-    document.getElementById("scoutForm").addEventListener("submit", function (e) {
-      e.preventDefault();
-      const onderdeel = document.getElementById("onderdeelSelect").value;
+    async function scoutAtleten() {
+      const gekozen = JSON.parse(document.getElementById("sportSelect").value);
+      const resultaten = document.getElementById("resultaten");
+      resultaten.innerHTML = "";
 
-      if ((scoutLog[onderdeel] || 0) >= MAX_SCOUTS_PER_EDITIE) {
-        alert("Maximaal aantal scoutingsessies bereikt voor dit onderdeel.");
-        return;
-      }
-
-      if (user.mp < SCOUT_KOSTEN) {
-        alert("Niet genoeg MP om te scouten.");
-        return;
-      }
-
-      user.mp -= SCOUT_KOSTEN;
-      localStorage.setItem("loggedInUser", JSON.stringify(user));
-      scoutLog[onderdeel] = (scoutLog[onderdeel] || 0) + 1;
-      localStorage.setItem("scout_log", JSON.stringify(scoutLog));
-
-      toonResultaten(onderdeel);
-    });
-
-    function toonResultaten(onderdeel) {
-      resultatenDiv.innerHTML = `<h3>Gescoute atleten (${onderdeel})</h3>`;
-
+      let lijst = [];
       for (let i = 0; i < 6; i++) {
-        const naam = genereerNaam(user.land);
-        const leeftijd = Math.floor(Math.random() * 10) + 18;
-        const stats = {
-          snelheid: Math.floor(Math.random() * 10) + 1
-        };
-        const kosten = 20 + Math.floor(Math.random() * 40); // 20-60 MP
+        lijst.push({
+          naam: genereerNaam(gebruiker.land),
+          leeftijd: Math.floor(Math.random() * 10) + 18,
+          sport: gekozen.sport,
+          discipline: gekozen.discipline,
+          geslacht: gekozen.geslacht,
+          onderdeel: gekozen.onderdeel,
+          snelheid: Math.random() * 100,
+          kracht: Math.random() * 100,
+          techniek: Math.random() * 100
+        });
+      }
 
-        const atleetData = {
-          id: `${Date.now()}_${i}`,
-          naam,
-          leeftijd,
-          sport: onderdeel,
-          stats,
-          kosten
-        };
-
+      lijst.forEach((atl) => {
         const div = document.createElement("div");
         div.innerHTML = `
-          <p><strong>${naam}</strong> (${leeftijd} jaar) – Snelheid: ${stats.snelheid} – <strong>${kosten} MP</strong></p>
-          <button onclick='aannemen(${JSON.stringify(atleetData)})'>➕ Aannemen</button>
+          <strong>${atl.naam}</strong> (${atl.leeftijd} jaar)<br>
+          Snelheid: ${atl.snelheid.toFixed(1)} | Kracht: ${atl.kracht.toFixed(1)} | Techniek: ${atl.techniek.toFixed(1)}<br>
+          <button onclick='neemAan(${JSON.stringify(JSON.stringify(atl))})'>➕ Neem aan</button>
+          <hr>
         `;
-        resultatenDiv.appendChild(div);
-      }
+        resultaten.appendChild(div);
+      });
     }
 
-    function aannemen(a) {
-      if (user.mp < a.kosten) {
-        alert("Niet genoeg MP om deze atleet aan te nemen.");
-        return;
-      }
+    async function neemAan(atleetJSON) {
+      const atl = JSON.parse(atleetJSON);
+      atl.owner = gebruiker.email;
 
-      const mijnAtleten = atleten.filter(at => at.owner === user.email && at.sport === a.sport);
-      if (mijnAtleten.length >= 8) {
-        alert("Maximaal aantal atleten voor dit onderdeel bereikt.");
-        return;
-      }
+      await supabase.from("atleten").insert([atl]);
+      gebruiker.mp -= 10;
+      await supabase.from("users").update({ mp: gebruiker.mp }).eq("email", gebruiker.email);
+      localStorage.setItem("loggedInUser", JSON.stringify(gebruiker));
 
-      a.owner = user.email;
-      atleten.push(a);
-
-      user.mp -= a.kosten;
-      localStorage.setItem("loggedInUser", JSON.stringify(user));
-      localStorage.setItem("atleten", JSON.stringify(atleten));
-      alert(`${a.naam} is succesvol toegevoegd aan jouw team!`);
-      locatie.reload();
+      alert(`${atl.naam} is toegevoegd aan jouw team!`);
     }
 
     function genereerNaam(land) {
-      const basis = land.substring(0, 3).toUpperCase();
-      const random = Math.random().toString(36).substring(2, 5).toUpperCase();
-      return `${basis}-${random}`;
+      const voornamen = ["Alex", "Liam", "Sven", "Noah", "Julian", "Max", "Kai"];
+      const achternamen = ["Jansen", "Kovacs", "Nguyen", "Petrov", "Dimitrov", "Smith", "Garcia"];
+      return `${voornamen[Math.floor(Math.random() * voornamen.length)]} ${achternamen[Math.floor(Math.random() * achternamen.length)]}`;
     }
 
-    document.addEventListener("DOMContentLoaded", vulDropdown);
+    laadSporten();
   </script>
 </body>
 </html>
