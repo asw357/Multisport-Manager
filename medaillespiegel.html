@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Medaillespiegel</title>
-  <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🥇 Medaillespiegel</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="js/supabaseClient.js"></script>
   <style>
+    body { font-family: sans-serif; padding: 20px; }
     table {
       width: 100%;
       border-collapse: collapse;
@@ -13,20 +16,18 @@
     }
     th, td {
       padding: 8px;
-      text-align: center;
       border: 1px solid #ccc;
+      text-align: center;
     }
     th {
-      background-color: #f2f2f2;
+      background: #f0f0f0;
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>🥇 Live Medaillespiegel</h1>
-    <nav>
-      <a href="index.html">⬅️ Terug naar Home</a>
-    </nav>
+    <h1>🥇 Medaillespiegel</h1>
+    <nav><a href="edities.html">⬅️ Terug naar Edities</a></nav>
   </header>
 
   <main>
@@ -35,46 +36,60 @@
         <tr>
           <th>#</th>
           <th>Land</th>
-          <th>🥇 Goud</th>
-          <th>🥈 Zilver</th>
-          <th>🥉 Brons</th>
+          <th>🥇</th>
+          <th>🥈</th>
+          <th>🥉</th>
           <th>Totaal</th>
         </tr>
       </thead>
-      <tbody id="spiegelTabel"></tbody>
+      <tbody id="medailleTabel"></tbody>
     </table>
   </main>
-
-  <footer>
-    <p>&copy; 2025 Sport Manager Simulatie – Medaillespiegel</p>
-  </footer>
-
   <script>
-    const spiegel = JSON.parse(localStorage.getItem("medaillespiegel")) || {};
-    const rows = Object.entries(spiegel).map(([land, medailles]) => {
-      const totaal = (medailles.goud || 0) + (medailles.zilver || 0) + (medailles.brons || 0);
-      return { land, ...medailles, totaal };
-    });
+    async function laadMedailles() {
+      const params = new URLSearchParams(window.location.search);
+      const editieId = params.get("editie");
 
-    rows.sort((a, b) => {
-      if (b.goud !== a.goud) return b.goud - a.goud;
-      if (b.zilver !== a.zilver) return b.zilver - a.zilver;
-      return b.brons - a.brons;
-    });
+      const { data: resultaten } = await supabase
+        .from("wedstrijd_resultaten")
+        .select("*, atleten:atleet_id(land)")
+        .eq("editie_id", editieId);
 
-    const tbody = document.getElementById("spiegelTabel");
-    rows.forEach((row, index) => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${index + 1}</td>
-        <td>${row.land}</td>
-        <td>${row.goud || 0}</td>
-        <td>${row.zilver || 0}</td>
-        <td>${row.brons || 0}</td>
-        <td>${row.totaal}</td>
-      `;
-      tbody.appendChild(tr);
-    });
+      const landen = {};
+
+      resultaten.forEach(r => {
+        const land = r.atleten?.land || "Onbekend";
+        if (!landen[land]) landen[land] = { goud: 0, zilver: 0, brons: 0 };
+
+        if (r.positie === 1) landen[land].goud++;
+        else if (r.positie === 2) landen[land].zilver++;
+        else if (r.positie === 3) landen[land].brons++;
+      });
+
+      const gesorteerd = Object.entries(landen).map(([land, data]) => ({
+        land,
+        ...data,
+        totaal: data.goud + data.zilver + data.brons
+      })).sort((a, b) =>
+        b.goud - a.goud || b.zilver - a.zilver || b.brons - a.brons
+      );
+
+      const tbody = document.getElementById("medailleTabel");
+      gesorteerd.forEach((row, index) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${row.land}</td>
+          <td>${row.goud}</td>
+          <td>${row.zilver}</td>
+          <td>${row.brons}</td>
+          <td>${row.totaal}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    laadMedailles();
   </script>
 </body>
 </html>
