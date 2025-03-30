@@ -102,29 +102,25 @@
       const wachtwoord = document.getElementById("wachtwoord").value;
 
       try {
-        console.log("✅ Controle op bestaand e-mailadres...");
+        console.log("Stap 1: Check op bestaand e-mailadres...");
         const { data: check, error: checkError } = await supabase.from("users").select("*").eq("email", email);
-        if (checkError) {
-          console.error("Fout bij controleren e-mailadres:", checkError);
-          alert("❌ Fout bij controle e-mailadres.");
-          return;
-        }
+        console.log("Check-resultaat:", check);
+        if (checkError) throw checkError;
         if (check.length > 0) {
           alert("❌ Dit e-mailadres is al geregistreerd.");
           return;
         }
 
-        console.log("🏁 Ophalen landentoewijzing...");
+        console.log("Stap 2: Ophalen landentoewijzing...");
         const { data: queue, error: queueError } = await supabase.from("landentoewijzing").select("*").order("volgorde");
         const { data: allUsers, error: usersError } = await supabase.from("users").select("id");
-
-        if (queueError || usersError) {
-          console.error("Fout bij ophalen landentoewijzing of gebruikers:", queueError || usersError);
-          alert("❌ Fout bij toewijzing land.");
-          return;
-        }
+        console.log("Queue:", queue);
+        console.log("All users:", allUsers);
+        if (queueError) throw queueError;
+        if (usersError) throw usersError;
 
         const toegewezenLand = queue[allUsers.length % queue.length]?.naam || "Landloos";
+        console.log("Toegewezen land:", toegewezenLand);
 
         const gebruiker = {
           gebruikersnaam,
@@ -134,25 +130,22 @@
           mp: 100
         };
 
-        console.log("📥 Registreren van gebruiker...");
+        console.log("Stap 3: Gebruiker registreren...");
         const { data: inserted, error: insertError } = await supabase.from("users").insert([gebruiker]).select();
-
-        if (insertError || !inserted || inserted.length === 0) {
-          console.error("Fout bij registreren gebruiker:", insertError);
-          alert("❌ Er is iets misgegaan tijdens registratie.");
-          return;
-        }
+        console.log("Insert resultaat:", inserted);
+        if (insertError) throw insertError;
+        if (!inserted || inserted.length === 0) throw new Error("Insert returned geen resultaat.");
 
         localStorage.setItem("loggedInUser", JSON.stringify(inserted[0]));
 
-        console.log("🏋️ Atleten genereren...");
+        console.log("Stap 4: Atleten genereren...");
         await genereerAtleten(inserted[0]);
 
-        console.log("✅ Klaar! Doorschakelen naar manager...");
+        console.log("Registratie voltooid! Navigeren naar manager.html...");
         window.location.href = "manager.html";
       } catch (error) {
-        console.error("❌ Onverwachte fout:", error);
-        alert("❌ Onverwachte fout tijdens registratie.");
+        console.error("❌ Fout bij registratie:", error);
+        alert("❌ Onverwachte fout tijdens registratie. Zie console voor details.");
       }
     });
   </script>
