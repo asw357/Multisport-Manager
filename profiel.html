@@ -1,57 +1,85 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mijn Profiel</title>
-  <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>👤 Mijn Profiel</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="js/supabaseClient.js"></script>
   <style>
-    .container { max-width: 500px; margin: auto; padding: 20px; background: #f9f9f9; border-radius: 8px; }
-    label { display: block; margin-top: 10px; }
-    input { width: 100%; padding: 8px; margin-top: 5px; }
+    body { font-family: sans-serif; padding: 20px; }
+    form {
+      max-width: 400px;
+      margin: auto;
+      background: #f9f9f9;
+      padding: 20px;
+      border-radius: 6px;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+    input, button {
+      width: 100%;
+      padding: 8px;
+      margin-top: 6px;
+    }
   </style>
 </head>
 <body>
   <header>
     <h1>👤 Mijn Profiel</h1>
-    <nav><a href="index.html">⬅️ Terug naar Home</a></nav>
+    <nav><a href="manager.html">⬅️ Terug naar Manager</a></nav>
   </header>
 
   <main>
-    <div class="container">
-      <p><strong>E-mailadres:</strong> <span id="email"></span></p>
-      <form id="wachtwoordForm">
-        <label for="nieuwWachtwoord">Nieuw wachtwoord:</label>
-        <input type="password" id="nieuwWachtwoord" required>
-        <button type="submit" style="margin-top: 15px;">🔐 Wachtwoord wijzigen</button>
-      </form>
-    </div>
+    <form id="profielForm">
+      <label for="gebruikersnaam">Gebruikersnaam</label>
+      <input type="text" id="gebruikersnaam" required />
+
+      <label for="wachtwoord">Nieuw Wachtwoord</label>
+      <input type="password" id="wachtwoord" />
+
+      <button type="submit">💾 Opslaan</button>
+    </form>
   </main>
-
-  <footer>
-    <p>&copy; 2025 Sport Manager Simulatie – Profiel</p>
-  </footer>
-
   <script>
-    const user = JSON.parse(localStorage.getItem("loggedInUser"));
-    const gebruikers = JSON.parse(localStorage.getItem("users")) || [];
-    const emailField = document.getElementById("email");
+    let gebruiker;
 
-    if (user) {
-      emailField.textContent = user.email;
+    async function laadProfiel() {
+      const userData = localStorage.getItem("loggedInUser");
+      if (!userData) {
+        window.location.href = "login.html";
+        return;
+      }
+      gebruiker = JSON.parse(userData);
+      document.getElementById("gebruikersnaam").value = gebruiker.gebruikersnaam;
     }
 
-    document.getElementById("wachtwoordForm").addEventListener("submit", function (e) {
+    document.getElementById("profielForm").addEventListener("submit", async function(e) {
       e.preventDefault();
-      const nieuwWachtwoord = document.getElementById("nieuwWachtwoord").value;
+      const gebruikersnaam = document.getElementById("gebruikersnaam").value;
+      const wachtwoord = document.getElementById("wachtwoord").value;
 
-      const index = gebruikers.findIndex(u => u.email === user.email);
-      if (index !== -1) {
-        gebruikers[index].wachtwoord = nieuwWachtwoord;
-        localStorage.setItem("users", JSON.stringify(gebruikers));
-        alert("Wachtwoord gewijzigd ✅");
+      const update = { gebruikersnaam };
+      if (wachtwoord) update.wachtwoord = wachtwoord;
+
+      const { data, error } = await supabase
+        .from("users")
+        .update(update)
+        .eq("email", gebruiker.email)
+        .select();
+
+      if (error) {
+        alert("❌ Er ging iets mis bij het opslaan.");
+      } else {
+        alert("✅ Gegevens opgeslagen.");
+        localStorage.setItem("loggedInUser", JSON.stringify(data[0]));
       }
     });
+
+    laadProfiel();
   </script>
 </body>
 </html>
