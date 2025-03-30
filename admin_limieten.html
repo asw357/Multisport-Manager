@@ -14,26 +14,30 @@
     }
     form, table {
       max-width: 900px;
-      margin: 0 auto 40px auto;
+      margin: 0 auto 30px auto;
     }
     input, select {
       width: 100%;
       padding: 6px;
-      margin: 4px 0;
+      margin-top: 5px;
+      margin-bottom: 10px;
     }
     table {
-      border-collapse: collapse;
       width: 100%;
+      border-collapse: collapse;
     }
     th, td {
+      padding: 6px;
       border: 1px solid #ccc;
-      padding: 8px;
     }
     th {
       background-color: #eee;
     }
-    button {
-      padding: 6px 12px;
+    .center {
+      text-align: center;
+    }
+    .actie-knoppen button {
+      margin-right: 5px;
     }
   </style>
 </head>
@@ -50,16 +54,16 @@
       <label for="discipline">Discipline (optioneel)</label>
       <input type="text" id="discipline" />
       <label for="geslacht">Geslacht</label>
-      <select id="geslacht">
+      <select id="geslacht" required>
         <option value="Mannen">Mannen</option>
         <option value="Vrouwen">Vrouwen</option>
         <option value="Gemengd">Gemengd</option>
       </select>
       <label for="onderdeel">Onderdeel</label>
       <input type="text" id="onderdeel" required />
-      <label for="limiet">Max. Aantal Atleten</label>
+      <label for="limiet">Limiet</label>
       <input type="number" id="limiet" required />
-      <label for="start">Aantal Startatleten</label>
+      <label for="start">Aantal startatleten</label>
       <input type="number" id="start" required />
       <button type="submit">➕ Toevoegen / Bijwerken</button>
     </form>
@@ -74,7 +78,7 @@
           <th>Onderdeel</th>
           <th>Limiet</th>
           <th>Start</th>
-          <th>Actie</th>
+          <th class="center">Actie</th>
         </tr>
       </thead>
       <tbody id="limietTabel"></tbody>
@@ -87,19 +91,32 @@
       const tbody = document.getElementById("limietTabel");
       tbody.innerHTML = "";
 
-      data.forEach(l => {
+      data.forEach((r) => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td>${l.sport}</td>
-          <td>${l.discipline || ""}</td>
-          <td>${l.geslacht}</td>
-          <td>${l.onderdeel}</td>
-          <td>${l.limiet}</td>
-          <td>${l.start}</td>
-          <td><button onclick="verwijderLimiet('${l.id}')">🗑️</button></td>
+          <td>${r.sport}</td>
+          <td>${r.discipline || ""}</td>
+          <td>${r.geslacht}</td>
+          <td>${r.onderdeel}</td>
+          <td>${r.limiet}</td>
+          <td>${r.start}</td>
+          <td class="center actie-knoppen">
+            <button onclick="vulFormulier(${JSON.stringify(JSON.stringify(r))})">✏️</button>
+            <button onclick="verwijderLimiet('${r.id}')">🗑️</button>
+          </td>
         `;
         tbody.appendChild(tr);
       });
+    }
+
+    function vulFormulier(json) {
+      const data = JSON.parse(json);
+      document.getElementById("sport").value = data.sport;
+      document.getElementById("discipline").value = data.discipline || "";
+      document.getElementById("geslacht").value = data.geslacht;
+      document.getElementById("onderdeel").value = data.onderdeel;
+      document.getElementById("limiet").value = data.limiet;
+      document.getElementById("start").value = data.start;
     }
 
     async function verwijderLimiet(id) {
@@ -109,7 +126,7 @@
 
     document.getElementById("limietForm").addEventListener("submit", async function (e) {
       e.preventDefault();
-      const item = {
+      const entry = {
         sport: document.getElementById("sport").value,
         discipline: document.getElementById("discipline").value,
         geslacht: document.getElementById("geslacht").value,
@@ -117,9 +134,17 @@
         limiet: parseInt(document.getElementById("limiet").value),
         start: parseInt(document.getElementById("start").value)
       };
-      await supabase.from("limieten").upsert([item], {
-        onConflict: ['sport', 'discipline', 'geslacht', 'onderdeel']
-      });
+
+      // Verwijder bestaande record (op basis van unieke combinatie) en voeg opnieuw toe
+      await supabase.from("limieten").delete()
+        .match({
+          sport: entry.sport,
+          discipline: entry.discipline,
+          geslacht: entry.geslacht,
+          onderdeel: entry.onderdeel
+        });
+
+      await supabase.from("limieten").insert([entry]);
       this.reset();
       laadLimieten();
     });
