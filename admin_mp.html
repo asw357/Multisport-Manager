@@ -1,140 +1,107 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MP-instellingen Beheren</title>
-  <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>💰 Admin – MP-instellingen</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    form, table { max-width: 700px; margin: auto; }
+    input, select {
+      width: 100%;
+      padding: 6px;
+      margin: 5px 0;
+    }
+    button {
+      padding: 8px 12px;
+      margin-top: 10px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 30px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 6px;
+    }
+    th {
+      background-color: #f0f0f0;
+    }
+  </style>
 </head>
 <body>
   <header>
-    <h1>💰 MP-instellingen Beheer</h1>
-    <nav>
-      <ul>
-        <li><a href="admin.html">⬅️ Terug naar Admin Dashboard</a></li>
-      </ul>
-    </nav>
+    <h1>💰 Admin – MP-instellingen</h1>
+    <nav><a href="admin.html">⬅️ Terug naar Admin</a></nav>
   </header>
 
   <main>
-    <section>
-      <h2>Nieuwe MP-regel toevoegen</h2>
-      <form id="mpAddForm">
-        <label for="mpBeschrijving">Beschrijving:</label><br />
-        <input type="text" id="mpBeschrijving" required><br />
-        <label for="mpWaarde">Waarde (positief = inkomen, negatief = kosten):</label><br />
-        <input type="number" id="mpWaarde" required><br /><br />
-        <button type="submit">Toevoegen</button>
-      </form>
-    </section>
+    <form id="mpForm">
+      <label for="type">Type</label>
+      <select id="type">
+        <option value="inkomst">Inkomst</option>
+        <option value="uitgave">Uitgave</option>
+      </select>
+      <label for="beschrijving">Beschrijving</label>
+      <input type="text" id="beschrijving" required />
+      <label for="waarde">Waarde (MP)</label>
+      <input type="number" id="waarde" required />
+      <button type="submit">➕ Toevoegen</button>
+    </form>
 
-    <section>
-      <h2>Huidige MP-regels</h2>
-      <ul id="mpList">
-        <!-- MP-items komen hier -->
-      </ul>
-    </section>
+    <h2>💼 Overzicht van MP-instellingen</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Beschrijving</th>
+          <th>Waarde</th>
+          <th>Actie</th>
+        </tr>
+      </thead>
+      <tbody id="mpTabel"></tbody>
+    </table>
   </main>
-
-  <footer>
-    <p>&copy; 2025 Sport Manager Simulatie – MP Beheer</p>
-  </footer>
   <script>
-    const ADMIN_EMAIL = "wilcoboesveld12@hotmail.com";
-    const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
-    if (!loggedInUser || loggedInUser.email !== ADMIN_EMAIL) {
-      alert("Toegang geweigerd.");
-      window.location.href = "index.html";
-    }
+    async function laadMP() {
+      const { data } = await supabase.from("mp_settings").select("*").order("type", { ascending: true });
+      const tbody = document.getElementById("mpTabel");
+      tbody.innerHTML = "";
 
-    const mpList = document.getElementById("mpList");
-    const mpForm = document.getElementById("mpAddForm");
-
-    function loadMPRules() {
-      const bestaande = JSON.parse(localStorage.getItem("mp_rules"));
-      if (!bestaande || bestaande.length === 0) {
-        const standaard = [
-          { beschrijving: "Registratiebonus", waarde: 100 },
-          { beschrijving: "Deelname per atleet", waarde: 5 },
-          { beschrijving: "Gastlandbonus bij openingsceremonie", waarde: 250 },
-          { beschrijving: "Voorronde overleven", waarde: 10 },
-          { beschrijving: "Finale gehaald", waarde: 25 },
-          { beschrijving: "Brons 🥉", waarde: 40 },
-          { beschrijving: "Zilver 🥈", waarde: 60 },
-          { beschrijving: "Goud 🥇", waarde: 100 },
-          { beschrijving: "4e plaats", waarde: 15 },
-          { beschrijving: "5e plaats", waarde: 10 },
-          { beschrijving: "Top 8", waarde: 5 },
-          { beschrijving: "Nationaal Record (NR)", waarde: 15 },
-          { beschrijving: "Multi Record (MR)", waarde: 50 },
-          { beschrijving: "Medaillespiegel 1e plaats", waarde: 150 },
-          { beschrijving: "Medaillespiegel 2e plaats", waarde: 120 },
-          { beschrijving: "Medaillespiegel 3e plaats", waarde: 100 },
-          { beschrijving: "Medaillespiegel Top 5", waarde: 75 },
-          { beschrijving: "Medaillespiegel Top 10", waarde: 50 },
-          { beschrijving: "Medaillespiegel Top 25", waarde: 35 },
-          { beschrijving: "Medaillespiegel Top 50", waarde: 20 },
-          { beschrijving: "Medaillespiegel Top 100", waarde: 10 },
-          { beschrijving: "Medaillespiegel Overige", waarde: 5 },
-          { beschrijving: "Lichte training", waarde: -10 },
-          { beschrijving: "Normale training", waarde: -20 },
-          { beschrijving: "Zware training", waarde: -40 },
-          { beschrijving: "Scouten: 6 atleten tonen", waarde: -25 },
-          { beschrijving: "Scouten: Atleet 1", waarde: -20 },
-          { beschrijving: "Scouten: Atleet 2", waarde: -30 },
-          { beschrijving: "Scouten: Atleet 3-8", waarde: -40 },
-          { beschrijving: "Scouten: Atleet top selecties", waarde: -60 },
-          { beschrijving: "Vriendschappelijke wedstrijd", waarde: -25 },
-          { beschrijving: "Atleet ontslaan", waarde: -100 },
-          { beschrijving: "Nieuwe atleet bij pensioen", waarde: -50 }
-        ];
-        localStorage.setItem("mp_rules", JSON.stringify(standaard));
-      }
-
-      const regels = JSON.parse(localStorage.getItem("mp_rules")) || [];
-      mpList.innerHTML = "";
-
-      regels.forEach((regel, index) => {
-        const li = document.createElement("li");
-        li.innerHTML = `
-          <strong>${regel.beschrijving}</strong><br />
-          Waarde: <input type="number" value="${regel.waarde}" onchange="updateMPWaarde(${index}, this.value)">
-          <button onclick="verwijderMPregel(${index})" style="margin-left:10px">❌ Verwijder</button>
+      data.forEach(item => {
+        const rij = document.createElement("tr");
+        rij.innerHTML = `
+          <td>${item.type}</td>
+          <td>${item.beschrijving}</td>
+          <td>${item.waarde}</td>
+          <td><button onclick="verwijderMP('${item.id}')">🗑️</button></td>
         `;
-        mpList.appendChild(li);
+        tbody.appendChild(rij);
       });
     }
 
-    function updateMPWaarde(index, nieuweWaarde) {
-      const regels = JSON.parse(localStorage.getItem("mp_rules")) || [];
-      regels[index].waarde = parseInt(nieuweWaarde);
-      localStorage.setItem("mp_rules", JSON.stringify(regels));
-      loadMPRules();
+    async function verwijderMP(id) {
+      await supabase.from("mp_settings").delete().eq("id", id);
+      laadMP();
     }
 
-    function verwijderMPregel(index) {
-      const regels = JSON.parse(localStorage.getItem("mp_rules")) || [];
-      if (confirm(`Weet je zeker dat je de regel "${regels[index].beschrijving}" wilt verwijderen?`)) {
-        regels.splice(index, 1);
-        localStorage.setItem("mp_rules", JSON.stringify(regels));
-        loadMPRules();
-      }
-    }
-
-    mpForm.addEventListener("submit", function (e) {
+    document.getElementById("mpForm").addEventListener("submit", async function(e) {
       e.preventDefault();
-      const beschrijving = document.getElementById("mpBeschrijving").value.trim();
-      const waarde = parseInt(document.getElementById("mpWaarde").value);
-      if (!beschrijving) return;
-
-      const regels = JSON.parse(localStorage.getItem("mp_rules")) || [];
-      regels.push({ beschrijving, waarde });
-      localStorage.setItem("mp_rules", JSON.stringify(regels));
-      mpForm.reset();
-      loadMPRules();
+      const nieuwItem = {
+        type: document.getElementById("type").value,
+        beschrijving: document.getElementById("beschrijving").value,
+        waarde: parseInt(document.getElementById("waarde").value)
+      };
+      await supabase.from("mp_settings").insert([nieuwItem]);
+      this.reset();
+      laadMP();
     });
 
-    document.addEventListener("DOMContentLoaded", loadMPRules);
+    laadMP();
   </script>
 </body>
 </html>
