@@ -2,172 +2,107 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Admin – Simulatieconfiguratie</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>⚙️ Simulatieregels</title>
   <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 6px;
+      text-align: left;
+    }
+    th { background: #f0f0f0; }
+    select, input {
+      width: 100%;
+      padding: 4px;
+    }
+    .save-button {
+      margin-top: 15px;
+      padding: 10px;
+      width: 100%;
+    }
+  </style>
 </head>
 <body>
-  <header>
-    <h1>🛠️ Admin – Simulatie-instellingen per Editie & Onderdeel</h1>
-    <nav><a href="admin.html">⬅️ Terug naar Admin</a></nav>
-  </header>
-
-  <main>
-    <section>
-      <h2>🔗 Koppel configuratie</h2>
-      <form id="configForm">
-        <label for="editieSelect">Editie:</label>
-        <select id="editieSelect" required></select><br/>
-
-        <label for="sportSelect">Sport:</label>
-        <select id="sportSelect" required></select><br/>
-
-        <label for="onderdeelSelect">Onderdeel:</label>
-        <select id="onderdeelSelect" required></select><br/>
-
-        <label for="rondeSelect">Ronde:</label>
-        <select id="rondeSelect" required>
-          <option value="">-- Kies ronde --</option>
-          <option value="Groepsfase">Groepsfase</option>
-          <option value="Voorrondes">Voorrondes</option>
-          <option value="Series">Series</option>
-          <option value="Kwartfinale">Kwartfinale</option>
-          <option value="Halve Finale">Halve Finale</option>
-          <option value="Finale">Finale</option>
-        </select><br/>
-      </form>
-    </section>
-
-    <section>
-      <h2>⚙️ Simulatiedetails</h2>
-      <form id="detailsForm">
-        <label for="type">Simulatie-type:</label>
-        <select id="type" required>
-          <option value="standaard">Standaard</option>
-          <option value="best_of">Best of (bijv. 2 of 3)</option>
-          <option value="meerdere_pogingen">Meerdere pogingen</option>
-          <option value="puntenklassement">Puntenklassement</option>
-          <option value="tijdvergelijking">Tijdvergelijking</option>
-          <option value="custom">Custom</option>
-        </select><br/>
-
-        <label for="instellingen">Technische instellingen (JSON):</label><br/>
-        <textarea id="instellingen" rows="5" cols="60" placeholder='Bijv: {"pogingen": 3, "om_de_beurt": true}'></textarea><br/>
-
-        <label for="uitleg">Uitleg voor speler of verslag:</label><br/>
-        <textarea id="uitleg" rows="3" cols="60" placeholder="Bijv: Elke atleet krijgt 3 pogingen. Beste telt."></textarea><br/>
-
-        <button type="submit">💾 Opslaan</button>
-      </form>
-    </section>
-
-    <section>
-      <h2>📋 Bestaande Configuratie</h2>
-      <div id="huidigeInstelling"></div>
-    </section>
-  </main>
-
-  <footer>
-    <p>&copy; 2025 Sport Manager Simulatie</p>
-  </footer>
-
+  <h1>⚙️ Simulatieregels per Sportonderdeel</h1>
+  <nav><a href="admin.html">⬅️ Terug naar Admin</a></nav>
+  <div id="configTabel">Laden...</div>
   <script>
-    const edities = JSON.parse(localStorage.getItem("edities")) || [];
-    const onderdelen = JSON.parse(localStorage.getItem("sportonderdelen")) || [];
-    let simulatieconfig = JSON.parse(localStorage.getItem("simulatieconfig")) || {};
+    let simulaties = [];
 
-    const editieSelect = document.getElementById("editieSelect");
-    const sportSelect = document.getElementById("sportSelect");
-    const onderdeelSelect = document.getElementById("onderdeelSelect");
-    const rondeSelect = document.getElementById("rondeSelect");
-    const typeSelect = document.getElementById("type");
-    const instellingen = document.getElementById("instellingen");
-    const uitleg = document.getElementById("uitleg");
-    const huidigeInstelling = document.getElementById("huidigeInstelling");
-    const detailsForm = document.getElementById("detailsForm");
+    async function laadTabel() {
+      const { data: sporten } = await supabase.from("sportonderdelen").select("*").order("sport");
+      const { data: regels } = await supabase.from("simulatieconfig").select("*");
 
-    // Vul edities
-    edities.forEach(e => {
-      const opt = document.createElement("option");
-      opt.value = e.id;
-      opt.textContent = e.naam;
-      editieSelect.appendChild(opt);
-    });
+      const tabel = document.createElement("table");
+      const header = `
+        <tr>
+          <th>Sport</th>
+          <th>Onderdeel</th>
+          <th>Rondes</th>
+          <th>Type</th>
+          <th>Opmerkingen</th>
+        </tr>`;
+      tabel.innerHTML = header;
 
-    // Vul sporten
-    const uniekeSporten = [...new Set(onderdelen.map(o => o.sport))];
-    uniekeSporten.forEach(sport => {
-      const opt = document.createElement("option");
-      opt.value = sport;
-      opt.textContent = sport;
-      sportSelect.appendChild(opt);
-    });
+      sporten.forEach(s => {
+        const match = regels.find(r =>
+          r.sport === s.sport && r.onderdeel === s.onderdeel && r.geslacht === s.geslacht
+        ) || { rondes: "", type: "", opmerkingen: "" };
 
-    // Vul onderdelen op sportkeuze
-    sportSelect.addEventListener("change", () => {
-      const gekozen = sportSelect.value;
-      onderdeelSelect.innerHTML = "";
-      const gefilterd = onderdelen.filter(o => o.sport === gekozen);
-      gefilterd.forEach(o => {
-        const opt = document.createElement("option");
-        opt.value = JSON.stringify(o);
-        opt.textContent = `${o.geslacht} - ${o.onderdeel}`;
-        onderdeelSelect.appendChild(opt);
-      });
-    });
-
-    // Toon bestaande config
-    [editieSelect, sportSelect, onderdeelSelect, rondeSelect].forEach(el => {
-      el.addEventListener("change", toonConfig);
-    });
-
-    function getSleutel() {
-      const editie = editieSelect.value;
-      if (!onderdeelSelect.value) return "";
-      const onderdeelObj = JSON.parse(onderdeelSelect.value);
-      const onderdeelKey = `${sportSelect.value} - ${onderdeelObj.geslacht} - ${onderdeelObj.onderdeel}`;
-      return `${editie} | ${onderdeelKey} | ${rondeSelect.value}`;
-    }
-
-    function toonConfig() {
-      const sleutel = getSleutel();
-      if (!sleutel) return;
-      const config = simulatieconfig[sleutel];
-      if (config) {
-        typeSelect.value = config.type || "standaard";
-        instellingen.value = JSON.stringify(config.instellingen || {}, null, 2);
-        uitleg.value = config.uitleg || "";
-        huidigeInstelling.innerHTML = `
-          <p><strong>Type:</strong> ${config.type}</p>
-          <p><strong>Instellingen:</strong> <pre>${JSON.stringify(config.instellingen, null, 2)}</pre></p>
-          <p><strong>Uitleg:</strong> ${config.uitleg}</p>
+        const rij = document.createElement("tr");
+        rij.innerHTML = `
+          <td>${s.sport} (${s.geslacht})</td>
+          <td>${s.onderdeel}</td>
+          <td><input value="${match.rondes}" data-sport="${s.sport}" data-onderdeel="${s.onderdeel}" data-type="rondes" /></td>
+          <td><input value="${match.type}" data-sport="${s.sport}" data-onderdeel="${s.onderdeel}" data-type="type" /></td>
+          <td><input value="${match.opmerkingen}" data-sport="${s.sport}" data-onderdeel="${s.onderdeel}" data-type="opmerkingen" /></td>
         `;
-      } else {
-        instellingen.value = "";
-        uitleg.value = "";
-        huidigeInstelling.innerHTML = "<p>Geen bestaande instellingen voor deze combinatie.</p>";
-      }
+        tabel.appendChild(rij);
+      });
+
+      const container = document.getElementById("configTabel");
+      container.innerHTML = "";
+      container.appendChild(tabel);
+
+      const knop = document.createElement("button");
+      knop.className = "save-button";
+      knop.innerText = "💾 Opslaan";
+      knop.onclick = opslaan;
+      container.appendChild(knop);
     }
 
-    detailsForm.addEventListener("submit", e => {
-      e.preventDefault();
-      const sleutel = getSleutel();
-      if (!sleutel) return alert("Selecteer eerst editie, sport, onderdeel en ronde.");
+    async function opslaan() {
+      const inputs = document.querySelectorAll("input[data-sport]");
+      const updates = {};
 
-      try {
-        const parsed = instellingen.value ? JSON.parse(instellingen.value) : {};
-        simulatieconfig[sleutel] = {
-          type: typeSelect.value,
-          instellingen: parsed,
-          uitleg: uitleg.value.trim()
+      inputs.forEach(input => {
+        const key = input.dataset.sport + "|" + input.dataset.onderdeel;
+        if (!updates[key]) updates[key] = {
+          sport: input.dataset.sport,
+          onderdeel: input.dataset.onderdeel,
+          rondes: "", type: "", opmerkingen: ""
         };
-        localStorage.setItem("simulatieconfig", JSON.stringify(simulatieconfig));
-        alert("Instellingen opgeslagen!");
-        toonConfig();
-      } catch (err) {
-        alert("Instellingen moeten geldig JSON zijn.");
-      }
-    });
+        updates[key][input.dataset.type] = input.value;
+      });
+
+      const gegevens = Object.values(updates);
+
+      await supabase.from("simulatieconfig").delete().neq("id", 0);
+      const { error } = await supabase.from("simulatieconfig").insert(gegevens);
+
+      alert(error ? "❌ Fout bij opslaan" : "✅ Simulatieregels opgeslagen");
+    }
+
+    laadTabel();
   </script>
 </body>
 </html>
