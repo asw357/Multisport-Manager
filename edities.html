@@ -2,101 +2,72 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Edities</title>
-  <link rel="stylesheet" href="css/style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>📆 Alle Edities</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="js/supabaseClient.js"></script>
   <style>
-    .editie-card {
+    body { font-family: sans-serif; padding: 20px; }
+    .editie {
       border: 1px solid #ccc;
-      padding: 15px;
-      margin: 10px 0;
+      border-radius: 6px;
+      padding: 10px;
+      margin-bottom: 12px;
       background: #f9f9f9;
-      border-radius: 8px;
     }
-    .editie-card h3 {
-      margin-top: 0;
+    .editie h3 {
+      margin: 0 0 5px 0;
     }
-    .editie-buttons a {
-      margin-right: 10px;
+    .editie a {
       display: inline-block;
-      margin-top: 10px;
-    }
-    .editie-type {
-      margin-top: 30px;
+      margin-right: 10px;
+      text-decoration: none;
+      color: #0077cc;
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>📅 Overzicht van Edities</h1>
-    <nav>
-      <ul>
-        <li><a href="index.html">⬅️ Terug naar Home</a></li>
-      </ul>
-    </nav>
+    <h1>📆 Alle Edities</h1>
+    <nav><a href="manager.html">⬅️ Terug naar Manager</a></nav>
   </header>
 
   <main>
-    <section class="editie-type">
-      <h2>☀️ Zomeredities</h2>
-      <div id="zomerContainer"></div>
-    </section>
-
-    <section class="editie-type">
-      <h2>❄️ Winteredities</h2>
-      <div id="winterContainer"></div>
-    </section>
-
-    <div id="adminActions"></div>
+    <div id="editieLijst">🔄 Edities laden...</div>
   </main>
-
-  <footer>
-    <p>&copy; 2025 Sport Manager Simulatie – Edities</p>
-  </footer>
-
   <script>
-    const edities = JSON.parse(localStorage.getItem("edities")) || [];
-    const zomerDiv = document.getElementById("zomerContainer");
-    const winterDiv = document.getElementById("winterContainer");
-    const adminDiv = document.getElementById("adminActions");
-    const user = JSON.parse(localStorage.getItem("loggedInUser"));
+    async function laadEdities() {
+      const { data: edities } = await supabase
+        .from("edities")
+        .select("*")
+        .order("start_datum", { ascending: true });
 
-    function isWinterEditie(naam) {
-      return naam.toLowerCase().includes("winter");
-    }
+      const lijst = document.getElementById("editieLijst");
+      lijst.innerHTML = "";
 
-    const vandaag = new Date();
-
-    edities.forEach(e => {
-      const start = new Date(e.startdatum);
-      const actief = (start.toDateString() === vandaag.toDateString()) ? " (🔴 Vandaag live!)" : "";
-
-      const div = document.createElement("div");
-      div.className = "editie-card";
-      div.innerHTML = `
-        <h3>${e.naam}${actief}</h3>
-        <p><strong>Gaststad:</strong> ${e.gaststad} – <strong>Startdatum:</strong> ${e.startdatum}</p>
-        <div class="editie-buttons">
-          <a href="toernooischema.html?editie=${e.naam}">📊 Toernooischema</a>
-          <a href="live_wedstrijd.html?editie=${e.naam}">📺 Live Wedstrijden</a>
-          <a href="nieuws.html?editie=${e.naam}">📰 Nieuws</a>
-          <a href="records.html?editie=${e.naam}">📈 Records</a>
-        </div>
-      `;
-
-      if (isWinterEditie(e.naam)) {
-        winterDiv.appendChild(div);
-      } else {
-        zomerDiv.appendChild(div);
+      if (!edities || edities.length === 0) {
+        lijst.innerHTML = "📭 Geen edities gevonden.";
+        return;
       }
-    });
 
-    if (user?.email === "wilcoboesveld12@hotmail.com") {
-      const knop = document.createElement("button");
-      knop.textContent = "➕ Nieuwe editie toevoegen";
-      knop.onclick = () => window.location.href = "admin_edities.html";
-      adminDiv.appendChild(knop);
+      edities.forEach(e => {
+        const div = document.createElement("div");
+        div.className = "editie";
+        div.innerHTML = `
+          <h3>${e.naam} (${e.gaststad}, ${e.gastland})</h3>
+          📅 Startdatum: ${e.start_datum}<br/><br/>
+          <a href="editie_resultaten.html?editie=${e.id}">📊 Resultaten</a>
+          <a href="live_wedstrijden_vandaag.html?editie=${e.id}">📺 Live Wedstrijden</a>
+          <a href="records.html?editie=${e.id}">🏅 Records</a>
+          <a href="nieuws.html?editie=${e.id}">📰 Nieuws</a>
+          <a href="medaillespiegel.html?editie=${e.id}">🥇 Medaillespiegel</a>
+        `;
+        lijst.appendChild(div);
+      });
     }
+
+    laadEdities();
   </script>
 </body>
 </html>
