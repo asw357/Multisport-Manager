@@ -1,90 +1,100 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Wedstrijdschema</title>
-  <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🔍 Wedstrijdschema Filter</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="js/supabaseClient.js"></script>
   <style>
-    .filterblok { text-align: center; margin: 20px 0; }
-    select { padding: 8px; margin: 0 5px; }
-    .schema-item {
-      border: 1px solid #ccc;
-      padding: 12px;
-      margin: 10px auto;
-      max-width: 700px;
-      border-radius: 6px;
-      background: #f9f9f9;
+    body { font-family: sans-serif; padding: 20px; }
+    select, button {
+      margin: 10px 5px;
+      padding: 8px;
     }
-    .schema-item h3 { margin: 0; }
+    .wedstrijd {
+      background: #f9f9f9;
+      padding: 10px;
+      border-radius: 6px;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
   <header>
-    <h1>📅 Wedstrijdschema</h1>
-    <nav><a href="index.html">⬅️ Terug naar Home</a></nav>
+    <h1>🔍 Wedstrijdschema Filter</h1>
+    <nav><a href="edities.html">⬅️ Terug naar Edities</a></nav>
   </header>
 
   <main>
-    <div class="filterblok">
-      <label>Filter op dag:</label>
-      <select id="filterDag">
-        <option value="">Alle dagen</option>
-        <option value="1">Dag 1</option>
-        <option value="2">Dag 2</option>
-        <option value="3">Dag 3</option>
-        <option value="4">Dag 4</option>
-      </select>
+    <div>
+      <label for="sport">🏅 Sport:</label>
+      <select id="sport"></select>
 
-      <label>Filter op sport:</label>
-      <select id="filterSport"></select>
+      <label for="dag">📆 Dag:</label>
+      <select id="dag"></select>
+
+      <button onclick="filterSchema()">🔍 Zoek</button>
     </div>
-
-    <div id="schemaContainer"></div>
+    <div id="schemaResultaten">📄 Resultaten verschijnen hier...</div>
   </main>
-
-  <footer>
-    <p>&copy; 2025 Sport Manager Simulatie – Wedstrijdschema</p>
-  </footer>
-
   <script>
-    const data = JSON.parse(localStorage.getItem("wedstrijdschema")) || [];
-    const schemaContainer = document.getElementById("schemaContainer");
-    const dagFilter = document.getElementById("filterDag");
-    const sportFilter = document.getElementById("filterSport");
+    async function vulFilters() {
+      const { data: schema } = await supabase.from("schema").select("*");
 
-    const uniekeSporten = [...new Set(data.map(d => d.sport))];
-    uniekeSporten.forEach(sport => {
-      const opt = document.createElement("option");
-      opt.value = sport;
-      opt.textContent = sport;
-      sportFilter.appendChild(opt);
-    });
+      const sporten = [...new Set(schema.map(s => s.sport))].sort();
+      const dagen = [...new Set(schema.map(s => s.dag))].sort();
 
-    function toonSchema(dag = "", sport = "") {
-      schemaContainer.innerHTML = "";
-      let gefilterd = data;
+      const sportSelect = document.getElementById("sport");
+      const dagSelect = document.getElementById("dag");
 
-      if (dag) gefilterd = gefilterd.filter(d => d.dag == dag);
-      if (sport) gefilterd = gefilterd.filter(d => d.sport === sport);
+      sporten.forEach(s => {
+        const opt = document.createElement("option");
+        opt.value = s;
+        opt.textContent = s;
+        sportSelect.appendChild(opt);
+      });
 
-      gefilterd.sort((a, b) => a.tijd.localeCompare(b.tijd));
-
-      gefilterd.forEach(w => {
-        const div = document.createElement("div");
-        div.className = "schema-item";
-        div.innerHTML = `
-          <h3>${w.sport} – ${w.onderdeel}</h3>
-          <p>Dag ${w.dag}, Tijd: ${w.tijd}</p>
-        `;
-        schemaContainer.appendChild(div);
+      dagen.forEach(d => {
+        const opt = document.createElement("option");
+        opt.value = d;
+        opt.textContent = d;
+        dagSelect.appendChild(opt);
       });
     }
 
-    dagFilter.addEventListener("change", () => toonSchema(dagFilter.value, sportFilter.value));
-    sportFilter.addEventListener("change", () => toonSchema(dagFilter.value, sportFilter.value));
+    async function filterSchema() {
+      const sport = document.getElementById("sport").value;
+      const dag = document.getElementById("dag").value;
 
-    toonSchema();
+      const { data: gefilterd } = await supabase
+        .from("schema")
+        .select("*")
+        .eq("sport", sport)
+        .eq("dag", dag)
+        .order("tijd", { ascending: true });
+
+      const container = document.getElementById("schemaResultaten");
+      container.innerHTML = "";
+
+      if (!gefilterd.length) {
+        container.innerHTML = "⚠️ Geen wedstrijden gevonden voor deze selectie.";
+        return;
+      }
+
+      gefilterd.forEach(w => {
+        const div = document.createElement("div");
+        div.className = "wedstrijd";
+        div.innerHTML = `
+          🕒 ${w.tijd} – ${w.geslacht} ${w.onderdeel}<br/>
+          🏟️ ${w.locatie || "Nader te bepalen"}
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    vulFilters();
   </script>
 </body>
 </html>
