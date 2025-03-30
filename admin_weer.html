@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>☀️ Admin – Weerinstellingen per Editie</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    form, table { max-width: 700px; margin: auto; }
+    input, select {
+      width: 100%;
+      padding: 6px;
+      margin: 5px 0;
+    }
+    button {
+      padding: 8px 12px;
+      margin-top: 10px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 30px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 6px;
+    }
+    th {
+      background-color: #f0f0f0;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>☀️ Admin – Weerinstellingen per Editie</h1>
+    <nav><a href="admin.html">⬅️ Terug naar Admin</a></nav>
+  </header>
+
+  <main>
+    <form id="weerForm">
+      <label for="editie_id">Editie ID</label>
+      <input type="text" id="editie_id" required />
+      <label for="dag">Dag</label>
+      <input type="text" id="dag" required />
+      <label for="omschrijving">Weersomstandigheden (tekst)</label>
+      <input type="text" id="omschrijving" required />
+      <button type="submit">➕ Toevoegen</button>
+    </form>
+
+    <h2>🌤️ Ingevoerde Weerdata</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Editie</th>
+          <th>Dag</th>
+          <th>Omschrijving</th>
+          <th>Actie</th>
+        </tr>
+      </thead>
+      <tbody id="weerTabel"></tbody>
+    </table>
+  </main>
+  <script>
+    async function laadWeer() {
+      const { data } = await supabase.from("weer").select("*").order("dag", { ascending: true });
+      const tbody = document.getElementById("weerTabel");
+      tbody.innerHTML = "";
+
+      data.forEach(w => {
+        const rij = document.createElement("tr");
+        rij.innerHTML = `
+          <td>${w.editie_id}</td>
+          <td>${w.dag}</td>
+          <td>${w.omschrijving}</td>
+          <td><button onclick="verwijderWeer('${w.id}')">🗑️</button></td>
+        `;
+        tbody.appendChild(rij);
+      });
+    }
+
+    async function verwijderWeer(id) {
+      await supabase.from("weer").delete().eq("id", id);
+      laadWeer();
+    }
+
+    document.getElementById("weerForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const item = {
+        editie_id: document.getElementById("editie_id").value,
+        dag: document.getElementById("dag").value,
+        omschrijving: document.getElementById("omschrijving").value
+      };
+      await supabase.from("weer").insert([item]);
+      this.reset();
+      laadWeer();
+    });
+
+    laadWeer();
+  </script>
+</body>
+</html>
