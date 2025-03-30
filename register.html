@@ -110,4 +110,43 @@
           return;
         }
 
-        console.log("Stap 2: Ophalen land
+        console.log("Stap 2: Ophalen landentoewijzing...");
+        const { data: queue, error: queueError } = await supabase.from("landentoewijzing").select("*").order("volgorde");
+        const { data: allUsers, error: usersError } = await supabase.from("users").select("id");
+        console.log("Queue:", queue);
+        console.log("All users:", allUsers);
+        if (queueError) throw queueError;
+        if (usersError) throw usersError;
+
+        const toegewezenLand = queue[allUsers.length % queue.length]?.naam || "Landloos";
+        console.log("Toegewezen land:", toegewezenLand);
+
+        const gebruiker = {
+          gebruikersnaam,
+          email,
+          wachtwoord,
+          land: toegewezenLand,
+          mp: 100
+        };
+
+        console.log("Stap 3: Gebruiker registreren...");
+        const { data: inserted, error: insertError } = await supabase.from("users").insert([gebruiker]).select();
+        console.log("Insert resultaat:", inserted);
+        if (insertError) throw insertError;
+        if (!inserted || inserted.length === 0) throw new Error("Insert returned geen resultaat.");
+
+        localStorage.setItem("loggedInUser", JSON.stringify(inserted[0]));
+
+        console.log("Stap 4: Atleten genereren...");
+        await genereerAtleten(inserted[0]);
+
+        console.log("Registratie voltooid! Navigeren naar manager.html...");
+        window.location.href = "manager.html";
+      } catch (error) {
+        console.error("❌ Fout bij registratie:", error.message || error);
+        alert("❌ Onverwachte fout tijdens registratie. Zie console voor details.");
+      }
+    });
+  </script>
+</body>
+</html>
