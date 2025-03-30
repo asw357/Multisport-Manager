@@ -3,70 +3,61 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Live Wedstrijden Vandaag</title>
-  <link rel="stylesheet" href="css/style.css">
+  <title>📅 Live Wedstrijden Vandaag</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="js/supabaseClient.js"></script>
   <style>
-    .wedstrijd-card {
-      border: 1px solid #ccc;
-      padding: 15px;
+    body { font-family: sans-serif; padding: 20px; }
+    .wedstrijd {
+      background: #f0f0f0;
       margin: 10px 0;
+      padding: 10px;
       border-radius: 6px;
-      background: #f9f9f9;
     }
-    .live { color: green; font-weight: bold; }
-    .locked { color: gray; font-style: italic; }
-    button { margin-top: 10px; }
+    h2 {
+      margin-bottom: 10px;
+    }
   </style>
 </head>
 <body>
   <header>
-    <h1>📺 Live Wedstrijden Vandaag</h1>
+    <h1>📅 Live Wedstrijden Vandaag</h1>
     <nav><a href="edities.html">⬅️ Terug naar Edities</a></nav>
   </header>
 
   <main>
-    <div id="wedstrijdenContainer"></div>
+    <div id="wedstrijdenLijst">🔄 Laden...</div>
   </main>
-
-  <footer>
-    <p>&copy; 2025 Sport Manager Simulatie – Live Vandaag</p>
-  </footer>
-
   <script>
-    const container = document.getElementById("wedstrijdenContainer");
-    const schema = JSON.parse(localStorage.getItem("wedstrijdschema")) || [];
-    const vandaag = new Date();
-    const vandaagStr = vandaag.toISOString().split("T")[0];
-    const nu = vandaag.getHours() + ":" + String(vandaag.getMinutes()).padStart(2, '0');
+    async function laadLiveWedstrijden() {
+      const vandaag = new Date().toISOString().split("T")[0];
+      const { data: wedstrijden } = await supabase
+        .from("schema")
+        .select("*")
+        .eq("datum", vandaag)
+        .order("tijd", { ascending: true });
 
-    const vandaagWedstrijden = schema.filter(w => w.datum === vandaagStr);
+      const lijst = document.getElementById("wedstrijdenLijst");
+      lijst.innerHTML = "";
 
-    if (vandaagWedstrijden.length === 0) {
-      container.innerHTML = "<p>Er zijn vandaag geen geplande wedstrijden.</p>";
-    } else {
-      vandaagWedstrijden.forEach(w => {
-        const wedstrijdDiv = document.createElement("div");
-        wedstrijdDiv.className = "wedstrijd-card";
+      if (!wedstrijden || wedstrijden.length === 0) {
+        lijst.innerHTML = "📭 Geen wedstrijden voor vandaag.";
+        return;
+      }
 
-        const tijdVergelijk = nu >= w.tijd;
-        const liveStatus = tijdVergelijk ? `<span class='live'>Live beschikbaar</span>` : `<span class='locked'>Beschikbaar vanaf ${w.tijd}</span>`;
-
-        wedstrijdDiv.innerHTML = `
-          <h3>${w.sport} – ${w.onderdeel}</h3>
-          <p><strong>Tijd:</strong> ${w.tijd} | <strong>Dag:</strong> ${w.dag}</p>
-          ${liveStatus}<br />
-          <button ${tijdVergelijk ? '' : 'disabled'} onclick="startWedstrijd('${w.sport}', '${w.onderdeel}')">▶️ Start Live Simulatie</button>
+      wedstrijden.forEach(w => {
+        const div = document.createElement("div");
+        div.className = "wedstrijd";
+        div.innerHTML = `
+          <strong>${w.tijd}</strong> – ${w.sport} ${w.geslacht} ${w.onderdeel}<br/>
+          <a href="live_wedstrijd.html?wedstrijd_id=${w.id}">➡️ Volg live</a>
         `;
-
-        container.appendChild(wedstrijdDiv);
+        lijst.appendChild(div);
       });
     }
 
-    function startWedstrijd(sport, onderdeel) {
-      // Simulatiepagina openen met parameters
-      const url = `live_wedstrijd.html?sport=${encodeURIComponent(sport)}&onderdeel=${encodeURIComponent(onderdeel)}`;
-      window.location.href = url;
-    }
+    laadLiveWedstrijden();
   </script>
 </body>
 </html>
