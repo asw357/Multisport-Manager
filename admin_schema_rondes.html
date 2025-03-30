@@ -2,116 +2,118 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Admin – Toernooirondes Instellen</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🎯 Admin – Toernooirondes Instellen</title>
   <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    form, table { max-width: 700px; margin: auto; }
+    input, select {
+      width: 100%;
+      padding: 6px;
+      margin: 5px 0;
+    }
+    button {
+      padding: 8px 12px;
+      margin-top: 10px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 30px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 6px;
+    }
+    th {
+      background-color: #f0f0f0;
+    }
+  </style>
 </head>
 <body>
   <header>
-    <h1>🎯 Admin – Toernooirondes automatisch instellen</h1>
-    <nav>
-      <a href="admin.html">⬅️ Terug naar Admin</a>
-    </nav>
+    <h1>🎯 Admin – Toernooirondes Instellen</h1>
+    <nav><a href="admin.html">⬅️ Terug naar Admin</a></nav>
   </header>
 
   <main>
-    <section>
-      <h2>🔍 Kies wedstrijd uit schema</h2>
-      <select id="wedstrijdSelect" required>
-        <option value="">-- Kies een geplande wedstrijd --</option>
-      </select>
-    </section>
+    <form id="rondeForm">
+      <label for="editie_id">Editie ID</label>
+      <input type="text" id="editie_id" required />
 
-    <section id="rondeSectie" style="display:none;">
-      <h2>🔁 Automatisch gegenereerde structuur</h2>
-      <div id="rondeResultaat"></div>
+      <label for="sport">Sport</label>
+      <input type="text" id="sport" required />
 
-      <h3>🗓️ Planning aanpassen</h3>
-      <form id="rondeForm">
-        <div id="dagenPerRonde"></div>
-        <button type="submit">💾 Opslaan rondestructuur</button>
-      </form>
-    </section>
+      <label for="onderdeel">Onderdeel</label>
+      <input type="text" id="onderdeel" required />
+
+      <label for="ronde">Ronde</label>
+      <input type="text" id="ronde" required />
+
+      <label for="volgorde">Volgorde</label>
+      <input type="number" id="volgorde" required />
+
+      <button type="submit">➕ Voeg ronde toe</button>
+    </form>
+
+    <h2>📑 Ingevoerde Ronde-instellingen</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Editie</th>
+          <th>Sport</th>
+          <th>Onderdeel</th>
+          <th>Ronde</th>
+          <th>Volgorde</th>
+          <th>Actie</th>
+        </tr>
+      </thead>
+      <tbody id="rondeTabel"></tbody>
+    </table>
   </main>
-
-  <footer>
-    <p>&copy; 2025 Sport Manager Simulatie</p>
-  </footer>
   <script>
-    const schema = JSON.parse(localStorage.getItem("schema")) || [];
-    let rondeschema = JSON.parse(localStorage.getItem("rondeschema")) || {};
-    const wedstrijdSelect = document.getElementById("wedstrijdSelect");
-    const rondeSectie = document.getElementById("rondeSectie");
-    const rondeResultaat = document.getElementById("rondeResultaat");
-    const dagenContainer = document.getElementById("dagenPerRonde");
-    const rondeForm = document.getElementById("rondeForm");
+    async function laadRondes() {
+      const { data } = await supabase.from("rondes").select("*").order("volgorde", { ascending: true });
+      const tbody = document.getElementById("rondeTabel");
+      tbody.innerHTML = "";
 
-    // Vul select met geplande wedstrijden
-    schema.forEach(s => {
-      const opt = document.createElement("option");
-      opt.value = s.id;
-      opt.textContent = `${s.editieNaam} – ${s.sport} (${s.onderdeel}) [Dag ${s.dag}]`;
-      wedstrijdSelect.appendChild(opt);
-    });
-
-    wedstrijdSelect.addEventListener("change", () => {
-      const id = parseInt(wedstrijdSelect.value);
-      if (!id) return;
-      const wedstrijd = schema.find(s => s.id === id);
-      if (!wedstrijd) return;
-
-      const totaal = wedstrijd.maxTotaal;
-      const struct = genereerRondeStructuur(totaal);
-      toonRondes(struct);
-      rondeSectie.style.display = "block";
-    });
-
-    function genereerRondeStructuur(totaal) {
-      const rondes = [];
-
-      if (totaal <= 8) {
-        rondes.push("Finale");
-      } else if (totaal <= 16) {
-        rondes.push("Halve Finale", "Finale");
-      } else {
-        rondes.push("Kwalificatie", "Halve Finale", "Finale");
-      }
-
-      return rondes;
-    }
-
-    function toonRondes(rondes) {
-      rondeResultaat.innerHTML = `<p><strong>Gegenereerde rondes:</strong> ${rondes.join(" → ")}</p>`;
-      dagenContainer.innerHTML = "";
-
-      rondes.forEach((ronde, i) => {
-        const label = document.createElement("label");
-        label.textContent = `${ronde} – Dagnummer:`;
-        const input = document.createElement("input");
-        input.type = "text";
-        input.name = ronde;
-        input.required = true;
-        input.value = `Dag ${i + 1}`;
-        dagenContainer.appendChild(label);
-        dagenContainer.appendChild(input);
-        dagenContainer.appendChild(document.createElement("br"));
+      data.forEach(r => {
+        const rij = document.createElement("tr");
+        rij.innerHTML = `
+          <td>${r.editie_id}</td>
+          <td>${r.sport}</td>
+          <td>${r.onderdeel}</td>
+          <td>${r.ronde}</td>
+          <td>${r.volgorde}</td>
+          <td><button onclick="verwijderRonde('${r.id}')">🗑️</button></td>
+        `;
+        tbody.appendChild(rij);
       });
     }
 
-    rondeForm.addEventListener("submit", e => {
+    async function verwijderRonde(id) {
+      await supabase.from("rondes").delete().eq("id", id);
+      laadRondes();
+    }
+
+    document.getElementById("rondeForm").addEventListener("submit", async function (e) {
       e.preventDefault();
-      const id = parseInt(wedstrijdSelect.value);
-      const inputs = rondeForm.querySelectorAll("input");
-      const dagen = {};
-
-      inputs.forEach(input => {
-        dagen[input.name] = input.value.trim();
-      });
-
-      rondeschema[id] = dagen;
-      localStorage.setItem("rondeschema", JSON.stringify(rondeschema));
-      alert("Rondestructuur opgeslagen!");
+      const nieuwe = {
+        editie_id: document.getElementById("editie_id").value,
+        sport: document.getElementById("sport").value,
+        onderdeel: document.getElementById("onderdeel").value,
+        ronde: document.getElementById("ronde").value,
+        volgorde: parseInt(document.getElementById("volgorde").value)
+      };
+      await supabase.from("rondes").insert([nieuwe]);
+      this.reset();
+      laadRondes();
     });
+
+    laadRondes();
   </script>
 </body>
 </html>
