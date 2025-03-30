@@ -1,98 +1,88 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mijn Atleten</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>👥 Atletenbeheer</title>
+  <link rel="stylesheet" href="css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script src="js/supabaseClient.js"></script>
   <style>
-    body {
-      font-family: sans-serif;
-      padding: 20px;
+    body { font-family: sans-serif; padding: 20px; }
+    .atleet-blok {
+      background: #f4f4f4;
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 12px;
     }
-    table {
-      width: 100%;
-      border-collapse: collapse;
+    .kop {
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+    .linkbox {
       margin-top: 20px;
     }
-    th, td {
-      padding: 10px;
-      border: 1px solid #ccc;
-    }
-    th {
-      background: #f4f4f4;
+    .linkbox a {
+      margin-right: 12px;
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>🏃 Mijn Atleten</h1>
+    <h1>👥 Mijn Atleten</h1>
     <nav><a href="manager.html">⬅️ Terug naar Manager</a></nav>
   </header>
 
   <main>
-    <table>
-      <thead>
-        <tr>
-          <th>Naam</th>
-          <th>Leeftijd</th>
-          <th>Sport</th>
-          <th>Discipline</th>
-          <th>Geslacht</th>
-          <th>Onderdeel</th>
-          <th>Snelheid</th>
-          <th>Kracht</th>
-          <th>Techniek</th>
-        </tr>
-      </thead>
-      <tbody id="atletenTabel">
-        <tr><td colspan="9">Laden...</td></tr>
-      </tbody>
-    </table>
+    <div id="atletenContainer">🔄 Atleten laden...</div>
+
+    <div class="linkbox">
+      <a href="training.html">🏋️ Naar Training</a>
+      <a href="scouting.html">🔍 Naar Scouten</a>
+    </div>
   </main>
-
-  <footer>
-    <p>&copy; 2025 Sport Manager Simulatie – Atleten</p>
-  </footer>
-
   <script>
     async function laadAtleten() {
-      const gebruiker = JSON.parse(localStorage.getItem("loggedInUser"));
-      if (!gebruiker) {
-        alert("Niet ingelogd.");
+      const user = JSON.parse(localStorage.getItem("loggedInUser"));
+      if (!user) {
         window.location.href = "login.html";
         return;
       }
 
-      const { data: atleten, error } = await supabase
+      const { data: atleten } = await supabase
         .from("atleten")
         .select("*")
-        .eq("owner", gebruiker.email);
+        .eq("owner", user.email)
+        .order("sport", { ascending: true });
 
-      const tbody = document.getElementById("atletenTabel");
-      tbody.innerHTML = "";
+      const container = document.getElementById("atletenContainer");
+      container.innerHTML = "";
 
-      if (error || !atleten || atleten.length === 0) {
-        tbody.innerHTML = "<tr><td colspan='9'>Geen atleten gevonden.</td></tr>";
+      if (!atleten || atleten.length === 0) {
+        container.innerHTML = "📭 Geen atleten gevonden.";
         return;
       }
 
-      for (let a of atleten) {
-        const rij = document.createElement("tr");
-        rij.innerHTML = `
-          <td>${a.naam}</td>
-          <td>${a.leeftijd}</td>
-          <td>${a.sport}</td>
-          <td>${a.discipline || ""}</td>
-          <td>${a.geslacht}</td>
-          <td>${a.onderdeel}</td>
-          <td>${a.snelheid.toFixed(1)}</td>
-          <td>${a.kracht.toFixed(1)}</td>
-          <td>${a.techniek.toFixed(1)}</td>
-        `;
-        tbody.appendChild(rij);
+      const gegroepeerd = {};
+      atleten.forEach(a => {
+        const sleutel = `${a.sport} - ${a.geslacht}`;
+        if (!gegroepeerd[sleutel]) gegroepeerd[sleutel] = [];
+        gegroepeerd[sleutel].push(a);
+      });
+
+      for (const sleutel in gegroepeerd) {
+        const sectie = document.createElement("div");
+        sectie.innerHTML = `<h2>${sleutel}</h2>`;
+        gegroepeerd[sleutel].forEach(a => {
+          const div = document.createElement("div");
+          div.className = "atleet-blok";
+          div.innerHTML = `
+            <div class="kop">${a.naam} (${a.leeftijd} jaar) – ${a.onderdeel}</div>
+            🏃‍♂️ Snelheid: ${a.stats?.snelheid?.toFixed(1) || 0} | 💪 Kracht: ${a.stats?.kracht?.toFixed(1) || 0} | 🧠 Techniek: ${a.stats?.techniek?.toFixed(1) || 0}
+          `;
+          sectie.appendChild(div);
+        });
+        container.appendChild(sectie);
       }
     }
 
