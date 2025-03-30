@@ -2,24 +2,40 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Wedstrijdtactieken</title>
-  <link rel="stylesheet" href="css/style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🎯 Wedstrijdtactieken</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+    }
+    select, button {
+      padding: 6px;
+      margin: 5px 0;
+    }
+    .tactiek {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-bottom: 8px;
+      border-radius: 6px;
+    }
+  </style>
 </head>
 <body>
   <header>
     <h1>🎯 Wedstrijdtactieken</h1>
-    <nav>
-      <ul>
-        <li><a href="manager.html">⬅️ Terug naar Manager Home</a></li>
-      </ul>
-    </nav>
+    <nav><a href="manager.html">⬅️ Terug naar Manager</a></nav>
   </header>
 
   <main>
-    <section id="tactiekContainer">
-      <!-- Dynamisch -->
-    </section>
+    <label for="sportSelect">Kies sportonderdeel:</label>
+    <select id="sportSelect"></select>
+
+    <h2>Tactieken</h2>
+    <div id="tactiekContainer">Laden...</div>
   </main>
 
   <footer>
@@ -27,63 +43,49 @@
   </footer>
 
   <script>
-    const user = JSON.parse(localStorage.getItem("loggedInUser"));
-    if (!user) {
-      alert("Niet ingelogd.");
-      window.location.href = "login.html";
+    const gebruiker = JSON.parse(localStorage.getItem("loggedInUser"));
+    let sportonderdelen = [];
+
+    async function laadSporten() {
+      const { data } = await supabase.from("sportonderdelen").select("*");
+      sportonderdelen = data;
+
+      const select = document.getElementById("sportSelect");
+      data.forEach(opt => {
+        const optie = document.createElement("option");
+        optie.value = JSON.stringify(opt);
+        optie.textContent = `${opt.sport} – ${opt.geslacht} – ${opt.onderdeel}`;
+        select.appendChild(optie);
+      });
+
+      select.addEventListener("change", toonTactieken);
     }
 
-    const alleTactieken = JSON.parse(localStorage.getItem("tactieken")) || {};
-    const alleAtleten = JSON.parse(localStorage.getItem("atleten")) || [];
-    const eigenAtleten = alleAtleten.filter(a => a.owner === user.email);
-    const tactiekOpslag = JSON.parse(localStorage.getItem("user_tactieken")) || {};
-    const container = document.getElementById("tactiekContainer");
+    async function toonTactieken() {
+      const gekozen = JSON.parse(document.getElementById("sportSelect").value);
+      const { data: tactieken } = await supabase
+        .from("tactieken")
+        .select("*")
+        .eq("sport", gekozen.sport)
+        .eq("onderdeel", gekozen.onderdeel);
 
-    // Groepeer atleten per onderdeel
-    const onderdelen = [...new Set(eigenAtleten.map(a => a.sport))];
+      const container = document.getElementById("tactiekContainer");
+      container.innerHTML = "";
 
-    function toonTactieken() {
-      if (onderdelen.length === 0) {
-        container.innerHTML = "<p>Je hebt nog geen atleten om tactieken voor in te stellen.</p>";
+      if (!tactieken.length) {
+        container.innerHTML = "Geen tactieken gevonden.";
         return;
       }
 
-      onderdelen.forEach(onderdeel => {
-        const opties = alleTactieken[onderdeel] || [];
-
-        const geselecteerd = tactiekOpslag[onderdeel] || "Standaard";
-        const select = document.createElement("select");
-        select.id = `select_${onderdeel}`;
-        opties.forEach(opt => {
-          const o = document.createElement("option");
-          o.value = opt.naam;
-          o.textContent = `${opt.naam} (${opt.effect})`;
-          if (opt.naam === geselecteerd) o.selected = true;
-          select.appendChild(o);
-        });
-
-        const blok = document.createElement("div");
-        blok.innerHTML = `
-          <h3>${onderdeel}</h3>
-          <p><strong>Huidige tactiek:</strong> ${geselecteerd}</p>
-        `;
-        blok.appendChild(select);
-
-        const btn = document.createElement("button");
-        btn.textContent = "Opslaan";
-        btn.onclick = () => {
-          const gekozen = document.getElementById(`select_${onderdeel}`).value;
-          tactiekOpslag[onderdeel] = gekozen;
-          localStorage.setItem("user_tactieken", JSON.stringify(tactiekOpslag));
-          alert(`Tactiek voor ${onderdeel} opgeslagen!`);
-        };
-
-        blok.appendChild(btn);
-        container.appendChild(blok);
+      tactieken.forEach(t => {
+        const div = document.createElement("div");
+        div.className = "tactiek";
+        div.innerHTML = `<strong>${t.tactiek}</strong><br><em>${t.effect}</em>`;
+        container.appendChild(div);
       });
     }
 
-    document.addEventListener("DOMContentLoaded", toonTactieken);
+    laadSporten();
   </script>
 </body>
 </html>
