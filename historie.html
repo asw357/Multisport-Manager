@@ -1,53 +1,76 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Historisch Overzicht</title>
-  <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>📜 Historie</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="js/supabaseClient.js"></script>
   <style>
-    .editie-blok {
-      border: 1px solid #ccc;
-      padding: 10px;
-      margin-bottom: 10px;
+    body { font-family: sans-serif; padding: 20px; }
+    .historie-box {
+      background: #f0f0f0;
+      padding: 15px;
       border-radius: 6px;
-      background: #f9f9f9;
+      margin-bottom: 15px;
     }
-    .editie-blok h3 {
-      margin-top: 0;
+    h2 {
+      margin-top: 30px;
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>📅 Historisch Overzicht van Edities</h1>
-    <nav><a href="index.html">⬅️ Terug naar Home</a></nav>
+    <h1>📜 Historisch Overzicht</h1>
+    <nav><a href="edities.html">⬅️ Terug naar Edities</a></nav>
   </header>
-
-  <main id="historieContainer"></main>
-
-  <footer>
-    <p>&copy; 2025 Sport Manager Simulatie – Historie</p>
-  </footer>
-
+  <main>
+    <div id="historieContent">🔄 Historie laden...</div>
+  </main>
   <script>
-    const edities = JSON.parse(localStorage.getItem("edities")) || [];
-    const spiegel = JSON.parse(localStorage.getItem("medaillespiegel")) || {};
+    async function laadHistorie() {
+      const { data: edities } = await supabase
+        .from("edities")
+        .select("*")
+        .order("start_datum");
 
-    const container = document.getElementById("historieContainer");
+      const { data: records } = await supabase
+        .from("records")
+        .select("*");
 
-    edities.forEach(editie => {
-      const div = document.createElement("div");
-      div.className = "editie-blok";
-      div.innerHTML = `
-        <h3>${editie.naam}</h3>
-        <p><strong>Locatie:</strong> ${editie.gaststad}</p>
-        <p><strong>Startdatum:</strong> ${editie.startdatum}</p>
-        <a href="records.html">📈 Bekijk Records</a>
-        <a href="medaillespiegel.html">🥇 Medaillespiegel</a>
-      `;
-      container.appendChild(div);
-    });
+      const { data: resultaten } = await supabase
+        .from("wedstrijd_resultaten")
+        .select("*, atleten:atleet_id(land)")
+        .order("positie");
+
+      const container = document.getElementById("historieContent");
+      container.innerHTML = "";
+
+      edities.forEach(e => {
+        const div = document.createElement("div");
+        div.className = "historie-box";
+        const medailles = {};
+
+        resultaten.filter(r => r.editie_id === e.id && r.positie <= 3)
+          .forEach(r => {
+            const land = r.atleten?.land || "Onbekend";
+            if (!medailles[land]) medailles[land] = { goud: 0, zilver: 0, brons: 0 };
+            if (r.positie === 1) medailles[land].goud++;
+            if (r.positie === 2) medailles[land].zilver++;
+            if (r.positie === 3) medailles[land].brons++;
+          });
+
+        const lijst = Object.entries(medailles)
+          .map(([land, m]) => `${land}: 🥇${m.goud} 🥈${m.zilver} 🥉${m.brons}`)
+          .join("<br/>");
+
+        div.innerHTML = `<h2>${e.naam} (${e.start_datum})</h2>${lijst}`;
+        container.appendChild(div);
+      });
+    }
+
+    laadHistorie();
   </script>
 </body>
 </html>
