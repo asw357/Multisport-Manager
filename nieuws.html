@@ -1,74 +1,76 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nieuws</title>
-  <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>📰 Nieuws</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="js/supabaseClient.js"></script>
   <style>
-    .filter { margin: 20px auto; text-align: center; }
-    select { padding: 8px; }
+    body { font-family: sans-serif; padding: 20px; }
     .bericht {
-      border: 1px solid #ccc;
-      padding: 15px;
-      margin-bottom: 10px;
+      background: #f5f5f5;
+      padding: 12px;
       border-radius: 6px;
-      background: #f9f9f9;
-      max-width: 700px;
-      margin-left: auto;
-      margin-right: auto;
+      margin-bottom: 15px;
     }
-    .bericht h3 { margin-top: 0; }
+    .datum {
+      font-size: 0.9em;
+      color: gray;
+    }
+    .categorie {
+      font-size: 0.8em;
+      background: #ddd;
+      display: inline-block;
+      padding: 2px 6px;
+      margin-bottom: 5px;
+      border-radius: 4px;
+    }
   </style>
 </head>
 <body>
   <header>
     <h1>📰 Nieuws</h1>
-    <nav><a href="index.html">⬅️ Terug naar Home</a></nav>
+    <nav><a href="edities.html">⬅️ Terug naar Edities</a></nav>
   </header>
 
   <main>
-    <div class="filter">
-      <label for="categorie">Filter op categorie: </label>
-      <select id="categorie">
-        <option value="">Alle categorieën</option>
-        <option value="Blessure">Blessure</option>
-        <option value="Update">Update</option>
-        <option value="Record">Record</option>
-        <option value="Voorspelling">Voorspelling</option>
-      </select>
-    </div>
-    <div id="nieuwsContainer"></div>
+    <div id="nieuwsContainer">🔄 Nieuws laden...</div>
   </main>
-
-  <footer>
-    <p>&copy; 2025 Sport Manager Simulatie – Nieuws</p>
-  </footer>
-
   <script>
-    const nieuws = JSON.parse(localStorage.getItem("nieuwsfeed")) || [];
-    const container = document.getElementById("nieuwsContainer");
-    const categorieSelect = document.getElementById("categorie");
+    async function laadNieuws() {
+      const params = new URLSearchParams(window.location.search);
+      const editieId = params.get("editie");
 
-    function toonNieuws(filter = "") {
+      const { data: nieuws } = await supabase
+        .from("nieuws")
+        .select("*")
+        .eq("editie_id", editieId)
+        .order("datum", { ascending: false });
+
+      const container = document.getElementById("nieuwsContainer");
       container.innerHTML = "";
-      const gefilterd = nieuws.filter(n => filter === "" || n.categorie === filter);
-      gefilterd.sort((a, b) => new Date(b.datum) - new Date(a.datum));
 
-      gefilterd.forEach(n => {
+      if (!nieuws || nieuws.length === 0) {
+        container.innerHTML = "📭 Geen nieuws beschikbaar.";
+        return;
+      }
+
+      nieuws.forEach(n => {
         const div = document.createElement("div");
         div.className = "bericht";
         div.innerHTML = `
-          <h3>${n.titel}</h3>
-          <p><strong>Categorie:</strong> ${n.categorie} | <em>${n.datum}</em></p>
-          <p>${n.inhoud}</p>
+          <div class="categorie">${n.categorie}</div>
+          <strong>${n.titel}</strong><br/>
+          <div class="datum">${new Date(n.datum).toLocaleDateString()}</div>
+          <p>${n.tekst}</p>
         `;
         container.appendChild(div);
       });
     }
 
-    categorieSelect.addEventListener("change", e => toonNieuws(e.target.value));
-    toonNieuws();
+    laadNieuws();
   </script>
 </body>
 </html>
