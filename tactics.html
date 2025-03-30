@@ -8,19 +8,25 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script src="js/supabaseClient.js"></script>
   <style>
-    body {
-      font-family: sans-serif;
-      padding: 20px;
+    body { font-family: sans-serif; padding: 20px; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
     }
-    select, button {
-      padding: 6px;
-      margin: 5px 0;
-    }
-    .tactiek {
+    th, td {
+      padding: 8px;
       border: 1px solid #ccc;
-      padding: 10px;
-      margin-bottom: 8px;
-      border-radius: 6px;
+    }
+    th {
+      background-color: #f0f0f0;
+    }
+    select {
+      padding: 6px;
+    }
+    button {
+      margin-top: 10px;
+      padding: 6px 12px;
     }
   </style>
 </head>
@@ -31,61 +37,68 @@
   </header>
 
   <main>
-    <label for="sportSelect">Kies sportonderdeel:</label>
-    <select id="sportSelect"></select>
+    <label for="onderdeel">Kies onderdeel</label>
+    <select id="onderdeel"></select>
+    <button onclick="laadTactiekKeuzes()">Toon Tactieken</button>
 
-    <h2>Tactieken</h2>
-    <div id="tactiekContainer">Laden...</div>
+    <div id="keuzeContainer" style="margin-top: 20px;"></div>
   </main>
-
-  <footer>
-    <p>&copy; 2025 Sport Manager Simulatie – Tactieken</p>
-  </footer>
-
   <script>
-    const gebruiker = JSON.parse(localStorage.getItem("loggedInUser"));
-    let sportonderdelen = [];
+    let gebruiker;
 
-    async function laadSporten() {
-      const { data } = await supabase.from("sportonderdelen").select("*");
-      sportonderdelen = data;
-
-      const select = document.getElementById("sportSelect");
-      data.forEach(opt => {
-        const optie = document.createElement("option");
-        optie.value = JSON.stringify(opt);
-        optie.textContent = `${opt.sport} – ${opt.geslacht} – ${opt.onderdeel}`;
-        select.appendChild(optie);
-      });
-
-      select.addEventListener("change", toonTactieken);
+    async function getUser() {
+      const userData = localStorage.getItem("loggedInUser");
+      if (!userData) {
+        alert("Niet ingelogd!");
+        window.location.href = "login.html";
+        return;
+      }
+      gebruiker = JSON.parse(userData);
     }
 
-    async function toonTactieken() {
-      const gekozen = JSON.parse(document.getElementById("sportSelect").value);
-      const { data: tactieken } = await supabase
-        .from("tactieken")
-        .select("*")
-        .eq("sport", gekozen.sport)
-        .eq("onderdeel", gekozen.onderdeel);
+    async function laadOnderdelen() {
+      const { data } = await supabase.from("sportonderdelen").select("*");
+      const select = document.getElementById("onderdeel");
+      data.forEach(o => {
+        const opt = document.createElement("option");
+        opt.value = `${o.sport}|${o.onderdeel}`;
+        opt.textContent = `${o.sport} - ${o.onderdeel}`;
+        select.appendChild(opt);
+      });
+    }
 
-      const container = document.getElementById("tactiekContainer");
-      container.innerHTML = "";
+    async function laadTactiekKeuzes() {
+      await getUser();
+      const [sport, onderdeel] = document.getElementById("onderdeel").value.split("|");
+      const { data } = await supabase.from("tactieken").select("*").eq("sport", sport).eq("onderdeel", onderdeel);
 
-      if (!tactieken.length) {
-        container.innerHTML = "Geen tactieken gevonden.";
+      const div = document.getElementById("keuzeContainer");
+      if (!data || data.length === 0) {
+        div.innerHTML = "Geen tactieken gevonden voor dit onderdeel.";
         return;
       }
 
-      tactieken.forEach(t => {
-        const div = document.createElement("div");
-        div.className = "tactiek";
-        div.innerHTML = `<strong>${t.tactiek}</strong><br><em>${t.effect}</em>`;
-        container.appendChild(div);
+      let html = `<h3>Kies jouw tactiek voor ${sport} - ${onderdeel}</h3><select id="tactiekSelect">`;
+      data.forEach(t => {
+        html += `<option value="${t.id}">${t.naam} – ${t.omschrijving}</option>`;
       });
+      html += `</select><br/><button onclick="opslaanTactiek('${sport}', '${onderdeel}')">💾 Opslaan</button>`;
+      div.innerHTML = html;
     }
 
-    laadSporten();
+    async function opslaanTactiek(sport, onderdeel) {
+      const tactiek_id = document.getElementById("tactiekSelect").value;
+      const record = {
+        owner: gebruiker.email,
+        sport: sport,
+        onderdeel: onderdeel,
+        tactiek_id: tactiek_id
+      };
+      await supabase.from("keuze_tactiek").upsert(record, { onConflict: ['owner', 'sport', 'onderdeel'] });
+      alert("Tactiek opgeslagen!");
+    }
+
+    laadOnderdelen();
   </script>
 </body>
 </html>
