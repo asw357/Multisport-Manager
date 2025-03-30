@@ -2,156 +2,124 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Admin - Wedstrijdschema</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>📋 Admin – Wedstrijdschema Maken</title>
   <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    form, table { max-width: 700px; margin: auto; }
+    input, select {
+      width: 100%;
+      padding: 6px;
+      margin: 5px 0;
+    }
+    button {
+      padding: 8px 12px;
+      margin-top: 10px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 30px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 6px;
+    }
+    th {
+      background-color: #f0f0f0;
+    }
+  </style>
 </head>
 <body>
   <header>
-    <h1>📋 Admin – Wedstrijdschema aanmaken</h1>
-    <nav>
-      <a href="admin.html">⬅️ Terug naar Admin</a>
-    </nav>
+    <h1>📋 Admin – Wedstrijdschema Maken</h1>
+    <nav><a href="admin.html">⬅️ Terug naar Admin</a></nav>
   </header>
 
   <main>
-    <section>
-      <h2>➕ Nieuwe Wedstrijd Invoeren</h2>
-      <form id="schemaForm">
-        <label for="editie">Kies editie:</label>
-        <select id="editie" required></select><br/>
+    <form id="schemaForm">
+      <label for="editie_id">Editie ID</label>
+      <input type="text" id="editie_id" required />
 
-        <label for="dag">Dagnummer (bijv. Dag 1):</label>
-        <input type="text" id="dag" required><br/>
+      <label for="dag">Dag (bijv. Dag 1)</label>
+      <input type="text" id="dag" required />
 
-        <label for="tijd">Tijdstip (bijv. 14:00):</label>
-        <input type="time" id="tijd" required><br/>
+      <label for="tijd">Tijdstip</label>
+      <input type="time" id="tijd" required />
 
-        <label for="sport">Sport:</label>
-        <select id="sport" required></select><br/>
+      <label for="sport">Sport</label>
+      <input type="text" id="sport" required />
 
-        <label for="onderdeel">Onderdeel:</label>
-        <select id="onderdeel" required></select><br/>
+      <label for="onderdeel">Onderdeel</label>
+      <input type="text" id="onderdeel" required />
 
-        <label for="maxTotaal">Max deelnemers totaal:</label>
-        <input type="number" id="maxTotaal" min="1" required><br/>
+      <label for="ronde">Ronde</label>
+      <input type="text" id="ronde" required />
 
-        <label for="maxLand">Max per land:</label>
-        <input type="number" id="maxLand" min="1" required><br/>
+      <button type="submit">➕ Toevoegen aan Schema</button>
+    </form>
 
-        <label for="ronde">Ronde-type:</label>
-        <select id="ronde" required>
-          <option value="Kwalificatie">Kwalificatie</option>
-          <option value="Halve Finale">Halve Finale</option>
-          <option value="Finale">Finale</option>
-        </select><br/>
-
-        <button type="submit">➕ Voeg toe aan schema</button>
-      </form>
-    </section>
-
-    <section>
-      <h2>📅 Ingevoerde Wedstrijden</h2>
-      <div id="schemaLijst"></div>
-    </section>
+    <h2>📅 Ingevoerde Schema-items</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Editie ID</th>
+          <th>Dag</th>
+          <th>Tijd</th>
+          <th>Sport</th>
+          <th>Onderdeel</th>
+          <th>Ronde</th>
+          <th>Actie</th>
+        </tr>
+      </thead>
+      <tbody id="schemaTabel"></tbody>
+    </table>
   </main>
-
-  <footer>
-    <p>&copy; 2025 Sport Manager Simulatie</p>
-  </footer>
   <script>
-    const edities = JSON.parse(localStorage.getItem("edities")) || [];
-    const onderdelen = JSON.parse(localStorage.getItem("sportonderdelen")) || [];
-    let schema = JSON.parse(localStorage.getItem("schema")) || [];
+    async function laadSchema() {
+      const { data } = await supabase.from("schema").select("*").order("tijd", { ascending: true });
+      const tbody = document.getElementById("schemaTabel");
+      tbody.innerHTML = "";
 
-    const editieSelect = document.getElementById("editie");
-    const sportSelect = document.getElementById("sport");
-    const onderdeelSelect = document.getElementById("onderdeel");
-    const schemaForm = document.getElementById("schemaForm");
-    const schemaLijst = document.getElementById("schemaLijst");
-
-    // Vul edities
-    edities.forEach(e => {
-      const opt = document.createElement("option");
-      opt.value = e.id;
-      opt.textContent = e.naam;
-      editieSelect.appendChild(opt);
-    });
-
-    // Vul sporten
-    const sportenUniek = [...new Set(onderdelen.map(o => o.sport))];
-    sportenUniek.forEach(sport => {
-      const opt = document.createElement("option");
-      opt.value = sport;
-      opt.textContent = sport;
-      sportSelect.appendChild(opt);
-    });
-
-    // Onderdeel bij geselecteerde sport
-    sportSelect.addEventListener("change", () => {
-      onderdeelSelect.innerHTML = "";
-      const geselecteerd = sportSelect.value;
-      const gefilterd = onderdelen.filter(o => o.sport === geselecteerd);
-      gefilterd.forEach(o => {
-        const opt = document.createElement("option");
-        opt.value = o.onderdeel;
-        opt.textContent = `${o.geslacht} - ${o.onderdeel}`;
-        onderdeelSelect.appendChild(opt);
+      data.forEach(s => {
+        const rij = document.createElement("tr");
+        rij.innerHTML = `
+          <td>${s.editie_id}</td>
+          <td>${s.dag}</td>
+          <td>${s.tijd}</td>
+          <td>${s.sport}</td>
+          <td>${s.onderdeel}</td>
+          <td>${s.ronde}</td>
+          <td><button onclick="verwijderSchema('${s.id}')">🗑️</button></td>
+        `;
+        tbody.appendChild(rij);
       });
-    });
+    }
 
-    // Form submit
-    schemaForm.addEventListener("submit", e => {
+    async function verwijderSchema(id) {
+      await supabase.from("schema").delete().eq("id", id);
+      laadSchema();
+    }
+
+    document.getElementById("schemaForm").addEventListener("submit", async function (e) {
       e.preventDefault();
-
-      const nieuw = {
-        id: Date.now(),
-        editieId: editieSelect.value,
-        editieNaam: editieSelect.options[editieSelect.selectedIndex].textContent,
-        dag: document.getElementById("dag").value.trim(),
+      const entry = {
+        editie_id: document.getElementById("editie_id").value,
+        dag: document.getElementById("dag").value,
         tijd: document.getElementById("tijd").value,
-        sport: sportSelect.value,
-        onderdeel: onderdeelSelect.value,
-        maxTotaal: parseInt(document.getElementById("maxTotaal").value),
-        maxLand: parseInt(document.getElementById("maxLand").value),
+        sport: document.getElementById("sport").value,
+        onderdeel: document.getElementById("onderdeel").value,
         ronde: document.getElementById("ronde").value
       };
-
-      schema.push(nieuw);
-      localStorage.setItem("schema", JSON.stringify(schema));
-      schemaForm.reset();
-      toonSchema();
+      await supabase.from("schema").insert([entry]);
+      this.reset();
+      laadSchema();
     });
 
-    function toonSchema() {
-      schemaLijst.innerHTML = "";
-      if (schema.length === 0) {
-        schemaLijst.innerHTML = "<p>Nog geen wedstrijden ingevoerd.</p>";
-        return;
-      }
-
-      schema.forEach(s => {
-        const div = document.createElement("div");
-        div.className = "schema-blok";
-        div.innerHTML = `
-          <h3>${s.editieNaam} – ${s.sport} (${s.onderdeel})</h3>
-          <p><strong>Dag:</strong> ${s.dag} | <strong>Tijd:</strong> ${s.tijd}</p>
-          <p><strong>Ronde:</strong> ${s.ronde} | <strong>Max totaal:</strong> ${s.maxTotaal}, <strong>Per land:</strong> ${s.maxLand}</p>
-          <button onclick="verwijderSchema(${s.id})">🗑️ Verwijder</button>
-        `;
-        schemaLijst.appendChild(div);
-      });
-    }
-
-    function verwijderSchema(id) {
-      if (!confirm("Weet je zeker dat je deze wedstrijd wilt verwijderen?")) return;
-      schema = schema.filter(s => s.id !== id);
-      localStorage.setItem("schema", JSON.stringify(schema));
-      toonSchema();
-    }
-
-    // Init
-    toonSchema();
+    laadSchema();
   </script>
 </body>
 </html>
