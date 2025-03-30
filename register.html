@@ -43,6 +43,7 @@
       <button type="submit">✅ Registreren</button>
     </form>
   </main>
+
   <script>
     function genereerNaam(land) {
       const voornamen = ["Alex", "Liam", "Sven", "Noah", "Julian"];
@@ -51,36 +52,46 @@
     }
 
     async function genereerAtleten(gebruiker) {
-      const { data: sporten } = await supabase.from("sporten").select("*");
-      const { data: limieten } = await supabase.from("limieten").select("*");
+      try {
+        const { data: sporten, error: sportenError } = await supabase.from("sporten").select("*");
+        const { data: limieten, error: limietenError } = await supabase.from("limieten").select("*");
 
-      let nieuweAtleten = [];
-
-      sporten.forEach(s => {
-        const match = limieten.find(l =>
-          l.sport === s.sport && l.geslacht === s.geslacht && l.onderdeel === s.onderdeel
-        );
-        const start = match?.start || 0;
-
-        for (let i = 0; i < start; i++) {
-          nieuweAtleten.push({
-            naam: genereerNaam(gebruiker.land),
-            leeftijd: Math.floor(Math.random() * 10) + 18,
-            sport: s.sport,
-            geslacht: s.geslacht,
-            onderdeel: s.onderdeel,
-            stats: {
-              snelheid: Math.random() * 100,
-              kracht: Math.random() * 100,
-              techniek: Math.random() * 100
-            },
-            owner: gebruiker.email
-          });
+        if (sportenError || limietenError) {
+          console.error("Fout bij ophalen van sporten of limieten:", sportenError || limietenError);
+          return;
         }
-      });
 
-      if (nieuweAtleten.length > 0) {
-        await supabase.from("atleten").insert(nieuweAtleten);
+        let nieuweAtleten = [];
+
+        sporten.forEach(s => {
+          const match = limieten.find(l =>
+            l.sport === s.sport && l.geslacht === s.geslacht && l.onderdeel === s.onderdeel
+          );
+          const start = match?.start || 0;
+
+          for (let i = 0; i < start; i++) {
+            nieuweAtleten.push({
+              naam: genereerNaam(gebruiker.land),
+              leeftijd: Math.floor(Math.random() * 10) + 18,
+              sport: s.sport,
+              geslacht: s.geslacht,
+              onderdeel: s.onderdeel,
+              stats: {
+                snelheid: Math.random() * 100,
+                kracht: Math.random() * 100,
+                techniek: Math.random() * 100
+              },
+              owner: gebruiker.email
+            });
+          }
+        });
+
+        if (nieuweAtleten.length > 0) {
+          const { error: atletenError } = await supabase.from("atleten").insert(nieuweAtleten);
+          if (atletenError) console.error("Fout bij aanmaken atleten:", atletenError);
+        }
+      } catch (error) {
+        console.error("Onverwachte fout bij atleten genereren:", error);
       }
     }
 
@@ -90,30 +101,59 @@
       const email = document.getElementById("email").value;
       const wachtwoord = document.getElementById("wachtwoord").value;
 
-      const { data: check } = await supabase.from("users").select("*").eq("email", email);
-      if (check.length > 0) {
-        alert("❌ Dit e-mailadres is al geregistreerd.");
-        return;
+      try {
+        console.log("✅ Controle op bestaand e-mailadres...");
+        const { data: check, error: checkError } = await supabase.from("users").select("*").eq("email", email);
+        if (checkError) {
+          console.error("Fout bij controleren e-mailadres:", checkError);
+          alert("❌ Fout bij controle e-mailadres.");
+          return;
+        }
+        if (check.length > 0) {
+          alert("❌ Dit e-mailadres is al geregistreerd.");
+          return;
+        }
+
+        console.log("🏁 Ophalen landentoewijzing...");
+        const { data: queue, error: queueError } = await supabase.from("landentoewijzing").select("*").order("volgorde");
+        const { data: allUsers, error: usersError } = await supabase.from("users").select("id");
+
+        if (queueError || usersError) {
+          console.error("Fout bij ophalen landentoewijzing of gebruikers:", queueError || usersError);
+          alert("❌ Fout bij toewijzing land.");
+          return;
+        }
+
+        const toegewezenLand = queue[allUsers.length % queue.length]?.naam || "Landloos";
+
+        const gebruiker = {
+          gebruikersnaam,
+          email,
+          wachtwoord,
+          land: toegewezenLand,
+          mp: 100
+        };
+
+        console.log("📥 Registreren van gebruiker...");
+        const { data: inserted, error: insertError } = await supabase.from("users").insert([gebruiker]).select();
+
+        if (insertError || !inserted || inserted.length === 0) {
+          console.error("Fout bij registreren gebruiker:", insertError);
+          alert("❌ Er is iets misgegaan tijdens registratie.");
+          return;
+        }
+
+        localStorage.setItem("loggedInUser", JSON.stringify(inserted[0]));
+
+        console.log("🏋️ Atleten genereren...");
+        await genereerAtleten(inserted[0]);
+
+        console.log("✅ Klaar! Doorschakelen naar manager...");
+        window.location.href = "manager.html";
+      } catch (error) {
+        console.error("❌ Onverwachte fout:", error);
+        alert("❌ Onverwachte fout tijdens registratie.");
       }
-
-      const { data: queue } = await supabase.from("landentoewijzing").select("*").order("volgorde");
-      const { data: allUsers } = await supabase.from("users").select("id");
-
-      const toegewezenLand = queue[allUsers.length % queue.length]?.naam || "Landloos";
-
-      const gebruiker = {
-        gebruikersnaam,
-        email,
-        wachtwoord,
-        land: toegewezenLand,
-        mp: 100
-      };
-
-      const { data: inserted } = await supabase.from("users").insert([gebruiker]).select();
-      localStorage.setItem("loggedInUser", JSON.stringify(inserted[0]));
-
-      await genereerAtleten(inserted[0]);
-      window.location.href = "manager.html";
     });
   </script>
 </body>
