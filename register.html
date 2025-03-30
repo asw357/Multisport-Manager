@@ -44,7 +44,47 @@
     </form>
   </main>
   <script>
-    document.getElementById("registerForm").addEventListener("submit", async function(e) {
+    function genereerNaam(land) {
+      const voornamen = ["Alex", "Liam", "Sven", "Noah", "Julian"];
+      const achternamen = ["Jansen", "Kovacs", "Nguyen", "Petrov", "Smith"];
+      return `${voornamen[Math.floor(Math.random() * voornamen.length)]} ${achternamen[Math.floor(Math.random() * achternamen.length)]}`;
+    }
+
+    async function genereerAtleten(gebruiker) {
+      const { data: sporten } = await supabase.from("sporten").select("*");
+      const { data: limieten } = await supabase.from("limieten").select("*");
+
+      let nieuweAtleten = [];
+
+      sporten.forEach(s => {
+        const match = limieten.find(l =>
+          l.sport === s.sport && l.geslacht === s.geslacht && l.onderdeel === s.onderdeel
+        );
+        const start = match?.start || 0;
+
+        for (let i = 0; i < start; i++) {
+          nieuweAtleten.push({
+            naam: genereerNaam(gebruiker.land),
+            leeftijd: Math.floor(Math.random() * 10) + 18,
+            sport: s.sport,
+            geslacht: s.geslacht,
+            onderdeel: s.onderdeel,
+            stats: {
+              snelheid: Math.random() * 100,
+              kracht: Math.random() * 100,
+              techniek: Math.random() * 100
+            },
+            owner: gebruiker.email
+          });
+        }
+      });
+
+      if (nieuweAtleten.length > 0) {
+        await supabase.from("atleten").insert(nieuweAtleten);
+      }
+    }
+
+    document.getElementById("registerForm").addEventListener("submit", async function (e) {
       e.preventDefault();
       const gebruikersnaam = document.getElementById("gebruikersnaam").value;
       const email = document.getElementById("email").value;
@@ -52,13 +92,14 @@
 
       const { data: check } = await supabase.from("users").select("*").eq("email", email);
       if (check.length > 0) {
-        alert("Dit e-mailadres is al geregistreerd.");
+        alert("❌ Dit e-mailadres is al geregistreerd.");
         return;
       }
 
-      const { data: landen } = await supabase.from("landentoewijzing").select("*").order("volgorde");
-      const { data: allUsers } = await supabase.from("users").select("*");
-      const toegewezenLand = landen[allUsers.length % landen.length]?.naam || "Landloos";
+      const { data: queue } = await supabase.from("landentoewijzing").select("*").order("volgorde");
+      const { data: allUsers } = await supabase.from("users").select("id");
+
+      const toegewezenLand = queue[allUsers.length % queue.length]?.naam || "Landloos";
 
       const gebruiker = {
         gebruikersnaam,
@@ -70,6 +111,8 @@
 
       const { data: inserted } = await supabase.from("users").insert([gebruiker]).select();
       localStorage.setItem("loggedInUser", JSON.stringify(inserted[0]));
+
+      await genereerAtleten(inserted[0]);
       window.location.href = "manager.html";
     });
   </script>
