@@ -5,47 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mijn Atleten</title>
   <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="js/supabaseClient.js"></script>
   <style>
     body {
       font-family: sans-serif;
       padding: 20px;
     }
-    h1 {
-      margin-bottom: 20px;
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
     }
-    .atleten-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 20px;
-    }
-    .atleet-kaart {
+    th, td {
+      padding: 10px;
       border: 1px solid #ccc;
-      padding: 15px;
-      border-radius: 10px;
-      width: 300px;
-      background: #f7f7f7;
-      box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
     }
-    .atleet-kaart h3 {
-      margin-top: 0;
-    }
-    .extra-onderdelen {
-      margin-top: 10px;
-    }
-    .extra-onderdelen ul {
-      margin: 0;
-      padding-left: 18px;
-    }
-    .extra-selectie {
-      margin-top: 10px;
-    }
-    .extra-selectie select {
-      width: 100%;
-      padding: 5px;
-    }
-    .extra-selectie button {
-      margin-top: 5px;
-      width: 100%;
+    th {
+      background: #f4f4f4;
     }
   </style>
 </head>
@@ -56,129 +33,70 @@
   </header>
 
   <main>
-    <div id="atletenContainer" class="atleten-container"></div>
+    <table>
+      <thead>
+        <tr>
+          <th>Naam</th>
+          <th>Leeftijd</th>
+          <th>Sport</th>
+          <th>Discipline</th>
+          <th>Geslacht</th>
+          <th>Onderdeel</th>
+          <th>Snelheid</th>
+          <th>Kracht</th>
+          <th>Techniek</th>
+        </tr>
+      </thead>
+      <tbody id="atletenTabel">
+        <tr><td colspan="9">Laden...</td></tr>
+      </tbody>
+    </table>
   </main>
 
   <footer>
-    <p>&copy; 2025 Sport Manager Simulatie</p>
+    <p>&copy; 2025 Sport Manager Simulatie – Atleten</p>
   </footer>
 
   <script>
-const loggedIn = JSON.parse(localStorage.getItem("loggedInUser"));
-const alleAtleten = JSON.parse(localStorage.getItem("atleten")) || [];
-const combinaties = JSON.parse(localStorage.getItem("combinaties")) || [];
-
-const container = document.getElementById("atletenContainer");
-
-const mijnAtleten = alleAtleten.filter(a => a.owner === loggedIn.email);
-
-function getLabel(atleet) {
-  return `${atleet.sport} – ${atleet.discipline ? atleet.discipline + " – " : ""}${atleet.onderdeel} (${atleet.geslacht})`;
-}
-
-function getMogelijkeCombinaties(atleet) {
-  const sleutel = `${atleet.sport}__${atleet.discipline || ""}__${atleet.geslacht}__${atleet.onderdeel}`;
-  return combinaties.filter(c => c.van === sleutel).map(c => ({
-    value: c.naar,
-    label: c.naarLabel
-  })).filter(extra => {
-    return !(atleet.extraOnderdelen || []).some(e => {
-      return `${e.sport}__${e.discipline || ""}__${e.geslacht}__${e.onderdeel}` === extra.value;
-    });
-  });
-}
-
-function groepeerOpSleutel(atleten) {
-  const groepen = {};
-  atleten.forEach(a => {
-    const sleutel = `${a.sport}__${a.discipline || ""}__${a.geslacht}__${a.onderdeel}`;
-    if (!groepen[sleutel]) groepen[sleutel] = [];
-    groepen[sleutel].push(a);
-  });
-  return groepen;
-}
-
-function sleutelLabel(sleutel) {
-  const [s, d, g, o] = sleutel.split("__");
-  return `${s} – ${d ? d + " – " : ""}${o} (${g})`;
-}
-
-function toonAtleten() {
-  container.innerHTML = "";
-  const groepen = groepeerOpSleutel(mijnAtleten);
-  const sleutels = Object.keys(groepen).sort((a, b) => sleutelLabel(a).localeCompare(sleutelLabel(b)));
-
-  sleutels.forEach(sleutel => {
-    const titel = document.createElement("h2");
-    titel.textContent = `📂 ${sleutelLabel(sleutel)}`;
-    container.appendChild(titel);
-
-    const groepDiv = document.createElement("div");
-    groepDiv.className = "atleten-container";
-
-    groepen[sleutel].forEach((atleet, index) => {
-      const kaart = document.createElement("div");
-      kaart.className = "atleet-kaart";
-
-      kaart.innerHTML = `
-        <h3>🏅 ${atleet.naam}</h3>
-        <p>📊 Leeftijd: ${atleet.leeftijd}</p>
-        <p>📈 Snelheid: ${Math.round(atleet.stats.snelheid)}</p>
-        <p>📈 Techniek: ${Math.round(atleet.stats.techniek)}</p>
-        <p>📈 Kracht: ${Math.round(atleet.stats.kracht)}</p>
-      `;
-
-      const extraBlok = document.createElement("div");
-      extraBlok.className = "extra-onderdelen";
-      extraBlok.innerHTML = "<strong>➕ Extra Onderdelen:</strong>";
-      const lijst = document.createElement("ul");
-      (atleet.extraOnderdelen || []).forEach(o => {
-        const li = document.createElement("li");
-        li.textContent = sleutelLabel(`${o.sport}__${o.discipline || ""}__${o.geslacht}__${o.onderdeel}`);
-        lijst.appendChild(li);
-      });
-      extraBlok.appendChild(lijst);
-      kaart.appendChild(extraBlok);
-
-      const opties = getMogelijkeCombinaties(atleet);
-      if (opties.length > 0) {
-        const selectieDiv = document.createElement("div");
-        selectieDiv.className = "extra-selectie";
-        const select = document.createElement("select");
-        opties.forEach(opt => {
-          const el = document.createElement("option");
-          el.value = opt.value;
-          el.textContent = opt.label;
-          select.appendChild(el);
-        });
-
-        const knop = document.createElement("button");
-        knop.textContent = "➕ Toevoegen";
-        knop.addEventListener("click", () => {
-          const gekozen = select.value;
-          const [s, d, g, o] = gekozen.split("__");
-          if (!atleet.extraOnderdelen) atleet.extraOnderdelen = [];
-          atleet.extraOnderdelen.push({ sport: s, discipline: d, geslacht: g, onderdeel: o });
-
-          const index = alleAtleten.findIndex(a => a.id === atleet.id);
-          alleAtleten[index] = atleet;
-          localStorage.setItem("atleten", JSON.stringify(alleAtleten));
-          toonAtleten();
-        });
-
-        selectieDiv.appendChild(select);
-        selectieDiv.appendChild(knop);
-        kaart.appendChild(selectieDiv);
+    async function laadAtleten() {
+      const gebruiker = JSON.parse(localStorage.getItem("loggedInUser"));
+      if (!gebruiker) {
+        alert("Niet ingelogd.");
+        window.location.href = "login.html";
+        return;
       }
 
-      groepDiv.appendChild(kaart);
-    });
+      const { data: atleten, error } = await supabase
+        .from("atleten")
+        .select("*")
+        .eq("owner", gebruiker.email);
 
-    container.appendChild(groepDiv);
-  });
-}
+      const tbody = document.getElementById("atletenTabel");
+      tbody.innerHTML = "";
 
-toonAtleten();
-</script>
+      if (error || !atleten || atleten.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='9'>Geen atleten gevonden.</td></tr>";
+        return;
+      }
+
+      for (let a of atleten) {
+        const rij = document.createElement("tr");
+        rij.innerHTML = `
+          <td>${a.naam}</td>
+          <td>${a.leeftijd}</td>
+          <td>${a.sport}</td>
+          <td>${a.discipline || ""}</td>
+          <td>${a.geslacht}</td>
+          <td>${a.onderdeel}</td>
+          <td>${a.snelheid.toFixed(1)}</td>
+          <td>${a.kracht.toFixed(1)}</td>
+          <td>${a.techniek.toFixed(1)}</td>
+        `;
+        tbody.appendChild(rij);
+      }
+    }
+
+    laadAtleten();
+  </script>
 </body>
 </html>
