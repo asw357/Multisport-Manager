@@ -85,5 +85,27 @@
 
     toonNieuwsPreview();
   </script>
+  <script>
+  window.addEventListener("DOMContentLoaded", () => {
+    const nav = document.querySelector("nav");
+    const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
+
+    if (loggedInUser) {
+      // Voeg Manager-knop toe
+      const managerBtn = document.createElement("a");
+      managerBtn.href = "manager.html";
+      managerBtn.textContent = "🏠 Manager";
+      nav.appendChild(managerBtn);
+
+      // Voeg Admin-knop toe alleen voor specifieke e-mailadres
+      if (loggedInUser.email === "wilcoboesveld12@hotmail.com") {
+        const adminBtn = document.createElement("a");
+        adminBtn.href = "admin.html";
+        adminBtn.textContent = "🛠️ Admin";
+        nav.appendChild(adminBtn);
+      }
+    }
+  });
+</script>
 </body>
 </html>
