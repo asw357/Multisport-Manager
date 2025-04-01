@@ -44,108 +44,33 @@
     </form>
   </main>
   <script>
-    function genereerNaam(land) {
-      const voornamen = ["Alex", "Liam", "Sven", "Noah", "Julian"];
-      const achternamen = ["Jansen", "Kovacs", "Nguyen", "Petrov", "Smith"];
-      return `${voornamen[Math.floor(Math.random() * voornamen.length)]} ${achternamen[Math.floor(Math.random() * achternamen.length)]}`;
-    }
-
-    async function genereerAtleten(gebruiker) {
-      try {
-        const { data: sporten, error: sportenError } = await supabase.from("sporten").select("*");
-        const { data: limieten, error: limietenError } = await supabase.from("limieten").select("*");
-
-        if (sportenError || limietenError) {
-          console.error("Fout bij ophalen van sporten of limieten:", sportenError || limietenError);
-          return;
-        }
-
-        let nieuweAtleten = [];
-
-        sporten.forEach(s => {
-          const match = limieten.find(l =>
-            l.sport === s.sport && l.geslacht === s.geslacht && l.onderdeel === s.onderdeel
-          );
-          const start = match?.start || 0;
-
-          for (let i = 0; i < start; i++) {
-            nieuweAtleten.push({
-              naam: genereerNaam(gebruiker.land),
-              leeftijd: Math.floor(Math.random() * 10) + 18,
-              sport: s.sport,
-              geslacht: s.geslacht,
-              onderdeel: s.onderdeel,
-              stats: {
-                snelheid: Math.random() * 100,
-                kracht: Math.random() * 100,
-                techniek: Math.random() * 100
-              },
-              owner: gebruiker.email
-            });
-          }
-        });
-
-        if (nieuweAtleten.length > 0) {
-          const { error: atletenError } = await supabase.from("atleten").insert(nieuweAtleten);
-          if (atletenError) console.error("Fout bij aanmaken atleten:", atletenError);
-        }
-      } catch (error) {
-        console.error("Onverwachte fout bij atleten genereren:", error.message || error);
-      }
-    }
-
-    document.getElementById("registerForm").addEventListener("submit", async function (e) {
+    document.getElementById("registerForm").addEventListener("submit", async function(e) {
       e.preventDefault();
       const gebruikersnaam = document.getElementById("gebruikersnaam").value;
       const email = document.getElementById("email").value;
       const wachtwoord = document.getElementById("wachtwoord").value;
 
-      try {
-        console.log("Stap 1: Check op bestaand e-mailadres...");
-        const { data: check, error: checkError } = await supabase.from("users").select("*").eq("email", email);
-        console.log("Check-resultaat:", check);
-        if (checkError) throw checkError;
-        if (check.length > 0) {
-          alert("❌ Dit e-mailadres is al geregistreerd.");
-          return;
-        }
-
-        console.log("Stap 2: Ophalen landentoewijzing...");
-        const { data: queue, error: queueError } = await supabase.from("landentoewijzing").select("*").order("volgorde");
-        const { data: allUsers, error: usersError } = await supabase.from("users").select("id");
-        console.log("Queue:", queue);
-        console.log("All users:", allUsers);
-        if (queueError) throw queueError;
-        if (usersError) throw usersError;
-
-        const toegewezenLand = queue[allUsers.length % queue.length]?.naam || "Landloos";
-        console.log("Toegewezen land:", toegewezenLand);
-
-        const gebruiker = {
-          gebruikersnaam,
-          email,
-          wachtwoord,
-          land: toegewezenLand,
-          mp: 100
-        };
-
-        console.log("Stap 3: Gebruiker registreren...");
-        const { data: inserted, error: insertError } = await supabase.from("users").insert([gebruiker]).select();
-        console.log("Insert resultaat:", inserted);
-        if (insertError) throw insertError;
-        if (!inserted || inserted.length === 0) throw new Error("Insert returned geen resultaat.");
-
-        localStorage.setItem("loggedInUser", JSON.stringify(inserted[0]));
-
-        console.log("Stap 4: Atleten genereren...");
-        await genereerAtleten(inserted[0]);
-
-        console.log("Registratie voltooid! Navigeren naar manager.html...");
-        window.location.href = "manager.html";
-      } catch (error) {
-        console.error("❌ Fout bij registratie:", error.message || error);
-        alert("❌ Onverwachte fout tijdens registratie. Zie console voor details.");
+      const { data: check } = await supabase.from("users").select("*").eq("email", email);
+      if (check.length > 0) {
+        alert("Dit e-mailadres is al geregistreerd.");
+        return;
       }
+
+      const { data: landen } = await supabase.from("landentoewijzing").select("*").order("volgorde");
+      const { data: allUsers } = await supabase.from("users").select("*");
+      const toegewezenLand = landen[allUsers.length % landen.length]?.naam || "Landloos";
+
+      const gebruiker = {
+        gebruikersnaam,
+        email,
+        wachtwoord,
+        land: toegewezenLand,
+        mp: 100
+      };
+
+      const { data: inserted } = await supabase.from("users").insert([gebruiker]).select();
+      localStorage.setItem("loggedInUser", JSON.stringify(inserted[0]));
+      window.location.href = "manager.html";
     });
   </script>
 </body>
