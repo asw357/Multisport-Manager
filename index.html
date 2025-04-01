@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🏅 Sport Manager Simulatie</title>
+  <title>🏆 Sport Management Simulatie</title>
   <link rel="stylesheet" href="css/style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script src="js/supabaseClient.js"></script>
@@ -11,61 +11,79 @@
     body { font-family: sans-serif; padding: 20px; }
     nav a {
       display: inline-block;
-      margin: 5px;
-      padding: 8px 12px;
+      margin-right: 10px;
+      padding: 10px 15px;
       background: #0077cc;
       color: white;
+      border-radius: 5px;
       text-decoration: none;
-      border-radius: 4px;
     }
-    .headlines {
-      margin-top: 30px;
-      background: #f0f0f0;
+    .welcome {
+      margin-top: 20px;
       padding: 10px;
-      border-radius: 6px;
+      background: #eef;
+      border-left: 5px solid #77f;
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>🏅 Welkom bij Sport Manager Simulatie</h1>
-    <nav>
-      <a href="register.html">📝 Registreren</a>
-      <a href="login.html">🔐 Inloggen</a>
-      <a href="regels.html">📖 Regels & Uitleg</a>
+    <h1>🏆 Sport Manager Simulatie</h1>
+    <nav id="navigatieBalk">
+      <!-- Navigatie wordt dynamisch toegevoegd -->
     </nav>
   </header>
 
   <main>
-    <section class="headlines">
-      <h2>📰 Laatste Nieuws</h2>
-      <ul id="nieuwsHeadlines">🔄 Laden...</ul>
-    </section>
+    <div class="welcome" id="welkomTekst">Welkom op de officiële Sport Manager website.</div>
+    <div id="nieuwsVoorbeeld">📰 Laatste nieuws wordt geladen...</div>
   </main>
   <script>
-    async function laadHeadlines() {
-      const { data: nieuws } = await supabase
-        .from("nieuws")
-        .select("titel, datum")
-        .order("datum", { ascending: false })
-        .limit(5);
+    const gebruiker = JSON.parse(localStorage.getItem("loggedInUser"));
 
-      const ul = document.getElementById("nieuwsHeadlines");
-      ul.innerHTML = "";
+    const nav = document.getElementById("navigatieBalk");
+    const welkom = document.getElementById("welkomTekst");
 
-      if (!nieuws || nieuws.length === 0) {
-        ul.innerHTML = "<li>📭 Geen nieuws beschikbaar.</li>";
-        return;
-      }
-
-      nieuws.forEach(n => {
-        const li = document.createElement("li");
-        li.textContent = `${n.titel} (${new Date(n.datum).toLocaleDateString()})`;
-        ul.appendChild(li);
-      });
+    if (gebruiker) {
+      nav.innerHTML = `
+        <a href="manager.html">🏠 Manager</a>
+        <a href="edities.html">📅 Edities</a>
+        <a href="profiel.html">👤 Profiel</a>
+        <a href="instellingen.html">⚙️ Instellingen</a>
+        <a href="logout.html">🚪 Uitloggen</a>
+      `;
+      welkom.innerHTML = `👋 Welkom terug, <strong>${gebruiker.gebruikersnaam}</strong> (${gebruiker.land})`;
+    } else {
+      nav.innerHTML = `
+        <a href="register.html">📝 Registreren</a>
+        <a href="login.html">🔐 Inloggen</a>
+        <a href="regels.html">📜 Regels & Uitleg</a>
+      `;
+      welkom.innerHTML = `Welkom op de officiële Sport Manager website. Log in om jouw team te beheren!`;
     }
 
-    laadHeadlines();
+    async function toonNieuwsPreview() {
+      const { data: nieuws } = await supabase
+        .from("nieuws")
+        .select("*")
+        .order("datum", { ascending: false })
+        .limit(1);
+
+      const div = document.getElementById("nieuwsVoorbeeld");
+      if (nieuws && nieuws.length > 0) {
+        const n = nieuws[0];
+        div.innerHTML = `
+          <h3>📰 ${n.titel}</h3>
+          <small>${new Date(n.datum).toLocaleDateString()}</small>
+          <p>${n.tekst.slice(0, 120)}...</p>
+          <a href="nieuws.html">➕ Meer nieuws</a>
+        `;
+      } else {
+        div.innerHTML = "📭 Geen nieuws beschikbaar.";
+      }
+    }
+
+    toonNieuwsPreview();
   </script>
 </body>
 </html>
