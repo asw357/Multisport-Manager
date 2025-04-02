@@ -54,6 +54,48 @@
 
   <footer>
     <p>&copy; 2025 Sport Manager Simulatie – Registratie</p>
+          // Atleten aanmaken na registratie
+      async function genereerAtleten(gebruiker) {
+        const { data: sporten } = await supabase.from("sportonderdelen").select("*");
+        const { data: limieten } = await supabase.from("limieten").select("*");
+
+        const gegenereerde = [];
+
+        sporten.forEach((s) => {
+          const match = limieten.find(
+            (l) =>
+              l.sport === s.sport &&
+              l.geslacht === s.geslacht &&
+              l.onderdeel === s.onderdeel
+          );
+
+          const aantal = match?.start || 0;
+
+          for (let i = 0; i < aantal; i++) {
+            gegenereerde.push({
+              owner: gebruiker.email,
+              naam: genereerNaam(gebruiker.land),
+              leeftijd: Math.floor(Math.random() * 10) + 18,
+              sport: s.sport,
+              geslacht: s.geslacht,
+              onderdeel: s.onderdeel,
+              land: gebruiker.land,
+              stats: {
+                snelheid: Math.floor(Math.random() * 100),
+                kracht: Math.floor(Math.random() * 100),
+                techniek: Math.floor(Math.random() * 100),
+              },
+            });
+          }
+        });
+
+        if (gegenereerde.length > 0) {
+          await supabase.from("atleten").insert(gegenereerde);
+        }
+      }
+
+      // Direct na registratie gebruiker:
+      await genereerAtleten(inserted[0]);
   </footer>
 
   <script>
