@@ -59,6 +59,46 @@
       const userData = localStorage.getItem("loggedInUser");
       if (!userData) {
         window.location.href = "login.html";
+        await genereerAtleten(inserted[0]);
+
+async function genereerAtleten(gebruiker) {
+  const { data: sporten } = await supabase.from("sportonderdelen").select("*");
+  const { data: limieten } = await supabase.from("limieten").select("*");
+
+  const nieuwe = [];
+
+  sporten.forEach(s => {
+    const sleutel = `${s.sport} - ${s.geslacht} - ${s.onderdeel}`;
+    const limiet = limieten.find(l => l.sport === s.sport && l.geslacht === s.geslacht && l.onderdeel === s.onderdeel);
+    const startAantal = limiet?.start || 0;
+
+    for (let i = 0; i < startAantal; i++) {
+      nieuwe.push({
+        naam: genereerNaam(gebruiker.land),
+        leeftijd: Math.floor(Math.random() * 10) + 18,
+        sport: s.sport,
+        geslacht: s.geslacht,
+        onderdeel: s.onderdeel,
+        owner: gebruiker.email,
+        stats: {
+          snelheid: Math.random() * 100,
+          kracht: Math.random() * 100,
+          techniek: Math.random() * 100
+        }
+      });
+    }
+  });
+
+  if (nieuwe.length > 0) {
+    await supabase.from("atleten").insert(nieuwe);
+  }
+}
+
+function genereerNaam(land) {
+  const voornamen = ["Alex", "Noah", "Sven", "Julian", "Max"];
+  const achternamen = ["Jansen", "Kovacs", "Petrov", "Smith"];
+  return `${voornamen[Math.floor(Math.random() * voornamen.length)]} ${achternamen[Math.floor(Math.random() * achternamen.length)]}`;
+}
         return;
       }
 
