@@ -123,11 +123,11 @@ function genereerNaam(land) {
       const statBox = document.getElementById("managerStats");
       if (aantal > 0) {
         statBox.innerHTML = `
-          👥 Aantal atleten: ${aantal}<br/>
-          📈 Gemiddelde Snelheid: ${(gemiddelden.snelheid / aantal).toFixed(1)}<br/>
-          💪 Gemiddelde Kracht: ${(gemiddelden.kracht / aantal).toFixed(1)}<br/>
-          🧠 Gemiddelde Techniek: ${(gemiddelden.techniek / aantal).toFixed(1)}
-        `;
+  👥 Aantal atleten: ${aantal}<br/>
+  📈 Gemiddelde Snelheid: ${(gemiddelden.snelheid / aantal).toFixed(1)}<br/>
+  💪 Gemiddelde Kracht: ${(gemiddelden.kracht / aantal).toFixed(1)}<br/>
+  🧠 Gemiddelde Techniek: ${(gemiddelden.techniek / aantal).toFixed(1)}
+`;
       } else {
         statBox.innerHTML = "Er zijn nog geen atleten gekoppeld aan jouw account.";
       }
