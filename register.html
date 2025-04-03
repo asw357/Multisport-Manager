@@ -53,21 +53,29 @@
     async function genereerAtleten(email, land) {
       const { data: sporten } = await supabase.from("sporten").select("*");
       const { data: limieten } = await supabase.from("limieten").select("*");
+      const { data: combinaties } = await supabase.from("combinaties").select("*");
+
       const atleten = [];
 
       for (const sport of sporten) {
+        const sleutel = `${sport.sport}-${sport.geslacht}-${sport.onderdeel}`;
         const limiet = limieten.find(l =>
           l.sport === sport.sport &&
           l.geslacht === sport.geslacht &&
           l.onderdeel === sport.onderdeel
         );
         const start = limiet?.start || 0;
+        const minLeeftijd = limiet?.startleeftijd_min || 18;
+        const maxLeeftijd = limiet?.startleeftijd_max || 28;
 
         for (let i = 0; i < start; i++) {
-          atleten.push({
+          const leeftijd = Math.floor(Math.random() * (maxLeeftijd - minLeeftijd + 1)) + minLeeftijd;
+
+          const atleet = {
             naam: genereerNaam(land),
-            leeftijd: Math.floor(Math.random() * 10) + 18,
+            leeftijd,
             sport: sport.sport,
+            discipline: sport.discipline || "",
             geslacht: sport.geslacht,
             onderdeel: sport.onderdeel,
             owner: email,
@@ -77,7 +85,21 @@
               kracht: Math.random() * 100,
               techniek: Math.random() * 100
             }
-          });
+          };
+
+          atleten.push(atleet);
+
+          // Extra onderdelen via combinatie
+          const combinatie = combinaties.filter(c =>
+            c.sport === sport.sport &&
+            c.geslacht === sport.geslacht &&
+            c.basis_onderdeel === sport.onderdeel
+          );
+
+          for (const combo of combinatie) {
+            const extra = { ...atleet, onderdeel: combo.extra_onderdeel };
+            atleten.push(extra);
+          }
         }
       }
 
