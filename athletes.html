@@ -1,26 +1,24 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>👥 Mijn Atleten</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>👥 Atletenbeheer</title>
   <link rel="stylesheet" href="css/style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script src="js/supabaseClient.js"></script>
   <style>
     body { font-family: sans-serif; padding: 20px; }
-    .groep {
-      margin-bottom: 30px;
-    }
-    .groep h3 {
-      border-bottom: 1px solid #ccc;
-      padding-bottom: 4px;
-    }
     .atleet {
-      margin: 4px 0;
-      padding: 6px;
-      background: #f0f0f0;
-      border-radius: 4px;
+      background: #f9f9f9;
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+    .stats {
+      font-size: 0.9em;
+      color: #444;
+      margin-top: 6px;
     }
   </style>
 </head>
@@ -31,7 +29,7 @@
   </header>
 
   <main>
-    <div id="atletenContainer">🔄 Laden...</div>
+    <div id="atletenContainer">🔄 Atleten laden...</div>
   </main>
   <script>
     async function laadAtleten() {
@@ -41,37 +39,33 @@
         return;
       }
 
-      const { data: atleten, error } = await supabase
+      const { data: atleten } = await supabase
         .from("atleten")
         .select("*")
-        .eq("owner", gebruiker.email);
-
-      if (error || !atleten) {
-        document.getElementById("atletenContainer").innerText = "❌ Atleten laden mislukt.";
-        return;
-      }
-
-      const groepen = {};
-      atleten.forEach(a => {
-        const sleutel = `${a.sport} – ${a.geslacht}`;
-        if (!groepen[sleutel]) groepen[sleutel] = [];
-        groepen[sleutel].push(a);
-      });
+        .eq("owner", gebruiker.email)
+        .order("sport", { ascending: true });
 
       const container = document.getElementById("atletenContainer");
       container.innerHTML = "";
 
-      Object.keys(groepen).sort().forEach(groepNaam => {
+      if (!atleten || atleten.length === 0) {
+        container.innerHTML = "📭 Geen atleten gevonden.";
+        return;
+      }
+
+      atleten.forEach(atleet => {
         const div = document.createElement("div");
-        div.className = "groep";
-        div.innerHTML = `<h3>${groepNaam}</h3>`;
-        groepen[groepNaam].forEach(a => {
-          div.innerHTML += `
-            <div class="atleet">
-              <strong>${a.naam}</strong> (${a.onderdeel}) – ${a.leeftijd} jaar
-            </div>
-          `;
-        });
+        div.className = "atleet";
+        const s = atleet.stats || {};
+        div.innerHTML = `
+          <strong>${atleet.naam}</strong> – ${atleet.sport} ${atleet.geslacht} ${atleet.onderdeel}<br/>
+          Leeftijd: ${atleet.leeftijd}<br/>
+          <div class="stats">
+            Snelheid: ${s.snelheid?.toFixed(1) || 0} |
+            Kracht: ${s.kracht?.toFixed(1) || 0} |
+            Techniek: ${s.techniek?.toFixed(1) || 0}
+          </div>
+        `;
         container.appendChild(div);
       });
     }
