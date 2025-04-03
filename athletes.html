@@ -3,27 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>👥 Atletenbeheer</title>
-  <link rel="stylesheet" href="css/style.css">
+  <title>👥 Mijn Atleten</title>
+  <link rel="stylesheet" href="css/style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script src="js/supabaseClient.js"></script>
   <style>
     body { font-family: sans-serif; padding: 20px; }
-    .atleet-blok {
-      background: #f4f4f4;
-      border-radius: 6px;
-      padding: 12px;
-      margin-bottom: 12px;
+    .groep {
+      margin-bottom: 30px;
     }
-    .kop {
-      font-weight: bold;
-      margin-bottom: 6px;
+    .groep h3 {
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 4px;
     }
-    .linkbox {
-      margin-top: 20px;
-    }
-    .linkbox a {
-      margin-right: 12px;
+    .atleet {
+      margin: 4px 0;
+      padding: 6px;
+      background: #f0f0f0;
+      border-radius: 4px;
     }
   </style>
 </head>
@@ -34,56 +31,49 @@
   </header>
 
   <main>
-    <div id="atletenContainer">🔄 Atleten laden...</div>
-
-    <div class="linkbox">
-      <a href="training.html">🏋️ Naar Training</a>
-      <a href="scouting.html">🔍 Naar Scouten</a>
-    </div>
+    <div id="atletenContainer">🔄 Laden...</div>
   </main>
   <script>
     async function laadAtleten() {
-      const user = JSON.parse(localStorage.getItem("loggedInUser"));
-      if (!user) {
+      const gebruiker = JSON.parse(localStorage.getItem("loggedInUser"));
+      if (!gebruiker) {
         window.location.href = "login.html";
         return;
       }
 
-      const { data: atleten } = await supabase
+      const { data: atleten, error } = await supabase
         .from("atleten")
         .select("*")
-        .eq("owner", user.email)
-        .order("sport", { ascending: true });
+        .eq("owner", gebruiker.email);
+
+      if (error || !atleten) {
+        document.getElementById("atletenContainer").innerText = "❌ Atleten laden mislukt.";
+        return;
+      }
+
+      const groepen = {};
+      atleten.forEach(a => {
+        const sleutel = `${a.sport} – ${a.geslacht}`;
+        if (!groepen[sleutel]) groepen[sleutel] = [];
+        groepen[sleutel].push(a);
+      });
 
       const container = document.getElementById("atletenContainer");
       container.innerHTML = "";
 
-      if (!atleten || atleten.length === 0) {
-        container.innerHTML = "📭 Geen atleten gevonden.";
-        return;
-      }
-
-      const gegroepeerd = {};
-      atleten.forEach(a => {
-        const sleutel = `${a.sport} - ${a.geslacht}`;
-        if (!gegroepeerd[sleutel]) gegroepeerd[sleutel] = [];
-        gegroepeerd[sleutel].push(a);
-      });
-
-      for (const sleutel in gegroepeerd) {
-        const sectie = document.createElement("div");
-        sectie.innerHTML = `<h2>${sleutel}</h2>`;
-        gegroepeerd[sleutel].forEach(a => {
-          const div = document.createElement("div");
-          div.className = "atleet-blok";
-          div.innerHTML = `
-            <div class="kop">${a.naam} (${a.leeftijd} jaar) – ${a.onderdeel}</div>
-            🏃‍♂️ Snelheid: ${a.stats?.snelheid?.toFixed(1) || 0} | 💪 Kracht: ${a.stats?.kracht?.toFixed(1) || 0} | 🧠 Techniek: ${a.stats?.techniek?.toFixed(1) || 0}
+      Object.keys(groepen).sort().forEach(groepNaam => {
+        const div = document.createElement("div");
+        div.className = "groep";
+        div.innerHTML = `<h3>${groepNaam}</h3>`;
+        groepen[groepNaam].forEach(a => {
+          div.innerHTML += `
+            <div class="atleet">
+              <strong>${a.naam}</strong> (${a.onderdeel}) – ${a.leeftijd} jaar
+            </div>
           `;
-          sectie.appendChild(div);
         });
-        container.appendChild(sectie);
-      }
+        container.appendChild(div);
+      });
     }
 
     laadAtleten();
