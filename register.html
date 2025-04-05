@@ -51,19 +51,23 @@
     }
 
     async function genereerAtleten(email, land) {
-      const { data: sporten } = await supabase.from("sporten").select("*");
+      const { data: sporten } = await supabase.from("sportonderdelen").select("*");
       const { data: limieten } = await supabase.from("limieten").select("*");
       const { data: combinaties } = await supabase.from("combinaties").select("*");
+
+      console.log("Sportonderdelen:", sporten);
+      console.log("Limieten:", limieten);
+      console.log("Combinaties:", combinaties);
 
       const atleten = [];
 
       for (const sport of sporten) {
-        const sleutel = `${sport.sport}-${sport.geslacht}-${sport.onderdeel}`;
         const limiet = limieten.find(l =>
           l.sport === sport.sport &&
           l.geslacht === sport.geslacht &&
           l.onderdeel === sport.onderdeel
         );
+
         const start = limiet?.start || 0;
         const minLeeftijd = limiet?.startleeftijd_min || 18;
         const maxLeeftijd = limiet?.startleeftijd_max || 28;
@@ -137,3 +141,4 @@
   </script>
 </body>
 </html>
+
