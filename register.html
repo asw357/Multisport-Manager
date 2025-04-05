@@ -43,6 +43,7 @@
       <button type="submit">✅ Registreren</button>
     </form>
   </main>
+
   <script>
     function genereerNaam(land) {
       const voornamen = ["Alex", "Sven", "Milan", "Noah", "Timo"];
@@ -55,22 +56,23 @@
       const { data: limieten } = await supabase.from("limieten").select("*");
       const { data: combinaties } = await supabase.from("combinaties").select("*");
 
-      console.log("Sportonderdelen:", sporten);
-      console.log("Limieten:", limieten);
-      console.log("Combinaties:", combinaties);
-
       const atleten = [];
 
       for (const sport of sporten) {
         const limiet = limieten.find(l =>
-          l.sport === sport.sport &&
-          l.geslacht === sport.geslacht &&
-          l.onderdeel === sport.onderdeel
+          l.sport.toLowerCase() === sport.sport.toLowerCase() &&
+          l.geslacht.toLowerCase() === sport.geslacht.toLowerCase() &&
+          l.onderdeel.toLowerCase() === sport.onderdeel.toLowerCase()
         );
 
-        const start = limiet?.start || 0;
-        const minLeeftijd = limiet?.startleeftijd_min || 18;
-        const maxLeeftijd = limiet?.startleeftijd_max || 28;
+        if (!limiet) {
+          console.warn("❌ Geen limiet gevonden voor:", sport);
+          continue;
+        }
+
+        const start = limiet.start || 0;
+        const minLeeftijd = limiet.startleeftijd_min || 18;
+        const maxLeeftijd = limiet.startleeftijd_max || 28;
 
         for (let i = 0; i < start; i++) {
           const leeftijd = Math.floor(Math.random() * (maxLeeftijd - minLeeftijd + 1)) + minLeeftijd;
@@ -93,14 +95,14 @@
 
           atleten.push(atleet);
 
-          // Extra onderdelen via combinatie
-          const combinatie = combinaties.filter(c =>
-            c.sport === sport.sport &&
-            c.geslacht === sport.geslacht &&
-            c.basis_onderdeel === sport.onderdeel
+          // Combinatie-onderdelen toevoegen
+          const comboLijst = combinaties.filter(c =>
+            c.sport.toLowerCase() === sport.sport.toLowerCase() &&
+            c.geslacht.toLowerCase() === sport.geslacht.toLowerCase() &&
+            c.basis_onderdeel.toLowerCase() === sport.onderdeel.toLowerCase()
           );
 
-          for (const combo of combinatie) {
+          for (const combo of comboLijst) {
             const extra = { ...atleet, onderdeel: combo.extra_onderdeel };
             atleten.push(extra);
           }
@@ -108,7 +110,10 @@
       }
 
       if (atleten.length > 0) {
+        console.log("✅ Atleten gegenereerd:", atleten);
         await supabase.from("atleten").insert(atleten);
+      } else {
+        console.warn("⚠️ Geen atleten gegenereerd bij registratie.");
       }
     }
 
@@ -141,4 +146,3 @@
   </script>
 </body>
 </html>
-
