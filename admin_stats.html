@@ -17,7 +17,9 @@
   <main>
     <form id="statForm">
       <label for="sport">Sport</label>
-      <select id="sport" required></select>
+      <select id="sport" required>
+        <option value="">-- Kies een sport --</option>
+      </select>
 
       <label for="geslacht">Geslacht</label>
       <select id="geslacht" required>
@@ -27,7 +29,9 @@
       </select>
 
       <label for="onderdeel">Onderdeel</label>
-      <select id="onderdeel" required></select>
+      <select id="onderdeel" required>
+        <option value="">-- Kies een onderdeel --</option>
+      </select>
 
       <label for="statnaam">Statnaam</label>
       <input type="text" id="statnaam" required />
@@ -52,21 +56,33 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      async function laadSporten() {
-        const { data } = await supabase.from("sportonderdelen").select("*").order("sport, onderdeel");
-        const sportSelect = document.getElementById("sport");
-        const onderdeelSelect = document.getElementById("onderdeel");
-        const sporten = [...new Set(data.map(s => s.sport))];
-        sportSelect.innerHTML = sporten.map(s => `<option value="${s}">${s}</option>`).join("");
+      let alleSporten = [];
 
-        function updateOnderdelen() {
-          const geselecteerd = sportSelect.value;
-          const onderdelen = data.filter(d => d.sport === geselecteerd);
-          onderdeelSelect.innerHTML = onderdelen.map(d => `<option value="${d.onderdeel}">${d.onderdeel}</option>`).join("");
+      async function laadSporten() {
+        const { data, error } = await supabase.from("sportonderdelen").select("*");
+        if (error) {
+          console.error("Fout bij laden sporten:", error);
+          return;
         }
+        alleSporten = data || [];
+
+        const sportSelect = document.getElementById("sport");
+        const uniekeSporten = [...new Set(alleSporten.map(s => s.sport))];
+        sportSelect.innerHTML = '<option value="">-- Kies een sport --</option>' +
+          uniekeSporten.map(s => `<option value="${s}">${s}</option>`).join("");
 
         sportSelect.addEventListener("change", updateOnderdelen);
         updateOnderdelen();
+      }
+
+      function updateOnderdelen() {
+        const geselecteerdeSport = document.getElementById("sport").value;
+        const onderdeelSelect = document.getElementById("onderdeel");
+        const gefilterd = alleSporten.filter(s => s.sport === geselecteerdeSport);
+        const uniekeOnderdelen = [...new Set(gefilterd.map(s => s.onderdeel))];
+
+        onderdeelSelect.innerHTML = '<option value="">-- Kies een onderdeel --</option>' +
+          uniekeOnderdelen.map(o => `<option value="${o}">${o}</option>`).join("");
       }
 
       async function laadStats() {
@@ -99,7 +115,10 @@
         const onderdeel = document.getElementById("onderdeel").value;
         const statnaam = document.getElementById("statnaam").value.trim();
 
-        if (!statnaam) return alert("⚠️ Vul een statnaam in.");
+        if (!sport || !onderdeel || !statnaam) {
+          alert("⚠️ Vul alle velden correct in.");
+          return;
+        }
 
         const { error } = await supabase.from("statcategorieen").insert([
           { sport, geslacht, onderdeel, statnaam }
