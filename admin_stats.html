@@ -19,6 +19,11 @@
       <label for="sport">Sport</label>
       <select id="sport" required></select>
 
+      <label for="discipline">Discipline (optioneel)</label>
+      <select id="discipline">
+        <option value="">— Geen discipline —</option>
+      </select>
+
       <label for="geslacht">Geslacht</label>
       <select id="geslacht" required>
         <option value="Mannen">Mannen</option>
@@ -40,6 +45,7 @@
       <thead>
         <tr>
           <th>Sport</th>
+          <th>Discipline</th>
           <th>Geslacht</th>
           <th>Onderdeel</th>
           <th>Statnaam</th>
@@ -62,20 +68,26 @@
       sportData = data;
 
       const sportSelect = document.getElementById("sport");
+      const disciplineSelect = document.getElementById("discipline");
       const onderdeelSelect = document.getElementById("onderdeel");
 
       const uniekeSporten = [...new Set(data.map(d => d.sport))];
       sportSelect.innerHTML = uniekeSporten.map(s => `<option value="${s}">${s}</option>`).join("");
 
-      function updateOnderdelen() {
+      function updateSubkeuzes() {
         const geselecteerdSport = sportSelect.value;
-        const gefilterd = data.filter(d => d.sport === geselecteerdSport);
-        const onderdelen = [...new Set(gefilterd.map(d => d.onderdeel))];
+        const filtered = data.filter(d => d.sport === geselecteerdSport);
+
+        const disciplines = [...new Set(filtered.map(d => d.discipline || "").filter(Boolean))];
+        disciplineSelect.innerHTML = `<option value="">— Geen discipline —</option>` +
+          disciplines.map(d => `<option value="${d}">${d}</option>`).join("");
+
+        const onderdelen = [...new Set(filtered.map(d => d.onderdeel))];
         onderdeelSelect.innerHTML = onderdelen.map(o => `<option value="${o}">${o}</option>`).join("");
       }
 
-      sportSelect.addEventListener("change", updateOnderdelen);
-      updateOnderdelen();
+      sportSelect.addEventListener("change", updateSubkeuzes);
+      updateSubkeuzes();
     }
 
     async function laadStats() {
@@ -87,6 +99,7 @@
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td>${stat.sport}</td>
+          <td>${stat.discipline || ""}</td>
           <td>${stat.geslacht}</td>
           <td>${stat.onderdeel}</td>
           <td>${stat.statnaam}</td>
@@ -104,6 +117,7 @@
     document.getElementById("statForm").addEventListener("submit", async function (e) {
       e.preventDefault();
       const sport = document.getElementById("sport").value;
+      const discipline = document.getElementById("discipline").value;
       const geslacht = document.getElementById("geslacht").value;
       const onderdeel = document.getElementById("onderdeel").value;
       const statnaam = document.getElementById("statnaam").value.trim();
@@ -114,7 +128,7 @@
       }
 
       const { error } = await supabase.from("statcategorieen").insert([
-        { sport, geslacht, onderdeel, statnaam }
+        { sport, discipline, geslacht, onderdeel, statnaam }
       ]);
 
       if (error) {
