@@ -17,9 +17,7 @@
   <main>
     <form id="statForm">
       <label for="sport">Sport</label>
-      <select id="sport" required>
-        <option value="">-- Kies een sport --</option>
-      </select>
+      <select id="sport" required></select>
 
       <label for="geslacht">Geslacht</label>
       <select id="geslacht" required>
@@ -29,9 +27,7 @@
       </select>
 
       <label for="onderdeel">Onderdeel</label>
-      <select id="onderdeel" required>
-        <option value="">-- Kies een onderdeel --</option>
-      </select>
+      <select id="onderdeel" required></select>
 
       <label for="statnaam">Statnaam</label>
       <input type="text" id="statnaam" required />
@@ -55,85 +51,83 @@
   </main>
 
   <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      let alleSporten = [];
+    let sportData = [];
 
-      async function laadSporten() {
-        const { data, error } = await supabase.from("sportonderdelen").select("*");
-        if (error) {
-          console.error("Fout bij laden sporten:", error);
-          return;
-        }
-        alleSporten = data || [];
-
-        const sportSelect = document.getElementById("sport");
-        const uniekeSporten = [...new Set(alleSporten.map(s => s.sport))];
-        sportSelect.innerHTML = '<option value="">-- Kies een sport --</option>' +
-          uniekeSporten.map(s => `<option value="${s}">${s}</option>`).join("");
-
-        sportSelect.addEventListener("change", updateOnderdelen);
-        updateOnderdelen();
+    async function laadSportDropdowns() {
+      const { data, error } = await supabase.from("sportonderdelen").select("*");
+      if (error) {
+        console.error("Fout bij ophalen sportonderdelen:", error);
+        return;
       }
+      sportData = data;
+
+      const sportSelect = document.getElementById("sport");
+      const onderdeelSelect = document.getElementById("onderdeel");
+
+      const uniekeSporten = [...new Set(data.map(d => d.sport))];
+      sportSelect.innerHTML = uniekeSporten.map(s => `<option value="${s}">${s}</option>`).join("");
 
       function updateOnderdelen() {
-        const geselecteerdeSport = document.getElementById("sport").value;
-        const onderdeelSelect = document.getElementById("onderdeel");
-        const gefilterd = alleSporten.filter(s => s.sport === geselecteerdeSport);
-        const uniekeOnderdelen = [...new Set(gefilterd.map(s => s.onderdeel))];
-
-        onderdeelSelect.innerHTML = '<option value="">-- Kies een onderdeel --</option>' +
-          uniekeOnderdelen.map(o => `<option value="${o}">${o}</option>`).join("");
+        const geselecteerdSport = sportSelect.value;
+        const gefilterd = data.filter(d => d.sport === geselecteerdSport);
+        const onderdelen = [...new Set(gefilterd.map(d => d.onderdeel))];
+        onderdeelSelect.innerHTML = onderdelen.map(o => `<option value="${o}">${o}</option>`).join("");
       }
 
-      async function laadStats() {
-        const { data } = await supabase.from("statcategorieen").select("*").order("sport, geslacht, onderdeel, statnaam");
-        const tbody = document.getElementById("statTable");
-        tbody.innerHTML = "";
+      sportSelect.addEventListener("change", updateOnderdelen);
+      updateOnderdelen();
+    }
 
-        data.forEach(stat => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${stat.sport}</td>
-            <td>${stat.geslacht}</td>
-            <td>${stat.onderdeel}</td>
-            <td>${stat.statnaam}</td>
-            <td><button onclick="verwijderStat('${stat.id}')">🗑️</button></td>
-          `;
-          tbody.appendChild(tr);
-        });
+    async function laadStats() {
+      const { data } = await supabase.from("statcategorieen").select("*").order("sport, geslacht, onderdeel, statnaam");
+      const tbody = document.getElementById("statTable");
+      tbody.innerHTML = "";
+
+      data.forEach(stat => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${stat.sport}</td>
+          <td>${stat.geslacht}</td>
+          <td>${stat.onderdeel}</td>
+          <td>${stat.statnaam}</td>
+          <td><button onclick="verwijderStat('${stat.id}')">🗑️</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function verwijderStat(id) {
+      await supabase.from("statcategorieen").delete().eq("id", id);
+      laadStats();
+    }
+
+    document.getElementById("statForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const sport = document.getElementById("sport").value;
+      const geslacht = document.getElementById("geslacht").value;
+      const onderdeel = document.getElementById("onderdeel").value;
+      const statnaam = document.getElementById("statnaam").value.trim();
+
+      if (!sport || !onderdeel || !statnaam) {
+        alert("⚠️ Vul alle velden in.");
+        return;
       }
 
-      async function verwijderStat(id) {
-        await supabase.from("statcategorieen").delete().eq("id", id);
+      const { error } = await supabase.from("statcategorieen").insert([
+        { sport, geslacht, onderdeel, statnaam }
+      ]);
+
+      if (error) {
+        console.error("Supabase fout:", error);
+        alert("❌ Toevoegen mislukt.");
+      } else {
+        this.reset();
         laadStats();
       }
+    });
 
-      document.getElementById("statForm").addEventListener("submit", async function (e) {
-        e.preventDefault();
-        const sport = document.getElementById("sport").value;
-        const geslacht = document.getElementById("geslacht").value;
-        const onderdeel = document.getElementById("onderdeel").value;
-        const statnaam = document.getElementById("statnaam").value.trim();
-
-        if (!sport || !onderdeel || !statnaam) {
-          alert("⚠️ Vul alle velden correct in.");
-          return;
-        }
-
-        const { error } = await supabase.from("statcategorieen").insert([
-          { sport, geslacht, onderdeel, statnaam }
-        ]);
-
-        if (error) {
-          console.error("Supabase fout:", error);
-          alert("❌ Toevoegen mislukt.");
-        } else {
-          this.reset();
-          laadStats();
-        }
-      });
-
-      laadSporten();
+    document.addEventListener("DOMContentLoaded", () => {
+      laadSportDropdowns();
       laadStats();
     });
   </script>
