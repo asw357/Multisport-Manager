@@ -52,30 +52,36 @@
     }
 
     async function genereerAtleten(email, land) {
-      const { data: sporten } = await supabase.from("sportonderdelen").select("*");
-      const { data: limieten } = await supabase.from("limieten").select("*");
-      const { data: combinaties } = await supabase.from("combinaties").select("*");
+      console.log("📦 Atleten genereren voor:", email, land);
+
+      const { data: sporten, error: err1 } = await supabase.from("sportonderdelen").select("*");
+      const { data: limieten, error: err2 } = await supabase.from("limieten").select("*");
+      const { data: combinaties, error: err3 } = await supabase.from("combinaties").select("*");
+
+      if (err1 || err2 || err3) {
+        console.error("❌ Fout bij laden data:", err1 || err2 || err3);
+        return;
+      }
 
       const atleten = [];
 
       for (const sport of sporten) {
         const limiet = limieten.find(l =>
-          l.sport.toLowerCase() === sport.sport.toLowerCase() &&
-          l.geslacht.toLowerCase() === sport.geslacht.toLowerCase() &&
-          l.onderdeel.toLowerCase() === sport.onderdeel.toLowerCase()
+          l.sport?.toLowerCase() === sport.sport?.toLowerCase() &&
+          l.geslacht?.toLowerCase() === sport.geslacht?.toLowerCase() &&
+          l.onderdeel?.toLowerCase() === sport.onderdeel?.toLowerCase() &&
+          (l.discipline?.toLowerCase() || "") === (sport.discipline?.toLowerCase() || "")
         );
 
-        if (!limiet) {
-          console.warn("❌ Geen limiet gevonden voor:", sport);
+        if (!limiet || !limiet.start || limiet.start <= 0) {
+          console.warn("⛔ Geen limiet of startwaarde voor:", sport);
           continue;
         }
 
-        const start = limiet.start || 0;
-        const minLeeftijd = limiet.startleeftijd_min || 18;
-        const maxLeeftijd = limiet.startleeftijd_max || 28;
+        console.log(`✅ Genereer ${limiet.start} atleten voor ${sport.sport} – ${sport.onderdeel}`);
 
-        for (let i = 0; i < start; i++) {
-          const leeftijd = Math.floor(Math.random() * (maxLeeftijd - minLeeftijd + 1)) + minLeeftijd;
+        for (let i = 0; i < limiet.start; i++) {
+          const leeftijd = Math.floor(Math.random() * 10) + 18;
 
           const atleet = {
             naam: genereerNaam(land),
@@ -95,25 +101,29 @@
 
           atleten.push(atleet);
 
-          // Combinatie-onderdelen toevoegen
           const comboLijst = combinaties.filter(c =>
-            c.sport.toLowerCase() === sport.sport.toLowerCase() &&
-            c.geslacht.toLowerCase() === sport.geslacht.toLowerCase() &&
-            c.basis_onderdeel.toLowerCase() === sport.onderdeel.toLowerCase()
+            c.sport?.toLowerCase() === sport.sport?.toLowerCase() &&
+            c.geslacht?.toLowerCase() === sport.geslacht?.toLowerCase() &&
+            c["onderdeel 1"]?.toLowerCase() === sport.onderdeel?.toLowerCase()
           );
 
           for (const combo of comboLijst) {
-            const extra = { ...atleet, onderdeel: combo.extra_onderdeel };
+            const extra = { ...atleet, onderdeel: combo["onderdeel 2"] };
             atleten.push(extra);
           }
         }
       }
 
       if (atleten.length > 0) {
-        console.log("✅ Atleten gegenereerd:", atleten);
-        await supabase.from("atleten").insert(atleten);
+        console.log("📤 Insert atleten:", atleten.length);
+        const { error } = await supabase.from("atleten").insert(atleten);
+        if (error) {
+          console.error("❌ Fout bij toevoegen atleten:", error);
+        } else {
+          console.log("✅ Atleten toegevoegd.");
+        }
       } else {
-        console.warn("⚠️ Geen atleten gegenereerd bij registratie.");
+        console.warn("⚠️ Geen atleten gegenereerd.");
       }
     }
 
