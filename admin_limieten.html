@@ -50,21 +50,29 @@
   <main>
     <form id="limietForm">
       <label for="sport">Sport</label>
-      <input type="text" id="sport" required />
+      <select id="sport" required></select>
+
       <label for="discipline">Discipline (optioneel)</label>
-      <input type="text" id="discipline" />
+      <select id="discipline">
+        <option value="">— Geen discipline —</option>
+      </select>
+
       <label for="geslacht">Geslacht</label>
       <select id="geslacht" required>
         <option value="Mannen">Mannen</option>
         <option value="Vrouwen">Vrouwen</option>
         <option value="Gemengd">Gemengd</option>
       </select>
+
       <label for="onderdeel">Onderdeel</label>
-      <input type="text" id="onderdeel" required />
+      <select id="onderdeel" required></select>
+
       <label for="limiet">Limiet</label>
       <input type="number" id="limiet" required />
+
       <label for="start">Aantal startatleten</label>
       <input type="number" id="start" required />
+
       <button type="submit">➕ Toevoegen / Bijwerken</button>
     </form>
 
@@ -86,6 +94,39 @@
   </main>
 
   <script>
+    let sportData = [];
+
+    async function laadSportDropdowns() {
+      const { data, error } = await supabase.from("sportonderdelen").select("*");
+      if (error) {
+        console.error("Fout bij ophalen sportonderdelen:", error);
+        return;
+      }
+      sportData = data;
+
+      const sportSelect = document.getElementById("sport");
+      const disciplineSelect = document.getElementById("discipline");
+      const onderdeelSelect = document.getElementById("onderdeel");
+
+      const uniekeSporten = [...new Set(data.map(d => d.sport))];
+      sportSelect.innerHTML = uniekeSporten.map(s => `<option value="${s}">${s}</option>`).join("");
+
+      function updateSubkeuzes() {
+        const geselecteerdSport = sportSelect.value;
+        const filtered = data.filter(d => d.sport === geselecteerdSport);
+
+        const disciplines = [...new Set(filtered.map(d => d.discipline || "").filter(Boolean))];
+        disciplineSelect.innerHTML = `<option value="">— Geen discipline —</option>` +
+          disciplines.map(d => `<option value="${d}">${d}</option>`).join("");
+
+        const onderdelen = [...new Set(filtered.map(d => d.onderdeel))];
+        onderdeelSelect.innerHTML = onderdelen.map(o => `<option value="${o}">${o}</option>`).join("");
+      }
+
+      sportSelect.addEventListener("change", updateSubkeuzes);
+      updateSubkeuzes();
+    }
+
     async function laadLimieten() {
       const { data } = await supabase.from("limieten").select("*");
       const tbody = document.getElementById("limietTabel");
@@ -135,7 +176,6 @@
         start: parseInt(document.getElementById("start").value)
       };
 
-      // Verwijder bestaande record (op basis van unieke combinatie) en voeg opnieuw toe
       await supabase.from("limieten").delete()
         .match({
           sport: entry.sport,
@@ -149,6 +189,7 @@
       laadLimieten();
     });
 
+    laadSportDropdowns();
     laadLimieten();
   </script>
 </body>
