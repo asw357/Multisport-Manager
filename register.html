@@ -44,45 +44,56 @@
     </form>
   </main>
   <script>
-    async function registreerGebruiker() {
+    async function registreer(e) {
+      e.preventDefault();
       const gebruikersnaam = document.getElementById("gebruikersnaam").value;
       const email = document.getElementById("email").value;
       const wachtwoord = document.getElementById("wachtwoord").value;
 
       const { data: bestaandeGebruiker } = await supabase
         .from("users")
-        .select("*")
+        .select("email")
         .eq("email", email);
 
       if (bestaandeGebruiker.length > 0) {
-        alert("Dit e-mailadres is al geregistreerd.");
+        alert("❌ Dit e-mailadres is al in gebruik.");
         return;
       }
 
-      const { data: landen } = await supabase.from("landentoewijzing").select("*").order("volgorde");
-      const { data: alleGebruikers } = await supabase.from("users").select("*");
-      const toegewezenLand = landen[alleGebruikers.length % landen.length]?.naam || "Landloos";
+      const { data: landenrij } = await supabase
+        .from("landentoewijzing")
+        .select("*")
+        .order("volgorde");
 
-      const gebruiker = {
+      const { data: gebruikers } = await supabase.from("users").select("id");
+      const landIndex = gebruikers.length % landenrij.length;
+      const land = landenrij[landIndex]?.naam || "Landloos";
+
+      const nieuweGebruiker = {
         gebruikersnaam,
         email,
         wachtwoord,
-        land: toegewezenLand,
+        land,
         mp: 100,
         taal: "nl",
         meldingen: "aan"
       };
 
-      const { data: inserted } = await supabase.from("users").insert([gebruiker]).select();
+      const { data: inserted, error } = await supabase
+        .from("users")
+        .insert([nieuweGebruiker])
+        .select();
+
+      if (error) {
+        alert("❌ Fout bij registratie.");
+        return;
+      }
 
       localStorage.setItem("loggedInUser", JSON.stringify(inserted[0]));
       window.location.href = "manager.html";
     }
 
-    document.getElementById("registerForm").addEventListener("submit", function(e) {
-      e.preventDefault();
-      registreerGebruiker();
-    });
+    document.getElementById("registerForm").addEventListener("submit", registreer);
   </script>
 </body>
 </html>
