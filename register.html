@@ -147,6 +147,7 @@
 
       if (nieuw && nieuw.length > 0) {
         localStorage.setItem("loggedInUser", JSON.stringify(nieuw[0]));
+        console.log("🚀 Gebruiker is aangemaakt, start generatie...");
         await genereerAtleten(email, toegewezenLand);
         window.location.href = "manager.html";
       } else {
