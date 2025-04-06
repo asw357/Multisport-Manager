@@ -79,7 +79,6 @@
           (l.discipline?.toLowerCase() || "") === (sport.discipline?.toLowerCase() || "")
         );
         if (!limiet || !limiet.start || limiet.start <= 0) {
-          console.warn("⛔️ Geen limiet of startwaarde voor:", sport);
           continue;
         }
 
@@ -94,11 +93,9 @@
             onderdeel: sport.onderdeel,
             owner: email,
             land,
-            stats: {
-              snelheid: Math.random() * 100,
-              kracht: Math.random() * 100,
-              techniek: Math.random() * 100
-            }
+            snelheid: Math.random() * 100,
+            kracht: Math.random() * 100,
+            techniek: Math.random() * 100
           };
           atleten.push(atleet);
 
