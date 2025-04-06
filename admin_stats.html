@@ -1,73 +1,122 @@
-<script>
-  async function laadSporten() {
-    const { data } = await supabase.from("sportonderdelen").select("*").order("sport, onderdeel");
-    const sportSelect = document.getElementById("sport");
-    const onderdeelSelect = document.getElementById("onderdeel");
-    const sporten = [...new Set(data.map(s => s.sport))];
-    sportSelect.innerHTML = sporten.map(s => `<option value="${s}">${s}</option>`).join("");
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📊 Admin – Statcategorieën</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="supabaseClient.js"></script>
+</head>
+<body>
+  <header>
+    <h1>📊 Admin – Statcategorieën</h1>
+    <nav><a href="admin.html">⬅️ Terug naar Admin</a></nav>
+  </header>
 
-    function updateOnderdelen() {
-      const geselecteerd = sportSelect.value;
-      const onderdelen = data.filter(d => d.sport === geselecteerd);
-      onderdeelSelect.innerHTML = onderdelen.map(d => `<option value="${d.onderdeel}">${d.onderdeel}</option>`).join("");
-    }
+  <main>
+    <form id="statForm">
+      <label for="sport">Sport</label>
+      <select id="sport" required></select>
 
-    sportSelect.addEventListener("change", updateOnderdelen);
-    updateOnderdelen();
-  }
+      <label for="geslacht">Geslacht</label>
+      <select id="geslacht" required>
+        <option value="Mannen">Mannen</option>
+        <option value="Vrouwen">Vrouwen</option>
+        <option value="Gemengd">Gemengd</option>
+      </select>
 
-  async function laadStats() {
-    const { data } = await supabase.from("statcategorieen").select("*").order("sport, geslacht, onderdeel, statnaam");
-    const tbody = document.getElementById("statTable");
-    tbody.innerHTML = "";
+      <label for="onderdeel">Onderdeel</label>
+      <select id="onderdeel" required></select>
 
-    data.forEach(stat => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${stat.sport}</td>
-        <td>${stat.geslacht}</td>
-        <td>${stat.onderdeel}</td>
-        <td>${stat.statnaam}</td>
-        <td><button onclick="verwijderStat('${stat.id}')">🗑️</button></td>
-      `;
-      tbody.appendChild(tr);
+      <label for="statnaam">Statnaam</label>
+      <input type="text" id="statnaam" required />
+
+      <button type="submit">➕ Toevoegen</button>
+    </form>
+
+    <h2>📋 Overzicht van Statcategorieën</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Sport</th>
+          <th>Geslacht</th>
+          <th>Onderdeel</th>
+          <th>Statnaam</th>
+          <th>Actie</th>
+        </tr>
+      </thead>
+      <tbody id="statTable"></tbody>
+    </table>
+  </main>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      async function laadSporten() {
+        const { data } = await supabase.from("sportonderdelen").select("*").order("sport, onderdeel");
+        const sportSelect = document.getElementById("sport");
+        const onderdeelSelect = document.getElementById("onderdeel");
+        const sporten = [...new Set(data.map(s => s.sport))];
+        sportSelect.innerHTML = sporten.map(s => `<option value="${s}">${s}</option>`).join("");
+
+        function updateOnderdelen() {
+          const geselecteerd = sportSelect.value;
+          const onderdelen = data.filter(d => d.sport === geselecteerd);
+          onderdeelSelect.innerHTML = onderdelen.map(d => `<option value="${d.onderdeel}">${d.onderdeel}</option>`).join("");
+        }
+
+        sportSelect.addEventListener("change", updateOnderdelen);
+        updateOnderdelen();
+      }
+
+      async function laadStats() {
+        const { data } = await supabase.from("statcategorieen").select("*").order("sport, geslacht, onderdeel, statnaam");
+        const tbody = document.getElementById("statTable");
+        tbody.innerHTML = "";
+
+        data.forEach(stat => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${stat.sport}</td>
+            <td>${stat.geslacht}</td>
+            <td>${stat.onderdeel}</td>
+            <td>${stat.statnaam}</td>
+            <td><button onclick="verwijderStat('${stat.id}')">🗑️</button></td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      async function verwijderStat(id) {
+        await supabase.from("statcategorieen").delete().eq("id", id);
+        laadStats();
+      }
+
+      document.getElementById("statForm").addEventListener("submit", async function (e) {
+        e.preventDefault();
+        const sport = document.getElementById("sport").value;
+        const geslacht = document.getElementById("geslacht").value;
+        const onderdeel = document.getElementById("onderdeel").value;
+        const statnaam = document.getElementById("statnaam").value.trim();
+
+        if (!statnaam) return alert("⚠️ Vul een statnaam in.");
+
+        const { error } = await supabase.from("statcategorieen").insert([
+          { sport, geslacht, onderdeel, statnaam }
+        ]);
+
+        if (error) {
+          console.error("Supabase fout:", error);
+          alert("❌ Toevoegen mislukt.");
+        } else {
+          this.reset();
+          laadStats();
+        }
+      });
+
+      laadSporten();
+      laadStats();
     });
-  }
-
-  async function voegStatToe() {
-    const sport = document.getElementById("sport").value;
-    const geslacht = document.getElementById("geslacht").value;
-    const onderdeel = document.getElementById("onderdeel").value;
-    const naam = document.getElementById("statnaam").value.trim();
-
-    if (!naam) {
-      alert("⚠️ Vul een statnaam in.");
-      return;
-    }
-
-    const { error } = await supabase.from("statcategorieen").insert([{
-      sport,
-      geslacht,
-      onderdeel,
-      statnaam: naam
-    }]);
-
-    if (error) {
-      console.error("Supabase fout:", error);
-      alert("❌ Toevoegen mislukt.");
-    } else {
-      document.getElementById("statnaam").value = "";
-      laadStats();
-    }
-  }
-
-  async function verwijderStat(id) {
-    if (confirm("Weet je zeker dat je deze stat wilt verwijderen?")) {
-      await supabase.from("statcategorieen").delete().eq("id", id);
-      laadStats();
-    }
-  }
-
-  laadSporten();
-  laadStats();
-</script>
+  </script>
+</body>
+</html>
