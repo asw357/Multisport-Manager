@@ -3,29 +3,37 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>📝 Registreren</title>
+  <title>Registreren</title>
   <link rel="stylesheet" href="css/style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script src="js/supabaseClient.js"></script>
   <style>
-    body { font-family: sans-serif; padding: 20px; }
     form {
       max-width: 400px;
       margin: auto;
-      background: #f4f4f4;
       padding: 20px;
-      border-radius: 6px;
+      background: #f9f9f9;
+      border-radius: 8px;
     }
-    input, button {
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+    input {
       width: 100%;
       padding: 8px;
-      margin-top: 10px;
+      margin-top: 5px;
+    }
+    button {
+      margin-top: 15px;
+      padding: 10px;
+      width: 100%;
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>📝 Registreren</h1>
+    <h1>📋 Registreren</h1>
     <nav><a href="index.html">⬅️ Terug naar Home</a></nav>
   </header>
 
@@ -34,7 +42,7 @@
       <label for="gebruikersnaam">Gebruikersnaam</label>
       <input type="text" id="gebruikersnaam" required />
 
-      <label for="email">E-mail</label>
+      <label for="email">E-mailadres</label>
       <input type="email" id="email" required />
 
       <label for="wachtwoord">Wachtwoord</label>
@@ -43,57 +51,75 @@
       <button type="submit">✅ Registreren</button>
     </form>
   </main>
+
+  <footer>
+    <p>&copy; 2025 Sport Manager Simulatie – Registratie</p>
+  </footer>
+
   <script>
-    async function registreer(e) {
+    async function genereerNaam(land) {
+      const voornamen = ["Alex", "Liam", "Sven", "Noah", "Julian", "Max", "Kai"];
+      const achternamen = ["Jansen", "Kovacs", "Nguyen", "Petrov", "Dimitrov", "Smith", "Garcia"];
+      return `${voornamen[Math.floor(Math.random() * voornamen.length)]} ${achternamen[Math.floor(Math.random() * achternamen.length)]}`;
+    }
+
+    document.getElementById("registerForm").addEventListener("submit", async function (e) {
       e.preventDefault();
+
       const gebruikersnaam = document.getElementById("gebruikersnaam").value;
       const email = document.getElementById("email").value;
       const wachtwoord = document.getElementById("wachtwoord").value;
 
-      const { data: bestaandeGebruiker } = await supabase
+      const { data: existing } = await supabase
         .from("users")
-        .select("email")
+        .select("*")
         .eq("email", email);
 
-      if (bestaandeGebruiker.length > 0) {
-        alert("❌ Dit e-mailadres is al in gebruik.");
+      if (existing.length > 0) {
+        alert("Er bestaat al een account met dit e-mailadres.");
         return;
       }
 
-      const { data: landenrij } = await supabase
-        .from("landentoewijzing")
-        .select("*")
-        .order("volgorde");
-
-      const { data: gebruikers } = await supabase.from("users").select("id");
-      const landIndex = gebruikers.length % landenrij.length;
-      const land = landenrij[landIndex]?.naam || "Landloos";
+      const landen = ["Australië", "Bulgarije", "Chili", "Denemarken", "IJsland", "Duitsland", "Frankrijk", "Griekenland"];
+      const { data: alleUsers } = await supabase.from("users").select("land");
+      const gebruikteLanden = alleUsers.map(u => u.land);
+      const vrijLand = landen.find(l => !gebruikteLanden.includes(l)) || "Landloos";
 
       const nieuweGebruiker = {
         gebruikersnaam,
         email,
         wachtwoord,
-        land,
-        mp: 100,
-        taal: "nl",
-        meldingen: "aan"
+        land: vrijLand,
+        mp: 100
       };
 
-      const { data: inserted, error } = await supabase
-        .from("users")
-        .insert([nieuweGebruiker])
-        .select();
+      await supabase.from("users").insert([nieuweGebruiker]);
 
-      if (error) {
-        alert("❌ Fout bij registratie.");
-        return;
+      const onderdelen = ["100m", "200m"];
+      const atleten = [];
+
+      for (let onderdeel of onderdelen) {
+        for (let i = 0; i < 2; i++) {
+          atleten.push({
+            naam: await genereerNaam(vrijLand),
+            leeftijd: Math.floor(Math.random() * 10) + 18,
+            sport: "Atletiek",
+            discipline: "",
+            geslacht: "Mannen",
+            onderdeel,
+            owner: email,
+            snelheid: Math.random() * 100,
+            kracht: Math.random() * 100,
+            techniek: Math.random() * 100
+          });
+        }
       }
 
-      localStorage.setItem("loggedInUser", JSON.stringify(inserted[0]));
-      window.location.href = "manager.html";
-    }
+      await supabase.from("atleten").insert(atleten);
 
-    document.getElementById("registerForm").addEventListener("submit", registreer);
+      localStorage.setItem("loggedInUser", JSON.stringify(nieuweGebruiker));
+      window.location.href = "manager.html";
+    });
   </script>
 </body>
 </html>
