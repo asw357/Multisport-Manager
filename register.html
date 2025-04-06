@@ -46,9 +46,34 @@
 
   <script>
     function genereerNaam(land) {
-      const voornamen = ["Alex", "Sven", "Milan", "Noah", "Timo"];
-      const achternamen = ["Jansen", "Kovacs", "Ivanov", "Dubois", "Schmidt"];
-      return `${voornamen[Math.floor(Math.random() * voornamen.length)]} ${achternamen[Math.floor(Math.random() * achternamen.length)]}`;
+      const naamdata = {
+        Nederland: {
+          voornamen: ["Jeroen", "Sven", "Laura", "Tessa", "Daan"],
+          achternamen: ["de Vries", "van Dijk", "Jansen", "Bakker", "Visser"]
+        },
+        Duitsland: {
+          voornamen: ["Lukas", "Anna", "Max", "Mia", "Jonas"],
+          achternamen: ["Schmidt", "Müller", "Weber", "Schneider", "Fischer"]
+        },
+        Japan: {
+          voornamen: ["Haruki", "Yuki", "Sora", "Ren", "Aoi"],
+          achternamen: ["Takahashi", "Kobayashi", "Nakamura", "Yamamoto", "Ito"]
+        },
+        Zweden: {
+          voornamen: ["Erik", "Anna", "Lina", "Oskar", "Felix"],
+          achternamen: ["Andersson", "Johansson", "Lindberg", "Svensson", "Larsson"]
+        }
+      };
+
+      const fallback = {
+        voornamen: ["Alex", "Jamie", "Taylor", "Morgan", "Sam"],
+        achternamen: ["Smith", "Lee", "Kim", "Patel", "Nguyen"]
+      };
+
+      const set = naamdata[land] || fallback;
+      const voornaam = set.voornamen[Math.floor(Math.random() * set.voornamen.length)];
+      const achternaam = set.achternamen[Math.floor(Math.random() * set.achternamen.length)];
+      return `${voornaam} ${achternaam}`;
     }
 
     async function genereerAtleten(email, land) {
@@ -114,8 +139,10 @@
         }
       }
 
+      console.log("📊 Aantal atleten gegenereerd:", atleten.length);
+      console.log("📃 Atleten preview:", atleten);
+
       if (atleten.length > 0) {
-        console.log("📤 Insert atleten:", atleten.length);
         const { error } = await supabase.from("atleten").insert(atleten);
         if (error) {
           console.error("❌ Fout bij toevoegen atleten:", error);
@@ -140,14 +167,20 @@
       const { data: users } = await supabase.from("users").select("id");
       const toegewezenLand = landen[users.length % landen.length]?.naam || "Landloos";
 
-      const { data: nieuw } = await supabase
+      const { data: nieuw, error } = await supabase
         .from("users")
         .insert([{ gebruikersnaam, email, wachtwoord, land: toegewezenLand, mp: 100 }])
         .select();
 
+      if (error) {
+        console.error("❌ Fout bij aanmaken gebruiker:", error);
+        alert("Er ging iets mis bij het aanmaken van je account:\n\n" + error.message);
+        return;
+      }
+
       if (nieuw && nieuw.length > 0) {
-        localStorage.setItem("loggedInUser", JSON.stringify(nieuw[0]));
         console.log("🚀 Gebruiker is aangemaakt, start generatie...");
+        localStorage.setItem("loggedInUser", JSON.stringify(nieuw[0]));
         await genereerAtleten(email, toegewezenLand);
         window.location.href = "manager.html";
       } else {
