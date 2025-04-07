@@ -62,7 +62,7 @@
 
       <label for="extra_info">Extra info (optioneel)</label>
       <input type="text" id="extra_info" />
-      
+
       <button type="submit">➕ Toevoegen aan Schema</button>
     </form>
 
@@ -73,10 +73,10 @@
           <th>Editie</th>
           <th>Dag</th>
           <th>Tijd</th>
+          <th>Ronde</th>
           <th>Sport</th>
           <th>Onderdeel</th>
           <th>Geslacht</th>
-          <th>Ronde</th>
           <th>Status</th>
           <th>Actie</th>
         </tr>
@@ -87,6 +87,7 @@
 
   <script>
     let rondeData = {};
+    let editieNamen = {};
 
     async function laadDropdowns() {
       const { data: edities } = await supabase
@@ -97,10 +98,11 @@
 
       const editieSelect = document.getElementById("editie_id");
       edities?.forEach(e => {
-        const opt = document.createElement("option");
-        opt.value = e.id;
-        opt.textContent = e.naam;
-        editieSelect.appendChild(opt);
+        editieNamen[e.id] = e.naam;
+        const option = document.createElement("option");
+        option.value = e.id;
+        option.textContent = e.naam;
+        editieSelect.appendChild(option);
       });
 
       const { data: rondes } = await supabase
@@ -110,14 +112,14 @@
 
       const rondeSelect = document.getElementById("ronde_id");
       rondes?.forEach(r => {
-        const opt = document.createElement("option");
-        opt.value = r.id;
-        opt.textContent = `${r.ronde} – ${r.sport} ${r.onderdeel} (${r.geslacht})`;
         rondeData[r.id] = r;
-        rondeSelect.appendChild(opt);
+        const label = `${r.ronde} – ${r.sport} ${r.onderdeel} (${r.geslacht})`;
+        const option = document.createElement("option");
+        option.value = r.id;
+        option.textContent = label;
+        rondeSelect.appendChild(option);
       });
     }
-
     async function laadSchema() {
       const { data } = await supabase.from("schema").select("*").order("dag, tijd");
       const tbody = document.getElementById("schemaTabel");
@@ -127,13 +129,13 @@
         const r = rondeData[item.ronde_id] || {};
         const rij = document.createElement("tr");
         rij.innerHTML = `
-          <td>${item.editie_id}</td>
+          <td>${editieNamen[item.editie_id] || item.editie_id}</td>
           <td>${item.dag}</td>
           <td>${item.tijd}</td>
+          <td>${r.ronde || "-"}</td>
           <td>${r.sport || "-"}</td>
           <td>${r.onderdeel || "-"}</td>
           <td>${r.geslacht || "-"}</td>
-          <td>${r.ronde || "-"}</td>
           <td>${item.status || "-"}</td>
           <td><button onclick="verwijderSchema('${item.id}')">🗑️</button></td>
         `;
@@ -156,9 +158,13 @@
         status: document.getElementById("status").value,
         extra_info: document.getElementById("extra_info").value || null
       };
-      await supabase.from("schema").insert([nieuwe]);
-      this.reset();
-      laadSchema();
+      const { error } = await supabase.from("schema").insert([nieuwe]);
+      if (error) {
+        alert("❌ Fout bij opslaan");
+      } else {
+        this.reset();
+        laadSchema();
+      }
     });
 
     laadDropdowns();
