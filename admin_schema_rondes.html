@@ -86,7 +86,7 @@
           <th>Max/land</th>
           <th>Pogingen</th>
           <th>Races</th>
-          <th>Actie</th>
+          <th>Acties</th>
         </tr>
       </thead>
       <tbody id="rondeTabel"></tbody>
@@ -94,6 +94,8 @@
   </main>
 
   <script>
+    let editieNamen = {};
+
     async function laadDropdowns() {
       const { data: edities } = await supabase
         .from("edities")
@@ -103,6 +105,7 @@
 
       const editieSelect = document.getElementById("editie_id");
       edities?.forEach(e => {
+        editieNamen[e.id] = e.naam;
         const option = document.createElement("option");
         option.value = e.id;
         option.textContent = e.naam;
@@ -122,7 +125,6 @@
       disciplines.forEach(val => d.innerHTML += `<option value="${val}">${val}</option>`);
       onderdelenset.forEach(val => o.innerHTML += `<option value="${val}">${val}</option>`);
     }
-
     document.getElementById("aantal_rondes").addEventListener("input", () => {
       const aantal = parseInt(document.getElementById("aantal_rondes").value);
       const container = document.getElementById("rondeVelden");
@@ -136,27 +138,44 @@
     });
 
     async function laadRondes() {
-      const { data } = await supabase.from("rondes").select("*").order("volgorde", { ascending: true });
+      const { data } = await supabase.from("rondes").select("*").order("volgorde");
       const tbody = document.getElementById("rondeTabel");
       tbody.innerHTML = "";
 
       data?.forEach(r => {
         const rij = document.createElement("tr");
         rij.innerHTML = `
-          <td>${r.editie_id}</td>
-          <td>${r.sport}</td>
-          <td>${r.discipline}</td>
-          <td>${r.onderdeel}</td>
-          <td>${r.ronde}</td>
-          <td>${r.volgorde}</td>
-          <td>${r.max_algemeen}</td>
-          <td>${r.max_per_land}</td>
-          <td>${r.aantal_pogingen || "-"}</td>
-          <td>${r.aantal_races || "-"}</td>
-          <td><button onclick="verwijderRonde('${r.id}')">🗑️</button></td>
+          <td>${editieNamen[r.editie_id] || r.editie_id}</td>
+          <td><input value="${r.sport}" data-id="${r.id}" data-field="sport" /></td>
+          <td><input value="${r.discipline}" data-id="${r.id}" data-field="discipline" /></td>
+          <td><input value="${r.onderdeel}" data-id="${r.id}" data-field="onderdeel" /></td>
+          <td><input value="${r.ronde}" data-id="${r.id}" data-field="ronde" /></td>
+          <td><input type="number" value="${r.volgorde}" data-id="${r.id}" data-field="volgorde" /></td>
+          <td><input type="number" value="${r.max_algemeen}" data-id="${r.id}" data-field="max_algemeen" /></td>
+          <td><input type="number" value="${r.max_per_land}" data-id="${r.id}" data-field="max_per_land" /></td>
+          <td><input type="number" value="${r.aantal_pogingen || ''}" data-id="${r.id}" data-field="aantal_pogingen" /></td>
+          <td><input type="number" value="${r.aantal_races || ''}" data-id="${r.id}" data-field="aantal_races" /></td>
+          <td>
+            <button onclick="opslaanRij('${r.id}')">💾</button>
+            <button onclick="verwijderRonde('${r.id}')">🗑️</button>
+          </td>
         `;
         tbody.appendChild(rij);
       });
+    }
+
+    async function opslaanRij(id) {
+      const inputs = document.querySelectorAll(`input[data-id='${id}']`);
+      const update = {};
+      inputs.forEach(input => {
+        const val = input.type === "number" ? parseInt(input.value) || null : input.value;
+        update[input.dataset.field] = val;
+      });
+
+      const { error } = await supabase.from("rondes").update(update).eq("id", id);
+      if (error) alert("❌ Fout bij opslaan");
+      else alert("✅ Ronde opgeslagen");
+      laadRondes();
     }
 
     async function verwijderRonde(id) {
