@@ -9,7 +9,7 @@
   <script src="js/supabaseClient.js"></script>
   <style>
     body { font-family: sans-serif; padding: 20px; }
-    form, table { max-width: 700px; margin: auto; }
+    form, table { max-width: 800px; margin: auto; }
     input, select {
       width: 100%;
       padding: 6px;
@@ -41,24 +41,28 @@
 
   <main>
     <form id="schemaForm">
-      <label for="editie_id">Editie ID</label>
-      <input type="text" id="editie_id" required />
+      <label for="editie_id">Editie</label>
+      <select id="editie_id" required></select>
 
-      <label for="dag">Dag (bijv. Dag 1)</label>
-      <input type="text" id="dag" required />
+      <label for="dag">Dag (bijv. 1)</label>
+      <input type="number" id="dag" required />
 
       <label for="tijd">Tijdstip</label>
       <input type="time" id="tijd" required />
 
-      <label for="sport">Sport</label>
-      <input type="text" id="sport" required />
+      <label for="ronde_id">Ronde</label>
+      <select id="ronde_id" required></select>
 
-      <label for="onderdeel">Onderdeel</label>
-      <input type="text" id="onderdeel" required />
+      <label for="status">Status</label>
+      <select id="status">
+        <option value="gepland">Gepland</option>
+        <option value="bezig">Bezig</option>
+        <option value="afgerond">Afgerond</option>
+      </select>
 
-      <label for="ronde">Ronde</label>
-      <input type="text" id="ronde" required />
-
+      <label for="extra_info">Extra info (optioneel)</label>
+      <input type="text" id="extra_info" />
+      
       <button type="submit">➕ Toevoegen aan Schema</button>
     </form>
 
@@ -66,34 +70,72 @@
     <table>
       <thead>
         <tr>
-          <th>Editie ID</th>
+          <th>Editie</th>
           <th>Dag</th>
           <th>Tijd</th>
           <th>Sport</th>
           <th>Onderdeel</th>
+          <th>Geslacht</th>
           <th>Ronde</th>
+          <th>Status</th>
           <th>Actie</th>
         </tr>
       </thead>
       <tbody id="schemaTabel"></tbody>
     </table>
   </main>
+
   <script>
+    let rondeData = {};
+
+    async function laadDropdowns() {
+      const { data: edities } = await supabase
+        .from("edities")
+        .select("id, naam, status")
+        .eq("status", "gepland")
+        .order("startdatum");
+
+      const editieSelect = document.getElementById("editie_id");
+      edities?.forEach(e => {
+        const opt = document.createElement("option");
+        opt.value = e.id;
+        opt.textContent = e.naam;
+        editieSelect.appendChild(opt);
+      });
+
+      const { data: rondes } = await supabase
+        .from("rondes")
+        .select("id, ronde, sport, onderdeel, geslacht")
+        .order("volgorde");
+
+      const rondeSelect = document.getElementById("ronde_id");
+      rondes?.forEach(r => {
+        const opt = document.createElement("option");
+        opt.value = r.id;
+        opt.textContent = `${r.ronde} – ${r.sport} ${r.onderdeel} (${r.geslacht})`;
+        rondeData[r.id] = r;
+        rondeSelect.appendChild(opt);
+      });
+    }
+
     async function laadSchema() {
-      const { data } = await supabase.from("schema").select("*").order("tijd", { ascending: true });
+      const { data } = await supabase.from("schema").select("*").order("dag, tijd");
       const tbody = document.getElementById("schemaTabel");
       tbody.innerHTML = "";
 
-      data.forEach(s => {
+      data?.forEach(item => {
+        const r = rondeData[item.ronde_id] || {};
         const rij = document.createElement("tr");
         rij.innerHTML = `
-          <td>${s.editie_id}</td>
-          <td>${s.dag}</td>
-          <td>${s.tijd}</td>
-          <td>${s.sport}</td>
-          <td>${s.onderdeel}</td>
-          <td>${s.ronde}</td>
-          <td><button onclick="verwijderSchema('${s.id}')">🗑️</button></td>
+          <td>${item.editie_id}</td>
+          <td>${item.dag}</td>
+          <td>${item.tijd}</td>
+          <td>${r.sport || "-"}</td>
+          <td>${r.onderdeel || "-"}</td>
+          <td>${r.geslacht || "-"}</td>
+          <td>${r.ronde || "-"}</td>
+          <td>${item.status || "-"}</td>
+          <td><button onclick="verwijderSchema('${item.id}')">🗑️</button></td>
         `;
         tbody.appendChild(rij);
       });
@@ -106,19 +148,20 @@
 
     document.getElementById("schemaForm").addEventListener("submit", async function (e) {
       e.preventDefault();
-      const entry = {
+      const nieuwe = {
         editie_id: document.getElementById("editie_id").value,
-        dag: document.getElementById("dag").value,
+        dag: parseInt(document.getElementById("dag").value),
         tijd: document.getElementById("tijd").value,
-        sport: document.getElementById("sport").value,
-        onderdeel: document.getElementById("onderdeel").value,
-        ronde: document.getElementById("ronde").value
+        ronde_id: document.getElementById("ronde_id").value,
+        status: document.getElementById("status").value,
+        extra_info: document.getElementById("extra_info").value || null
       };
-      await supabase.from("schema").insert([entry]);
+      await supabase.from("schema").insert([nieuwe]);
       this.reset();
       laadSchema();
     });
 
+    laadDropdowns();
     laadSchema();
   </script>
 </body>
