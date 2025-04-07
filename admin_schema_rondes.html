@@ -53,11 +53,9 @@
       <label for="onderdeel">Onderdeel</label>
       <select id="onderdeel" required></select>
 
-      <label for="ronde">Ronde</label>
-      <input type="text" id="ronde" required />
-
-      <label for="volgorde">Volgorde</label>
-      <input type="number" id="volgorde" required />
+      <label for="aantal_rondes">Aantal rondes</label>
+      <input type="number" id="aantal_rondes" min="1" max="8" value="1" required />
+      <div id="rondeVelden"></div>
 
       <label for="max_algemeen">Maximaal aantal deelnemers (totaal)</label>
       <input type="number" id="max_algemeen" required />
@@ -65,7 +63,13 @@
       <label for="max_per_land">Maximaal aantal per land</label>
       <input type="number" id="max_per_land" required />
 
-      <button type="submit">➕ Voeg ronde toe</button>
+      <label for="aantal_pogingen">Aantal pogingen (optioneel)</label>
+      <input type="number" id="aantal_pogingen" />
+
+      <label for="aantal_races">Aantal races (optioneel)</label>
+      <input type="number" id="aantal_races" />
+
+      <button type="submit">➕ Voeg rondes toe</button>
     </form>
 
     <h2>📑 Ingevoerde Ronde-instellingen</h2>
@@ -80,6 +84,8 @@
           <th>Volgorde</th>
           <th>Max (totaal)</th>
           <th>Max/land</th>
+          <th>Pogingen</th>
+          <th>Races</th>
           <th>Actie</th>
         </tr>
       </thead>
@@ -89,7 +95,6 @@
 
   <script>
     async function laadDropdowns() {
-      // Edities: alleen geplande edities
       const { data: edities } = await supabase
         .from("edities")
         .select("id, naam, status")
@@ -104,15 +109,10 @@
         editieSelect.appendChild(option);
       });
 
-      // Sportonderdelen
-      const { data: onderdelen } = await supabase
-        .from("sportonderdelen")
-        .select("*")
-        .order("sport");
-
+      const { data: onderdelen } = await supabase.from("sportonderdelen").select("*");
       const sporten = [...new Set(onderdelen.map(o => o.sport))];
       const disciplines = [...new Set(onderdelen.map(o => o.discipline))];
-      const onderdelenSet = [...new Set(onderdelen.map(o => o.onderdeel))];
+      const onderdelenset = [...new Set(onderdelen.map(o => o.onderdeel))];
 
       const s = document.getElementById("sport");
       const d = document.getElementById("discipline");
@@ -120,8 +120,20 @@
 
       sporten.forEach(val => s.innerHTML += `<option value="${val}">${val}</option>`);
       disciplines.forEach(val => d.innerHTML += `<option value="${val}">${val}</option>`);
-      onderdelenSet.forEach(val => o.innerHTML += `<option value="${val}">${val}</option>`);
+      onderdelenset.forEach(val => o.innerHTML += `<option value="${val}">${val}</option>`);
     }
+
+    document.getElementById("aantal_rondes").addEventListener("input", () => {
+      const aantal = parseInt(document.getElementById("aantal_rondes").value);
+      const container = document.getElementById("rondeVelden");
+      container.innerHTML = "";
+      for (let i = 1; i <= aantal; i++) {
+        container.innerHTML += `
+          <label for="ronde_${i}">Naam ronde ${i}</label>
+          <input type="text" id="ronde_${i}" required />
+        `;
+      }
+    });
 
     async function laadRondes() {
       const { data } = await supabase.from("rondes").select("*").order("volgorde", { ascending: true });
@@ -139,6 +151,8 @@
           <td>${r.volgorde}</td>
           <td>${r.max_algemeen}</td>
           <td>${r.max_per_land}</td>
+          <td>${r.aantal_pogingen || "-"}</td>
+          <td>${r.aantal_races || "-"}</td>
           <td><button onclick="verwijderRonde('${r.id}')">🗑️</button></td>
         `;
         tbody.appendChild(rij);
@@ -152,18 +166,28 @@
 
     document.getElementById("rondeForm").addEventListener("submit", async function (e) {
       e.preventDefault();
-      const nieuwe = {
-        editie_id: document.getElementById("editie_id").value,
-        sport: document.getElementById("sport").value,
-        discipline: document.getElementById("discipline").value,
-        onderdeel: document.getElementById("onderdeel").value,
-        ronde: document.getElementById("ronde").value,
-        volgorde: parseInt(document.getElementById("volgorde").value),
-        max_algemeen: parseInt(document.getElementById("max_algemeen").value),
-        max_per_land: parseInt(document.getElementById("max_per_land").value)
-      };
-      await supabase.from("rondes").insert([nieuwe]);
+      const aantal = parseInt(document.getElementById("aantal_rondes").value);
+      const records = [];
+
+      for (let i = 1; i <= aantal; i++) {
+        const record = {
+          editie_id: document.getElementById("editie_id").value,
+          sport: document.getElementById("sport").value,
+          discipline: document.getElementById("discipline").value,
+          onderdeel: document.getElementById("onderdeel").value,
+          ronde: document.getElementById(`ronde_${i}`).value,
+          volgorde: i,
+          max_algemeen: parseInt(document.getElementById("max_algemeen").value),
+          max_per_land: parseInt(document.getElementById("max_per_land").value),
+          aantal_pogingen: parseInt(document.getElementById("aantal_pogingen").value) || null,
+          aantal_races: parseInt(document.getElementById("aantal_races").value) || null
+        };
+        records.push(record);
+      }
+
+      await supabase.from("rondes").insert(records);
       this.reset();
+      document.getElementById("rondeVelden").innerHTML = "";
       laadRondes();
     });
 
