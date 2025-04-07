@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🎯 Admin – Toernooirondes Instellen</title>
+  <title>📋 Admin – Wedstrijdschema Maken</title>
   <link rel="stylesheet" href="css/style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script src="js/supabaseClient.js"></script>
   <style>
     body { font-family: sans-serif; padding: 20px; }
-    form, table { max-width: 800px; margin: auto; }
+    form, table { max-width: 700px; margin: auto; }
     input, select {
       width: 100%;
       padding: 6px;
@@ -35,140 +35,91 @@
 </head>
 <body>
   <header>
-    <h1>🎯 Admin – Toernooirondes Instellen</h1>
+    <h1>📋 Admin – Wedstrijdschema Maken</h1>
     <nav><a href="admin.html">⬅️ Terug naar Admin</a></nav>
   </header>
 
   <main>
-    <form id="rondeForm">
-      <label for="editie_id">Editie</label>
-      <select id="editie_id" required></select>
+    <form id="schemaForm">
+      <label for="editie_id">Editie ID</label>
+      <input type="text" id="editie_id" required />
+
+      <label for="dag">Dag (bijv. Dag 1)</label>
+      <input type="text" id="dag" required />
+
+      <label for="tijd">Tijdstip</label>
+      <input type="time" id="tijd" required />
 
       <label for="sport">Sport</label>
-      <select id="sport" required></select>
-
-      <label for="discipline">Discipline</label>
-      <select id="discipline" required></select>
+      <input type="text" id="sport" required />
 
       <label for="onderdeel">Onderdeel</label>
-      <select id="onderdeel" required></select>
+      <input type="text" id="onderdeel" required />
 
       <label for="ronde">Ronde</label>
       <input type="text" id="ronde" required />
 
-      <label for="volgorde">Volgorde</label>
-      <input type="number" id="volgorde" required />
-
-      <label for="max_algemeen">Maximaal aantal deelnemers (totaal)</label>
-      <input type="number" id="max_algemeen" required />
-
-      <label for="max_per_land">Maximaal aantal per land</label>
-      <input type="number" id="max_per_land" required />
-
-      <button type="submit">➕ Voeg ronde toe</button>
+      <button type="submit">➕ Toevoegen aan Schema</button>
     </form>
 
-    <h2>📑 Ingevoerde Ronde-instellingen</h2>
+    <h2>📅 Ingevoerde Schema-items</h2>
     <table>
       <thead>
         <tr>
-          <th>Editie</th>
+          <th>Editie ID</th>
+          <th>Dag</th>
+          <th>Tijd</th>
           <th>Sport</th>
-          <th>Discipline</th>
           <th>Onderdeel</th>
           <th>Ronde</th>
-          <th>Volgorde</th>
-          <th>Max (totaal)</th>
-          <th>Max/land</th>
           <th>Actie</th>
         </tr>
       </thead>
-      <tbody id="rondeTabel"></tbody>
+      <tbody id="schemaTabel"></tbody>
     </table>
   </main>
-
   <script>
-    async function laadDropdowns() {
-      // Edities: alleen geplande edities
-      const { data: edities } = await supabase
-        .from("edities")
-        .select("id, naam, status")
-        .eq("status", "gepland")
-        .order("startdatum");
-
-      const editieSelect = document.getElementById("editie_id");
-      edities?.forEach(e => {
-        const option = document.createElement("option");
-        option.value = e.id;
-        option.textContent = e.naam;
-        editieSelect.appendChild(option);
-      });
-
-      // Sportonderdelen
-      const { data: onderdelen } = await supabase
-        .from("sportonderdelen")
-        .select("*")
-        .order("sport");
-
-      const sporten = [...new Set(onderdelen.map(o => o.sport))];
-      const disciplines = [...new Set(onderdelen.map(o => o.discipline))];
-      const onderdelenSet = [...new Set(onderdelen.map(o => o.onderdeel))];
-
-      const s = document.getElementById("sport");
-      const d = document.getElementById("discipline");
-      const o = document.getElementById("onderdeel");
-
-      sporten.forEach(val => s.innerHTML += `<option value="${val}">${val}</option>`);
-      disciplines.forEach(val => d.innerHTML += `<option value="${val}">${val}</option>`);
-      onderdelenSet.forEach(val => o.innerHTML += `<option value="${val}">${val}</option>`);
-    }
-
-    async function laadRondes() {
-      const { data } = await supabase.from("rondes").select("*").order("volgorde", { ascending: true });
-      const tbody = document.getElementById("rondeTabel");
+    async function laadSchema() {
+      const { data } = await supabase.from("schema").select("*").order("tijd", { ascending: true });
+      const tbody = document.getElementById("schemaTabel");
       tbody.innerHTML = "";
 
-      data?.forEach(r => {
+      data.forEach(s => {
         const rij = document.createElement("tr");
         rij.innerHTML = `
-          <td>${r.editie_id}</td>
-          <td>${r.sport}</td>
-          <td>${r.discipline}</td>
-          <td>${r.onderdeel}</td>
-          <td>${r.ronde}</td>
-          <td>${r.volgorde}</td>
-          <td>${r.max_algemeen}</td>
-          <td>${r.max_per_land}</td>
-          <td><button onclick="verwijderRonde('${r.id}')">🗑️</button></td>
+          <td>${s.editie_id}</td>
+          <td>${s.dag}</td>
+          <td>${s.tijd}</td>
+          <td>${s.sport}</td>
+          <td>${s.onderdeel}</td>
+          <td>${s.ronde}</td>
+          <td><button onclick="verwijderSchema('${s.id}')">🗑️</button></td>
         `;
         tbody.appendChild(rij);
       });
     }
 
-    async function verwijderRonde(id) {
-      await supabase.from("rondes").delete().eq("id", id);
-      laadRondes();
+    async function verwijderSchema(id) {
+      await supabase.from("schema").delete().eq("id", id);
+      laadSchema();
     }
 
-    document.getElementById("rondeForm").addEventListener("submit", async function (e) {
+    document.getElementById("schemaForm").addEventListener("submit", async function (e) {
       e.preventDefault();
-      const nieuwe = {
+      const entry = {
         editie_id: document.getElementById("editie_id").value,
+        dag: document.getElementById("dag").value,
+        tijd: document.getElementById("tijd").value,
         sport: document.getElementById("sport").value,
-        discipline: document.getElementById("discipline").value,
         onderdeel: document.getElementById("onderdeel").value,
-        ronde: document.getElementById("ronde").value,
-        volgorde: parseInt(document.getElementById("volgorde").value),
-        max_algemeen: parseInt(document.getElementById("max_algemeen").value),
-        max_per_land: parseInt(document.getElementById("max_per_land").value)
+        ronde: document.getElementById("ronde").value
       };
-      await supabase.from("rondes").insert([nieuwe]);
+      await supabase.from("schema").insert([entry]);
       this.reset();
-      laadRondes();
+      laadSchema();
     });
 
-    laadDropdowns();
-    laadRondes();
+    laadSchema();
   </script>
 </body>
 </html>
