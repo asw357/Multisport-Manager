@@ -2,60 +2,31 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>⚙️ Admin Dashboard</title>
+  <title>🎛️ Admin Dashboard</title>
   <link rel="stylesheet" href="css/style.css" />
   <style>
-    body {
-      font-family: sans-serif;
-      padding: 30px;
-    }
-    h1 {
-      text-align: center;
-    }
-    .admin-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 16px;
-      margin-top: 40px;
-    }
-    .admin-grid a {
-      display: block;
-      background: #f0f0f0;
-      border: 1px solid #ccc;
-      padding: 16px;
-      text-align: center;
-      border-radius: 8px;
-      text-decoration: none;
-      color: #000;
-      transition: background 0.2s;
-    }
-    .admin-grid a:hover {
-      background: #e0e0e0;
-    }
+    body { font-family: sans-serif; padding: 40px; }
+    h1 { margin-bottom: 30px; }
+    ul { list-style: none; padding: 0; }
+    li { margin: 10px 0; }
+    a { font-size: 18px; text-decoration: none; color: #0077cc; }
+    a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
-  <h1>⚙️ Admin Dashboard</h1>
-
-  <nav style="text-align: center; margin-bottom: 20px;">
-  <a href="index.html" style="font-weight: bold; text-decoration: none; background: #004080; color: white; padding: 10px 20px; border-radius: 8px;">🏠 Naar Home</a>
-</nav>
-  <div class="admin-grid">
-    <a href="admin_edities.html">📅 Edities beheren</a>
-    <a href="admin_schema.html">📋 Wedstrijdschema maken</a>
-    <a href="admin_schema_rondes.html">🎯 Toernooirondes instellen</a>
-    <a href="admin_sportlogica.html">📚 Simulatieregels per onderdeel</a>
-    <a href="admin_landen.html">🌍 Landentoewijzing</a>
-    <a href="admin_sporten.html">🏅 Sporten & Onderdelen</a>
-    <a href="admin_limieten.html">📏 Limieten & Startatleten</a>
-    <a href="admin_stats.html">📊 Statcategorieën</a>
-    <a href="admin_combinaties.html">🔁 Onderdeelcombinaties</a>
-    <a href="admin_atleetbeheer.html">👥 Atletenbeheer</a>
-    <a href="admin_mp.html">💰 MP-instellingen</a>
-    <a href="admin_tactieken.html">🧠 Tactieken</a>
-    <a href="admin_weer.html">☀️ Weerinstellingen</a>
-    <a href="admin_reset.html">🧪 Reset Testomgeving</a>
-  </div>
+  <h1>🎛️ Admin Dashboard</h1>
+  <ul>
+    <li><a href="admin_editiebeheer.html">🗂️ Editie Beheer (nieuw)</a></li>
+    <li><a href="admin_landen.html">🌍 Landen beheren</a></li>
+    <li><a href="admin_sporten.html">🏅 Sporten beheren</a></li>
+    <li><a href="admin_atleetbeheer.html">👤 Atleten beheren</a></li>
+    <li><a href="admin_limieten.html">📏 Limieten beheren</a></li>
+    <li><a href="admin_tactieken.html">🧠 Tactieken beheren</a></li>
+    <li><a href="admin_stats.html">📊 Statistiekcategorieën</a></li>
+    <li><a href="admin_combinaties.html">🔗 Onderdeelcombinaties</a></li>
+    <li><a href="admin_simulatieconfig.html">⚙️ Simulatie Instellingen</a></li>
+    <li><a href="admin_weer.html">🌤️ Weerinstellingen</a></li>
+    <li><a href="admin_reset.html">🔄 Reset alle gegevens</a></li>
+  </ul>
 </body>
 </html>
