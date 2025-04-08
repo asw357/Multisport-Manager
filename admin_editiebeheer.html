@@ -271,4 +271,159 @@
     laadSchemaDropdowns();
     laadSchemaTabel();
   </script>
+  <!-- 🧩 Toernooistructuur bouwen -->
+  <section>
+    <h2>🧩 Toernooistructuur bouwen</h2>
+    <form id="rondeForm">
+      <label for="ronde_editie">Editie</label>
+      <select id="ronde_editie" required></select>
 
+      <label for="ronde_sport">Sport</label>
+      <select id="ronde_sport" required></select>
+
+      <label for="ronde_discipline">Discipline</label>
+      <select id="ronde_discipline"></select>
+
+      <label for="ronde_onderdeel">Onderdeel</label>
+      <select id="ronde_onderdeel" required></select>
+
+      <label for="ronde_geslacht">Geslacht</label>
+      <select id="ronde_geslacht" required>
+        <option value="Mannen">Mannen</option>
+        <option value="Vrouwen">Vrouwen</option>
+        <option value="Gemengd">Gemengd</option>
+      </select>
+
+      <label for="aantal_rondes">Aantal rondes</label>
+      <input type="number" id="aantal_rondes" min="1" max="8" value="1" required />
+      <div id="rondeVelden"></div>
+
+      <button type="submit">➕ Voeg rondes toe</button>
+    </form>
+
+    <h3>📑 Ingestelde rondes</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Ronde</th>
+          <th>Sport</th>
+          <th>Onderdeel</th>
+          <th>Geslacht</th>
+          <th>Max</th>
+          <th>Per land</th>
+          <th>Pogingen</th>
+          <th>Races</th>
+          <th>Type</th>
+          <th>Groep</th>
+          <th>Actie</th>
+        </tr>
+      </thead>
+      <tbody id="rondeTabel"></tbody>
+    </table>
+  </section>
+
+  <script>
+    function updateRondeVelden() {
+      const aantal = parseInt(document.getElementById("aantal_rondes").value);
+      const container = document.getElementById("rondeVelden");
+      container.innerHTML = "";
+      for (let i = 1; i <= aantal; i++) {
+        container.innerHTML += `
+          <fieldset style="border:1px solid #ccc; margin:10px 0; padding:10px;">
+            <legend>Ronde ${i}</legend>
+            <label>Naam</label><input type="text" id="ronde_${i}_naam" required />
+            <label>Volgorde</label><input type="number" id="ronde_${i}_volgorde" value="${i}" required />
+            <label>Max. deelnemers totaal</label><input type="number" id="ronde_${i}_max" required />
+            <label>Max. per land</label><input type="number" id="ronde_${i}_perland" required />
+            <label>Pogingen (optioneel)</label><input type="number" id="ronde_${i}_pogingen" />
+            <label>Races (optioneel)</label><input type="number" id="ronde_${i}_races" />
+            <label>Ronde-type</label><input type="text" id="ronde_${i}_type" placeholder="groep / knock-out / herkansing" />
+            <label>Groep (optioneel)</label><input type="text" id="ronde_${i}_groep" />
+          </fieldset>
+        `;
+      }
+    }
+
+    document.getElementById("aantal_rondes").addEventListener("input", updateRondeVelden);
+
+    async function laadRondeDropdowns() {
+      const { data: edities } = await supabase.from("edities").select("id, naam").order("startdatum");
+      const r_editie = document.getElementById("ronde_editie");
+      edities?.forEach(e => {
+        r_editie.innerHTML += `<option value="${e.id}">${e.naam}</option>`;
+      });
+
+      const { data: onderdelen } = await supabase.from("sportonderdelen").select("*").order("sport");
+
+      const sporten = [...new Set(onderdelen.map(o => o.sport))];
+      const disciplines = [...new Set(onderdelen.map(o => o.discipline))];
+      const onderdelenset = [...new Set(onderdelen.map(o => o.onderdeel))];
+
+      sporten.forEach(s => ronde_sport.innerHTML += `<option value="${s}">${s}</option>`);
+      disciplines.forEach(d => ronde_discipline.innerHTML += `<option value="${d}">${d}</option>`);
+      onderdelenset.forEach(o => ronde_onderdeel.innerHTML += `<option value="${o}">${o}</option>`);
+    }
+
+    async function laadRondeTabel() {
+      const { data } = await supabase.from("rondes").select("*").order("volgorde");
+      const tbody = document.getElementById("rondeTabel");
+      tbody.innerHTML = "";
+
+      data?.forEach(r => {
+        const rij = document.createElement("tr");
+        rij.innerHTML = `
+          <td>${r.ronde}</td>
+          <td>${r.sport}</td>
+          <td>${r.onderdeel}</td>
+          <td>${r.geslacht}</td>
+          <td>${r.max_algemeen}</td>
+          <td>${r.max_per_land}</td>
+          <td>${r.aantal_pogingen || "-"}</td>
+          <td>${r.aantal_races || "-"}</td>
+          <td>${r.ronde_type || "-"}</td>
+          <td>${r.groep || "-"}</td>
+          <td><button onclick="verwijderRonde('${r.id}')">🗑️</button></td>
+        `;
+        tbody.appendChild(rij);
+      });
+    }
+
+    async function verwijderRonde(id) {
+      if (confirm("Weet je zeker dat je deze ronde wilt verwijderen?")) {
+        await supabase.from("rondes").delete().eq("id", id);
+        laadRondeTabel();
+      }
+    }
+
+    document.getElementById("rondeForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const aantal = parseInt(document.getElementById("aantal_rondes").value);
+      const records = [];
+      for (let i = 1; i <= aantal; i++) {
+        const record = {
+          editie_id: ronde_editie.value,
+          sport: ronde_sport.value,
+          discipline: ronde_discipline.value || null,
+          onderdeel: ronde_onderdeel.value,
+          geslacht: ronde_geslacht.value,
+          ronde: document.getElementById(`ronde_${i}_naam`).value,
+          volgorde: parseInt(document.getElementById(`ronde_${i}_volgorde`).value),
+          max_algemeen: parseInt(document.getElementById(`ronde_${i}_max`).value),
+          max_per_land: parseInt(document.getElementById(`ronde_${i}_perland`).value),
+          aantal_pogingen: parseInt(document.getElementById(`ronde_${i}_pogingen`).value) || null,
+          aantal_races: parseInt(document.getElementById(`ronde_${i}_races`).value) || null,
+          ronde_type: document.getElementById(`ronde_${i}_type`).value || null,
+          groep: document.getElementById(`ronde_${i}_groep`).value || null
+        };
+        records.push(record);
+      }
+      await supabase.from("rondes").insert(records);
+      this.reset();
+      updateRondeVelden();
+      laadRondeTabel();
+    });
+
+    updateRondeVelden();
+    laadRondeDropdowns();
+    laadRondeTabel();
+  </script>
