@@ -133,3 +133,142 @@
   </script>
 </body>
 </html>
+  <!-- 📋 Wedstrijdschema maken -->
+  <section>
+    <h2>📋 Wedstrijdschema maken</h2>
+    <form id="schemaForm">
+      <label for="schema_editie">Editie</label>
+      <select id="schema_editie" required></select>
+
+      <label for="schema_dag">Dagnummer</label>
+      <input type="number" id="schema_dag" required />
+
+      <label for="schema_tijd">Tijdstip</label>
+      <input type="time" id="schema_tijd" required />
+
+      <label for="schema_locatie">Locatie</label>
+      <input type="text" id="schema_locatie" required />
+
+      <label for="schema_sport">Sport</label>
+      <select id="schema_sport" required></select>
+
+      <label for="schema_discipline">Discipline (optioneel)</label>
+      <select id="schema_discipline"></select>
+
+      <label for="schema_onderdeel">Onderdeel</label>
+      <select id="schema_onderdeel" required></select>
+
+      <label for="schema_geslacht">Geslacht</label>
+      <select id="schema_geslacht" required>
+        <option value="Mannen">Mannen</option>
+        <option value="Vrouwen">Vrouwen</option>
+        <option value="Gemengd">Gemengd</option>
+      </select>
+
+      <label for="schema_status">Status</label>
+      <select id="schema_status">
+        <option value="gepland">Gepland</option>
+        <option value="bezig">Bezig</option>
+        <option value="afgerond">Afgerond</option>
+      </select>
+
+      <button type="submit">➕ Voeg wedstrijd toe</button>
+    </form>
+
+    <h3>📅 Geplande wedstrijden</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Editie</th>
+          <th>Dag</th>
+          <th>Tijd</th>
+          <th>Sport</th>
+          <th>Discipline</th>
+          <th>Onderdeel</th>
+          <th>Geslacht</th>
+          <th>Locatie</th>
+          <th>Status</th>
+          <th>Actie</th>
+        </tr>
+      </thead>
+      <tbody id="schemaTabel"></tbody>
+    </table>
+  </section>
+
+  <script>
+    async function laadSchemaDropdowns() {
+      const { data: edities } = await supabase.from("edities").select("id, naam").order("startdatum");
+      const editieSelect = document.getElementById("schema_editie");
+      edities?.forEach(e => {
+        const opt = document.createElement("option");
+        opt.value = e.id;
+        opt.textContent = e.naam;
+        editieSelect.appendChild(opt);
+      });
+
+      const { data: onderdelen } = await supabase.from("sportonderdelen").select("*").order("sport");
+
+      const sporten = [...new Set(onderdelen.map(o => o.sport))];
+      const disciplines = [...new Set(onderdelen.map(o => o.discipline))];
+      const onderdelenset = [...new Set(onderdelen.map(o => o.onderdeel))];
+
+      sporten.forEach(s => schema_sport.innerHTML += `<option value="${s}">${s}</option>`);
+      disciplines.forEach(d => schema_discipline.innerHTML += `<option value="${d}">${d}</option>`);
+      onderdelenset.forEach(o => schema_onderdeel.innerHTML += `<option value="${o}">${o}</option>`);
+    }
+
+    async function laadSchemaTabel() {
+      const { data } = await supabase.from("schema").select("*").order("dag, tijd");
+      const edities = await supabase.from("edities").select("id, naam");
+      const editieMap = Object.fromEntries(edities.data.map(e => [e.id, e.naam]));
+
+      const tbody = document.getElementById("schemaTabel");
+      tbody.innerHTML = "";
+
+      data?.forEach(s => {
+        const rij = document.createElement("tr");
+        rij.innerHTML = `
+          <td>${editieMap[s.editie_id] || "-"}</td>
+          <td>${s.dag}</td>
+          <td>${s.tijd}</td>
+          <td>${s.sport}</td>
+          <td>${s.discipline || "-"}</td>
+          <td>${s.onderdeel}</td>
+          <td>${s.geslacht}</td>
+          <td>${s.locatie}</td>
+          <td>${s.status}</td>
+          <td><button onclick="verwijderWedstrijd('${s.id}')">🗑️</button></td>
+        `;
+        tbody.appendChild(rij);
+      });
+    }
+
+    async function verwijderWedstrijd(id) {
+      if (confirm("Weet je zeker dat je deze wedstrijd wilt verwijderen?")) {
+        await supabase.from("schema").delete().eq("id", id);
+        laadSchemaTabel();
+      }
+    }
+
+    document.getElementById("schemaForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const nieuwe = {
+        editie_id: schema_editie.value,
+        dag: parseInt(schema_dag.value),
+        tijd: schema_tijd.value,
+        locatie: schema_locatie.value,
+        sport: schema_sport.value,
+        discipline: schema_discipline.value || null,
+        onderdeel: schema_onderdeel.value,
+        geslacht: schema_geslacht.value,
+        status: schema_status.value
+      };
+      await supabase.from("schema").insert([nieuwe]);
+      this.reset();
+      laadSchemaTabel();
+    });
+
+    laadSchemaDropdowns();
+    laadSchemaTabel();
+  </script>
+
