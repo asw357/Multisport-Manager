@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🗂️ Editie Beheer</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    section { margin-bottom: 40px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 6px; text-align: left; }
+    th { background: #f0f0f0; }
+    input, select { width: 100%; padding: 6px; margin: 5px 0; }
+    button { margin-top: 10px; padding: 8px 12px; }
+  </style>
+</head>
+<body>
+  <h1>🗂️ Editie Beheer</h1>
+  
+  <!-- 🎯 Editie Instellen -->
+  <section>
+    <h2>🎯 Editie Instellen</h2>
+    <form id="editieForm">
+      <label for="type">Type</label>
+      <select id="type" required>
+        <option value="Zomer">Zomereditie</option>
+        <option value="Winter">Wintereditie</option>
+      </select>
+
+      <label for="plaats">Gaststad</label>
+      <input type="text" id="plaats" required />
+
+      <label for="land">Gastland</label>
+      <input type="text" id="land" required />
+
+      <label for="startdatum">Startdatum</label>
+      <input type="date" id="startdatum" />
+
+      <button type="submit">➕ Voeg editie toe</button>
+    </form>
+
+    <h3>Bestaande edities</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Naam</th>
+          <th>Type</th>
+          <th>Gaststad</th>
+          <th>Land</th>
+          <th>Startdatum</th>
+          <th>Status</th>
+          <th>Actie</th>
+        </tr>
+      </thead>
+      <tbody id="editiesTabel"></tbody>
+    </table>
+  </section>
+
+  <script>
+    async function genereerVolgendeNaam(type) {
+      const { data } = await supabase
+        .from("edities")
+        .select("type, nummer")
+        .eq("type", type);
+
+      const nummers = data?.map(e => e.nummer) || [];
+      const hoogste = Math.max(0, ...nummers);
+      return `${type}editie ${hoogste + 1}`;
+    }
+
+    async function laadEdities() {
+      const { data } = await supabase.from("edities").select("*").order("startdatum");
+      const tbody = document.getElementById("editiesTabel");
+      tbody.innerHTML = "";
+
+      data?.forEach(e => {
+        const rij = document.createElement("tr");
+        rij.innerHTML = `
+          <td><input value="${e.naam}" data-id="${e.id}" data-field="naam" /></td>
+          <td>${e.type}</td>
+          <td><input value="${e.plaats}" data-id="${e.id}" data-field="plaats" /></td>
+          <td><input value="${e.land}" data-id="${e.id}" data-field="land" /></td>
+          <td><input type="date" value="${e.startdatum || ''}" data-id="${e.id}" data-field="startdatum" /></td>
+          <td><input value="${e.status || ''}" data-id="${e.id}" data-field="status" /></td>
+          <td>
+            <button onclick="opslaanEditie('${e.id}')">💾</button>
+            <button onclick="verwijderEditie('${e.id}')">🗑️</button>
+          </td>
+        `;
+        tbody.appendChild(rij);
+      });
+    }
+
+    async function opslaanEditie(id) {
+      const inputs = document.querySelectorAll(`[data-id="${id}"]`);
+      const update = {};
+      inputs.forEach(input => {
+        update[input.dataset.field] = input.value;
+      });
+      await supabase.from("edities").update(update).eq("id", id);
+      laadEdities();
+    }
+
+    async function verwijderEditie(id) {
+      if (confirm("Weet je zeker dat je deze editie wilt verwijderen?")) {
+        await supabase.from("edities").delete().eq("id", id);
+        laadEdities();
+      }
+    }
+
+    document.getElementById("editieForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const type = document.getElementById("type").value;
+      const naam = await genereerVolgendeNaam(type);
+      const nieuweEditie = {
+        type,
+        naam,
+        plaats: document.getElementById("plaats").value,
+        land: document.getElementById("land").value,
+        startdatum: document.getElementById("startdatum").value || null,
+        status: "gepland",
+        nummer: parseInt(naam.match(/\d+$/)[0])
+      };
+      await supabase.from("edities").insert([nieuweEditie]);
+      this.reset();
+      laadEdities();
+    });
+
+    laadEdities();
+  </script>
+</body>
+</html>
