@@ -427,3 +427,122 @@
     laadRondeDropdowns();
     laadRondeTabel();
   </script>
+  <!-- ⚙️ Simulatieregels per onderdeel -->
+  <section>
+    <h2>⚙️ Simulatieregels per onderdeel</h2>
+    <form id="simulatieForm">
+      <label for="sim_editie">Editie</label>
+      <select id="sim_editie" required></select>
+
+      <label for="sim_sport">Sport</label>
+      <select id="sim_sport" required></select>
+
+      <label for="sim_discipline">Discipline</label>
+      <select id="sim_discipline"></select>
+
+      <label for="sim_onderdeel">Onderdeel</label>
+      <select id="sim_onderdeel" required></select>
+
+      <label for="sim_geslacht">Geslacht</label>
+      <select id="sim_geslacht" required>
+        <option value="Mannen">Mannen</option>
+        <option value="Vrouwen">Vrouwen</option>
+        <option value="Gemengd">Gemengd</option>
+      </select>
+
+      <label for="sim_naam">Naam stat</label>
+      <input type="text" id="sim_naam" required />
+
+      <label for="sim_min">Min. waarde</label>
+      <input type="number" id="sim_min" required />
+
+      <label for="sim_max">Max. waarde</label>
+      <input type="number" id="sim_max" required />
+
+      <label for="sim_eenheid">Eenheid</label>
+      <input type="text" id="sim_eenheid" placeholder="bijv. sec, m" />
+
+      <button type="submit">➕ Voeg simulatieregel toe</button>
+    </form>
+
+    <h3>📐 Instellingen per stat</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Sport</th>
+          <th>Onderdeel</th>
+          <th>Geslacht</th>
+          <th>Stat</th>
+          <th>Min</th>
+          <th>Max</th>
+          <th>Eenheid</th>
+          <th>Actie</th>
+        </tr>
+      </thead>
+      <tbody id="simulatieTabel"></tbody>
+    </table>
+  </section>
+
+  <script>
+    async function laadSimulatieDropdowns() {
+      const { data: edities } = await supabase.from("edities").select("id, naam");
+      edities?.forEach(e => sim_editie.innerHTML += `<option value="${e.id}">${e.naam}</option>`);
+
+      const { data: onderdelen } = await supabase.from("sportonderdelen").select("*");
+      const sporten = [...new Set(onderdelen.map(o => o.sport))];
+      const disciplines = [...new Set(onderdelen.map(o => o.discipline))];
+      const onderdelenset = [...new Set(onderdelen.map(o => o.onderdeel))];
+
+      sporten.forEach(s => sim_sport.innerHTML += `<option value="${s}">${s}</option>`);
+      disciplines.forEach(d => sim_discipline.innerHTML += `<option value="${d}">${d}</option>`);
+      onderdelenset.forEach(o => sim_onderdeel.innerHTML += `<option value="${o}">${o}</option>`);
+    }
+
+    async function laadSimulatieTabel() {
+      const { data } = await supabase.from("statcategorieen").select("*");
+      const tbody = document.getElementById("simulatieTabel");
+      tbody.innerHTML = "";
+      data?.forEach(s => {
+        const rij = document.createElement("tr");
+        rij.innerHTML = `
+          <td>${s.sport}</td>
+          <td>${s.onderdeel}</td>
+          <td>${s.geslacht}</td>
+          <td>${s.naam}</td>
+          <td>${s.min_waarde}</td>
+          <td>${s.max_waarde}</td>
+          <td>${s.eenheid || "-"}</td>
+          <td><button onclick="verwijderSimulatie('${s.id}')">🗑️</button></td>
+        `;
+        tbody.appendChild(rij);
+      });
+    }
+
+    async function verwijderSimulatie(id) {
+      if (confirm("Simulatieregel verwijderen?")) {
+        await supabase.from("statcategorieen").delete().eq("id", id);
+        laadSimulatieTabel();
+      }
+    }
+
+    document.getElementById("simulatieForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const nieuwe = {
+        sport: sim_sport.value,
+        discipline: sim_discipline.value || null,
+        onderdeel: sim_onderdeel.value,
+        geslacht: sim_geslacht.value,
+        naam: sim_naam.value,
+        min_waarde: parseFloat(sim_min.value),
+        max_waarde: parseFloat(sim_max.value),
+        eenheid: sim_eenheid.value || null
+      };
+      await supabase.from("statcategorieen").insert([nieuwe]);
+      this.reset();
+      laadSimulatieTabel();
+    });
+
+    laadSimulatieDropdowns();
+    laadSimulatieTabel();
+  </script>
+</html>
