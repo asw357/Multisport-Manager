@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>📥 Inschrijving Editie</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    select, button { margin: 8px 0; padding: 6px; }
+    .blok { border: 1px solid #ccc; padding: 15px; border-radius: 6px; margin-top: 20px; background: #f9f9f9; }
+  </style>
+</head>
+<body>
+  <h1>📥 Inschrijven voor een Editie</h1>
+  <nav><a href="manager.html">⬅️ Terug naar Manager</a></nav>
+
+  <div class="blok">
+    <label for="editie">Kies Editie</label>
+    <select id="editie"></select><br />
+
+    <label for="sport">Kies Sport</label>
+    <select id="sport"></select><br />
+
+    <label for="onderdeel">Kies Onderdeel</label>
+    <select id="onderdeel"></select><br />
+
+    <label for="atleet">Kies Atleet</label>
+    <select id="atleet"></select><br />
+
+    <button onclick="inschrijven()">✅ Inschrijven</button>
+    <div id="melding"></div>
+  </div>
+
+  <script>
+    let gebruiker;
+    async function laadGebruiker() {
+      const data = localStorage.getItem("loggedInUser");
+      if (!data) return window.location.href = "login.html";
+      gebruiker = JSON.parse(data);
+    }
+
+    async function laadDropdowns() {
+      const [{ data: edities }, { data: sporten }, { data: atleten }] = await Promise.all([
+        supabase.from("edities").select("id, naam, status"),
+        supabase.from("sportonderdelen").select("*"),
+        supabase.from("atleten").select("*").eq("owner", gebruiker.email)
+      ]);
+
+      const editieSelect = document.getElementById("editie");
+      edities.filter(e => e.status === "open").forEach(e => {
+        editieSelect.innerHTML += `<option value="${e.id}">${e.naam}</option>`;
+      });
+
+      const sportSelect = document.getElementById("sport");
+      const uniekeSporten = [...new Set(sporten.map(s => s.sport))];
+      uniekeSporten.forEach(s => {
+        sportSelect.innerHTML += `<option value="${s}">${s}</option>`;
+      });
+
+      sportSelect.addEventListener("change", () => {
+        const geselecteerd = sporten.filter(s => s.sport === sportSelect.value);
+        const onderdeelSelect = document.getElementById("onderdeel");
+        onderdeelSelect.innerHTML = "";
+        [...new Set(geselecteerd.map(s => s.onderdeel))].forEach(o => {
+          onderdeelSelect.innerHTML += `<option value="${o}">${o}</option>`;
+        });
+      });
+
+      document.getElementById("onderdeel").addEventListener("change", () => {
+        const sport = sportSelect.value;
+        const onderdeel = document.getElementById("onderdeel").value;
+        const lijst = atleten.filter(a => a.sport === sport && a.onderdeel === onderdeel);
+        const atleetSelect = document.getElementById("atleet");
+        atleetSelect.innerHTML = "";
+        lijst.forEach(a => {
+          atleetSelect.innerHTML += `<option value="${a.id}">${a.naam} (${a.geslacht})</option>`;
+        });
+      });
+
+      sportSelect.dispatchEvent(new Event("change"));
+    }
+
+    async function inschrijven() {
+      const editie_id = document.getElementById("editie").value;
+      const atleet_id = document.getElementById("atleet").value;
+      const sport = document.getElementById("sport").value;
+      const onderdeel = document.getElementById("onderdeel").value;
+
+      const { error } = await supabase.from("inschrijvingen").insert([
+        { editie_id, atleet_id, sport, onderdeel, status: "actief", datum: new Date().toISOString() }
+      ]);
+
+      document.getElementById("melding").textContent = error ? "❌ Fout bij inschrijven." : "✅ Inschrijving succesvol!";
+    }
+
+    laadGebruiker().then(laadDropdowns);
+  </script>
+</body>
+</html>
