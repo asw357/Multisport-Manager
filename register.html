@@ -45,117 +45,122 @@
   </main>
 
   <script>
-  async function genereerNaam(land) {
-    const naamdata = {
-      Nederland: { voornamen: ["Jeroen", "Sven", "Laura", "Tessa", "Daan"], achternamen: ["de Vries", "van Dijk", "Jansen", "Bakker", "Visser"] },
-      Duitsland: { voornamen: ["Lukas", "Anna", "Max", "Mia", "Jonas"], achternamen: ["Schmidt", "Müller", "Weber", "Schneider", "Fischer"] },
-      Japan: { voornamen: ["Haruki", "Yuki", "Sora", "Ren", "Aoi"], achternamen: ["Takahashi", "Kobayashi", "Nakamura", "Yamamoto", "Ito"] },
-      Zweden: { voornamen: ["Erik", "Anna", "Lina", "Oskar", "Felix"], achternamen: ["Andersson", "Johansson", "Lindberg", "Svensson", "Larsson"] }
-    };
-    const fallback = { voornamen: ["Alex", "Jamie", "Taylor", "Morgan", "Sam"], achternamen: ["Smith", "Lee", "Kim", "Patel", "Nguyen"] };
-    const set = naamdata[land] || fallback;
-    const voornaam = set.voornamen[Math.floor(Math.random() * set.voornamen.length)];
-    const achternaam = set.achternamen[Math.floor(Math.random() * set.achternamen.length)];
-    return `${voornaam} ${achternaam}`;
-  }
+    document.getElementById("registerForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
 
-  async function genereerAtleten(email, land) {
-    const { data: sporten } = await supabase.from("sportonderdelen").select("*");
-    const { data: limieten } = await supabase.from("limieten").select("*");
-    const { data: combinaties } = await supabase.from("combinaties").select("*");
+      const gebruikersnaam = document.getElementById("gebruikersnaam").value;
+      const email = document.getElementById("email").value;
+      const wachtwoord = document.getElementById("wachtwoord").value;
 
-    const atleten = [];
-    for (const sport of sporten) {
-      const limiet = limieten.find(l =>
-        l.sport?.toLowerCase() === sport.sport?.toLowerCase() &&
-        l.geslacht?.toLowerCase() === sport.geslacht?.toLowerCase() &&
-        l.onderdeel?.toLowerCase() === sport.onderdeel?.toLowerCase() &&
-        (l.discipline?.toLowerCase() || "") === (sport.discipline?.toLowerCase() || "")
-      );
-      if (!limiet?.start || limiet.start <= 0) continue;
+      // Vrij land ophalen
+      const { data: landen } = await supabase.from("landentoewijzing").select("*").order("volgorde");
+      const { data: spelers } = await supabase.from("users").select("land");
+      const gebruikte = spelers.map(s => s.land);
+      const vrij = landen.find(l => !gebruikte.includes(l.naam));
+      if (!vrij) return alert("❌ Geen vrije landen meer beschikbaar.");
 
-      for (let i = 0; i < limiet.start; i++) {
-        const leeftijd = 18 + Math.floor(Math.random() * 10);
-        const naam = await genereerNaam(land);
-        const atleet = {
-          naam,
-          leeftijd,
-          sport: sport.sport,
-          discipline: sport.discipline || "",
-          geslacht: sport.geslacht,
-          onderdeel: sport.onderdeel,
-          owner: email,
-          land,
-          snelheid: Math.random() * 100,
-          kracht: Math.random() * 100,
-          techniek: Math.random() * 100
-        };
-        atleten.push(atleet);
+      // IP ophalen
+      let ip = "onbekend";
+      try {
+        const res = await fetch("https://api.ipify.org?format=json");
+        ip = (await res.json()).ip;
+      } catch (e) {
+        console.warn("Kon IP niet ophalen", e);
+      }
 
-        const comboLijst = combinaties.filter(c =>
-          c.sport?.toLowerCase() === sport.sport?.toLowerCase() &&
-          c.geslacht?.toLowerCase() === sport.geslacht?.toLowerCase() &&
-          c["onderdeel 1"]?.toLowerCase() === sport.onderdeel?.toLowerCase()
+      // Tijd
+      const tijd = new Date().toISOString();
+
+      // Speler registreren
+      const { data: user, error } = await supabase
+        .from("users")
+        .insert({
+          gebruikersnaam,
+          email,
+          wachtwoord,
+          land: vrij.naam,
+          mp: 100,
+          ip_adres: ip,
+          created_at: tijd
+        })
+        .select();
+
+      if (error) {
+        alert("❌ Registratie mislukt: " + error.message);
+        return;
+      }
+
+      localStorage.setItem("loggedInUser", JSON.stringify(user[0]));
+      await genereerStartAtleten(user[0].email, vrij.naam);
+      window.location.href = "manager.html";
+    });
+
+    async function genereerStartAtleten(email, land) {
+      const { data: onderdelen } = await supabase.from("sportonderdelen").select("*");
+      const { data: limieten } = await supabase.from("limieten").select("*");
+
+      const atleten = [];
+      for (const onderdeel of onderdelen) {
+        const limiet = limieten.find(l =>
+          l.sport?.toLowerCase() === onderdeel.sport?.toLowerCase() &&
+          l.geslacht?.toLowerCase() === onderdeel.geslacht?.toLowerCase() &&
+          l.onderdeel?.toLowerCase() === onderdeel.onderdeel?.toLowerCase() &&
+          (l.discipline?.toLowerCase() || "") === (onderdeel.discipline?.toLowerCase() || "")
         );
-        for (const combo of comboLijst) {
-          atleten.push({ ...atleet, onderdeel: combo["onderdeel 2"] });
+        if (!limiet?.start || limiet.start <= 0) continue;
+
+        for (let i = 0; i < limiet.start; i++) {
+          const leeftijd = 18 + Math.floor(Math.random() * 6);
+          const naam = genereerNaam(land);
+
+          const atleet = {
+            naam,
+            leeftijd,
+            sport: onderdeel.sport,
+            discipline: onderdeel.discipline || "",
+            geslacht: onderdeel.geslacht,
+            onderdeel: onderdeel.onderdeel,
+            owner: email,
+            land,
+            snelheid: Math.random() * 100,
+            kracht: Math.random() * 100,
+            techniek: Math.random() * 100
+          };
+
+          atleten.push(atleet);
         }
+      }
+
+      if (atleten.length > 0) {
+        const { error } = await supabase.from("atleten").insert(atleten);
+        if (error) {
+          console.error("❌ Fout bij atleten genereren:", error);
+        } else {
+          console.log("✅ Startatleten gegenereerd:", atleten.length);
+        }
+      } else {
+        console.warn("⚠️ Geen atleten gegenereerd.");
       }
     }
 
-    if (atleten.length > 0) {
-      const { error } = await supabase.from("atleten").insert(atleten);
-      if (error) console.error("Fout bij atleten:", error);
+    function genereerNaam(land) {
+      const naamdata = {
+        Nederland: { voornamen: ["Jeroen", "Sven", "Laura", "Tessa", "Daan"], achternamen: ["de Vries", "van Dijk", "Jansen", "Bakker", "Visser"] },
+        Duitsland: { voornamen: ["Lukas", "Anna", "Max", "Mia", "Jonas"], achternamen: ["Schmidt", "Müller", "Weber", "Schneider", "Fischer"] },
+        Japan: { voornamen: ["Haruki", "Yuki", "Sora", "Ren", "Aoi"], achternamen: ["Takahashi", "Kobayashi", "Nakamura", "Yamamoto", "Ito"] },
+        Zweden: { voornamen: ["Erik", "Anna", "Lina", "Oskar", "Felix"], achternamen: ["Andersson", "Johansson", "Lindberg", "Svensson", "Larsson"] }
+      };
+
+      const fallback = {
+        voornamen: ["Alex", "Jamie", "Taylor", "Morgan", "Sam"],
+        achternamen: ["Smith", "Lee", "Kim", "Patel", "Nguyen"]
+      };
+
+      const set = naamdata[land] || fallback;
+      const voornaam = set.voornamen[Math.floor(Math.random() * set.voornamen.length)];
+      const achternaam = set.achternamen[Math.floor(Math.random() * set.achternamen.length)];
+      return `${voornaam} ${achternaam}`;
     }
-  }
-
-  document.getElementById("registerForm").addEventListener("submit", async function (e) {
-    e.preventDefault();
-
-    const gebruikersnaam = document.getElementById("gebruikersnaam").value;
-    const email = document.getElementById("email").value;
-    const wachtwoord = document.getElementById("wachtwoord").value;
-
-    const { data: bestaande } = await supabase.from("users").select("*").eq("email", email);
-    if (bestaande.length > 0) return alert("E-mailadres is al in gebruik.");
-
-    const { data: landen } = await supabase.from("landentoewijzing").select("*").order("volgorde");
-    const { data: spelers } = await supabase.from("users").select("land");
-    const gebruikteLanden = spelers.map(s => s.land);
-    const vrijLand = landen.find(l => !gebruikteLanden.includes(l.naam));
-
-    if (!vrijLand) return alert("Er zijn geen vrije landen meer beschikbaar.");
-
-    // IP en tijd
-    let ip = "onbekend";
-    try {
-      const res = await fetch("https://api.ipify.org?format=json");
-      const json = await res.json();
-      ip = json.ip;
-    } catch (e) {
-      console.warn("IP niet opgehaald:", e);
-    }
-    const tijd = new Date().toISOString();
-
-    const { data: nieuw, error } = await supabase
-      .from("users")
-      .insert([{ gebruikersnaam, email, wachtwoord, land: vrijLand.naam, mp: 100, created_at: tijd, ip_adres: ip }])
-      .select();
-
-    if (error) {
-      console.error("Fout bij registreren:", error);
-      alert("Registratie mislukt:\n" + error.message);
-      return;
-    }
-
-    if (nieuw?.length > 0) {
-      localStorage.setItem("loggedInUser", JSON.stringify(nieuw[0]));
-      await genereerAtleten(email, vrijLand.naam);
-      window.location.href = "manager.html";
-    } else {
-      alert("Er ging iets mis bij het registreren.");
-    }
-  });
-</script>
+  </script>
 </body>
 </html>
