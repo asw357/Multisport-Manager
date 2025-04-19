@@ -3,38 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>📝 Registreren</title>
-  <link rel="stylesheet" href="css/style.css" />
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-  <script src="js/supabaseClient.js"></script>
-  <style>
-    body { font-family: sans-serif; padding: 20px; }
-    form {
-      max-width: 400px;
-      margin: auto;
-      background: #f4f4f4;
-      padding: 20px;
-      border-radius: 6px;
-    }
-    input, button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 10px;
-    }
-  </style>
+  <title>🆕 Registreren – Multisport-Manager</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header>
-    <h1>📝 Registreren</h1>
-    <nav><a href="index.html">⬅️ Terug naar Home</a></nav>
-  </header>
-
   <main>
+    <h1>🆕 Registreren</h1>
     <form id="registerForm">
       <label for="gebruikersnaam">Gebruikersnaam</label>
       <input type="text" id="gebruikersnaam" required />
 
-      <label for="email">E-mail</label>
+      <label for="email">E-mailadres</label>
       <input type="email" id="email" required />
 
       <label for="wachtwoord">Wachtwoord</label>
@@ -44,94 +23,104 @@
     </form>
   </main>
 
- <script type="module">
-  import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
-  const supabase = createClient("https://aqfgikfyymvigvexwhgp.supabase.co", "eyJhbGciOiJI..."); // jouw key hier
+  <!-- Supabase + registratie-script -->
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+    const supabase = createClient(
+      "https://aqfgikfyymvigvexwhgp.supabase.co",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFxZmdpa2Z5eW12aWd2ZXh3aGdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMyNzM4MDcsImV4cCI6MjA1ODg0OTgwN30.YWeUkkpnpA19GU1Jpjebc6vGdoaIDSX7C6UQZW3ZTAA"
+    );
 
-  document.getElementById("registerForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
+    document.getElementById("registerForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
 
-    const gebruikersnaam = document.getElementById("gebruikersnaam").value;
-    const email = document.getElementById("email").value;
-    const wachtwoord = document.getElementById("wachtwoord").value;
+      const gebruikersnaam = document.getElementById("gebruikersnaam").value;
+      const email = document.getElementById("email").value;
+      const wachtwoord = document.getElementById("wachtwoord").value;
 
-    // 1. Check of land beschikbaar is
-    const { data: landen } = await supabase
-      .from("landentoewijzing")
-      .select("*")
-      .order("volgorde", { ascending: true });
-
-    const { data: spelers } = await supabase.from("users").select("land");
-    const gebruikteLanden = spelers.map((s) => s.land);
-    const vrijLand = landen.find((l) => !gebruikteLanden.includes(l.naam));
-
-    if (!vrijLand) {
-      alert("Er zijn momenteel geen landen beschikbaar. Probeer later opnieuw.");
-      return;
-    }
-
-    // 2. IP + tijd
-    const ip = await fetch("https://api.ipify.org?format=json").then((res) => res.json()).then((d) => d.ip);
-    const tijd = new Date().toISOString();
-
-    // 3. Voeg speler toe
-    const { error: insertError } = await supabase.from("users").insert({
-      gebruikersnaam,
-      email,
-      wachtwoord, // beveiligd wachtwoordbeheer kun je later toevoegen
-      land: vrijLand.naam,
-      mp: 100, // aanpasbaar
-      created_at: tijd,
-      ip_adres: ip
-    });
-
-    if (insertError) {
-      alert("Registreren mislukt. Probeer opnieuw.");
-      console.error(insertError);
-      return;
-    }
-
-    // 4. Genereer startatleten o.b.v. limieten
-    const { data: limieten } = await supabase.from("limieten").select("*");
-
-    for (const limiet of limieten) {
-      const aantal = limiet.start;
-      const { data: statcategorieen } = await supabase
-        .from("statcategorieen")
+      // Vrij land bepalen
+      const { data: landen } = await supabase
+        .from("landentoewijzing")
         .select("*")
-        .match({
-          sport: limiet.sport,
-          discipline: limiet.discipline,
-          onderdeel: limiet.onderdeel,
-          geslacht: limiet.geslacht,
-        });
+        .order("volgorde", { ascending: true });
 
-      for (let i = 0; i < aantal; i++) {
-        const naam = `${vrijLand.naam.slice(0, 3).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
-        const stats = {};
-        for (const stat of statcategorieen) {
-          stats[stat.naam] = (
-            Math.random() * (stat.max_waarde - stat.min_waarde) + stat.min_waarde
-          ).toFixed(2);
-        }
+      const { data: spelers } = await supabase.from("users").select("land");
+      const gebruikteLanden = spelers.map((s) => s.land);
+      const vrijLand = landen.find((l) => !gebruikteLanden.includes(l.naam));
 
-        await supabase.from("atleten").insert({
-          naam,
-          leeftijd: 18 + Math.floor(Math.random() * 6),
-          sport: limiet.sport,
-          discipline: limiet.discipline,
-          onderdeel: limiet.onderdeel,
-          geslacht: limiet.geslacht,
-          owner: email,
-          land: vrijLand.naam,
-          ...stats,
-        });
+      if (!vrijLand) {
+        alert("Er zijn momenteel geen landen beschikbaar. Probeer later opnieuw.");
+        return;
       }
-    }
 
-    alert("Registratie voltooid! Je bent nu ingelogd.");
-    window.location.href = "login.html";
-  });
-</script>
+      // IP & tijd
+      let ip = "onbekend";
+      try {
+        ip = await fetch("https://api.ipify.org?format=json").then((res) => res.json()).then((d) => d.ip);
+      } catch (e) {
+        console.warn("IP ophalen mislukt:", e);
+      }
+      const tijd = new Date().toISOString();
+
+      // Speler toevoegen
+      const { error: insertError } = await supabase.from("users").insert({
+        gebruikersnaam,
+        email,
+        wachtwoord,
+        land: vrijLand.naam,
+        mp: 100,
+        created_at: tijd,
+        ip_adres: ip
+      });
+
+      if (insertError) {
+        alert("Registreren mislukt. Probeer opnieuw.");
+        console.error(insertError);
+        return;
+      }
+
+      // Atleten genereren o.b.v. limieten
+      const { data: limieten } = await supabase.from("limieten").select("*");
+
+      for (const limiet of limieten) {
+        const aantal = limiet.start;
+
+        const { data: statcategorieen } = await supabase
+          .from("statcategorieen")
+          .select("*")
+          .match({
+            sport: limiet.sport,
+            discipline: limiet.discipline,
+            onderdeel: limiet.onderdeel,
+            geslacht: limiet.geslacht,
+          });
+
+        for (let i = 0; i < aantal; i++) {
+          const naam = `${vrijLand.naam.slice(0, 3).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
+          const stats = {};
+          for (const stat of statcategorieen) {
+            stats[stat.naam] = parseFloat(
+              (Math.random() * (stat.max_waarde - stat.min_waarde) + stat.min_waarde).toFixed(2)
+            );
+          }
+
+          await supabase.from("atleten").insert({
+            naam,
+            leeftijd: 18 + Math.floor(Math.random() * 6),
+            sport: limiet.sport,
+            discipline: limiet.discipline,
+            onderdeel: limiet.onderdeel,
+            geslacht: limiet.geslacht,
+            owner: email,
+            land: vrijLand.naam,
+            ...stats
+          });
+        }
+      }
+
+      alert("Registratie voltooid! Je kunt nu inloggen.");
+      window.location.href = "login.html";
+    });
+  </script>
 </body>
 </html>
