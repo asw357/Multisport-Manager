@@ -55,85 +55,55 @@
     <div id="managerStats" class="info-box">Even geduld...</div>
   </main>
   <script>
-    async function laadManagerGegevens() {
-      const userData = localStorage.getItem("loggedInUser");
-      if (!userData) {
-        window.location.href = "login.html";
-        await genereerAtleten(inserted[0]);
+    // ✅ Logincontrole
+    const speler = JSON.parse(localStorage.getItem("loggedInUser"));
+    if (!speler) window.location.href = "login.html";
 
-async function genereerAtleten(gebruiker) {
-  const { data: sporten } = await supabase.from("sportonderdelen").select("*");
-  const { data: limieten } = await supabase.from("limieten").select("*");
+    // 👤 Gebruikersinfo tonen
+    const vlaggen = {
+      Nederland: "🇳🇱",
+      Duitsland: "🇩🇪",
+      Japan: "🇯🇵",
+      Zweden: "🇸🇪"
+    };
 
-  const nieuwe = [];
+    document.getElementById("userInfo").innerHTML = `
+      👤 Ingelogd als <strong>${speler.gebruikersnaam}</strong> uit 
+      <strong>${speler.land}</strong> ${vlaggen[speler.land] || "🏳️"}
+      <br>🏅 MP: <strong>${speler.mp}</strong>
+    `;
 
-  sporten.forEach(s => {
-    const sleutel = `${s.sport} - ${s.geslacht} - ${s.onderdeel}`;
-    const limiet = limieten.find(l => l.sport === s.sport && l.geslacht === s.geslacht && l.onderdeel === s.onderdeel);
-    const startAantal = limiet?.start || 0;
+    // 📦 Statistieken ophalen
+    async function laadStats() {
+      const { data: atleten, error } = await supabase
+        .from("atleten")
+        .select("*")
+        .eq("owner", speler.email);
 
-    for (let i = 0; i < startAantal; i++) {
-      nieuwe.push({
-        naam: genereerNaam(gebruiker.land),
-        leeftijd: Math.floor(Math.random() * 10) + 18,
-        sport: s.sport,
-        geslacht: s.geslacht,
-        onderdeel: s.onderdeel,
-        owner: gebruiker.email,
-        stats: {
-          snelheid: Math.random() * 100,
-          kracht: Math.random() * 100,
-          techniek: Math.random() * 100
-        }
-      });
-    }
-  });
-
-  if (nieuwe.length > 0) {
-    await supabase.from("atleten").insert(nieuwe);
-  }
-}
-
-function genereerNaam(land) {
-  const voornamen = ["Alex", "Noah", "Sven", "Julian", "Max"];
-  const achternamen = ["Jansen", "Kovacs", "Petrov", "Smith"];
-  return `${voornamen[Math.floor(Math.random() * voornamen.length)]} ${achternamen[Math.floor(Math.random() * achternamen.length)]}`;
-}
+      if (error || !atleten) {
+        document.getElementById("managerStats").textContent = "❌ Fout bij laden atleten.";
         return;
       }
 
-      const gebruiker = JSON.parse(userData);
-      const userDiv = document.getElementById("userInfo");
-      const vlagUrl = `https://flagcdn.com/h20/${gebruiker.land.toLowerCase().slice(0, 2)}.png`;
-
-      userDiv.innerHTML = `👤 <strong>${gebruiker.gebruikersnaam}</strong> (${gebruiker.land}) 
-        <img src="${vlagUrl}" class="flag" alt="${gebruiker.land}"> 
-        | 💰 MP: ${gebruiker.mp}`;
-
-      const { data: atleten } = await supabase.from("atleten").select("*").eq("owner", gebruiker.email);
-      const aantal = atleten.length;
-      const gemiddelden = { snelheid: 0, kracht: 0, techniek: 0 };
-
+      const totaal = atleten.length;
+      let snelheid = 0, kracht = 0, techniek = 0;
       atleten.forEach(a => {
-        gemiddelden.snelheid += a.stats?.snelheid || 0;
-        gemiddelden.kracht += a.stats?.kracht || 0;
-        gemiddelden.techniek += a.stats?.techniek || 0;
+        snelheid += a.snelheid || 0;
+        kracht += a.kracht || 0;
+        techniek += a.techniek || 0;
       });
 
-      const statBox = document.getElementById("managerStats");
-      if (aantal > 0) {
-        statBox.innerHTML = `
-  👥 Aantal atleten: ${aantal}<br/>
-  📈 Gemiddelde Snelheid: ${(gemiddelden.snelheid / aantal).toFixed(1)}<br/>
-  💪 Gemiddelde Kracht: ${(gemiddelden.kracht / aantal).toFixed(1)}<br/>
-  🧠 Gemiddelde Techniek: ${(gemiddelden.techniek / aantal).toFixed(1)}
-`;
-      } else {
-        statBox.innerHTML = "Er zijn nog geen atleten gekoppeld aan jouw account.";
-      }
+      const gem = (x) => (x / totaal).toFixed(1);
+
+      document.getElementById("managerStats").innerHTML = `
+        👥 Aantal atleten: <strong>${totaal}</strong><br>
+        ⚡ Gemiddelde snelheid: <strong>${gem(snelheid)}</strong><br>
+        💪 Gemiddelde kracht: <strong>${gem(kracht)}</strong><br>
+        🧠 Gemiddelde techniek: <strong>${gem(techniek)}</strong>
+      `;
     }
 
-    laadManagerGegevens();
+    laadStats();
   </script>
 </body>
 </html>
