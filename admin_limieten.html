@@ -13,7 +13,7 @@
       padding: 20px;
     }
     form, table {
-      max-width: 900px;
+      max-width: 1000px;
       margin: 0 auto 30px auto;
     }
     input, select {
@@ -25,6 +25,7 @@
     table {
       width: 100%;
       border-collapse: collapse;
+      margin-top: 30px;
     }
     th, td {
       padding: 6px;
@@ -38,6 +39,17 @@
     }
     .actie-knoppen button {
       margin-right: 5px;
+    }
+    .sport-header {
+      background-color: #004080;
+      color: white;
+      font-size: 1.2em;
+      font-weight: bold;
+      padding: 8px;
+    }
+    .discipline-header {
+      background-color: #dfefff;
+      font-style: italic;
     }
   </style>
 </head>
@@ -76,7 +88,7 @@
       <button type="submit">➕ Toevoegen / Bijwerken</button>
     </form>
 
-    <h2>Huidige Limieten</h2>
+    <h2>📋 Huidige Limieten per Sport</h2>
     <table>
       <thead>
         <tr>
@@ -129,25 +141,52 @@
 
     async function laadLimieten() {
       const { data } = await supabase.from("limieten").select("*");
-      const tbody = document.getElementById("limietTabel");
-      tbody.innerHTML = "";
+      groepeerLimieten(data);
+    }
 
-      data.forEach((r) => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${r.sport}</td>
-          <td>${r.discipline || ""}</td>
-          <td>${r.geslacht}</td>
-          <td>${r.onderdeel}</td>
-          <td>${r.limiet}</td>
-          <td>${r.start}</td>
-          <td class="center actie-knoppen">
-            <button onclick="vulFormulier(${JSON.stringify(JSON.stringify(r))})">✏️</button>
-            <button onclick="verwijderLimiet('${r.id}')">🗑️</button>
-          </td>
-        `;
-        tbody.appendChild(tr);
+    function groepeerLimieten(limieten) {
+      const container = document.getElementById("limietTabel");
+      container.innerHTML = "";
+
+      const perSport = {};
+
+      limieten.forEach((item) => {
+        if (!perSport[item.sport]) perSport[item.sport] = {};
+        const discipline = item.discipline || "— Geen discipline —";
+        if (!perSport[item.sport][discipline]) perSport[item.sport][discipline] = [];
+        perSport[item.sport][discipline].push(item);
       });
+
+      for (const sport in perSport) {
+        const sportRow = document.createElement("tr");
+        sportRow.className = "sport-header";
+        sportRow.innerHTML = `<td colspan="7">🏅 ${sport}</td>`;
+        container.appendChild(sportRow);
+
+        for (const discipline in perSport[sport]) {
+          const disciplineRow = document.createElement("tr");
+          disciplineRow.className = "discipline-header";
+          disciplineRow.innerHTML = `<td colspan="7">📂 Discipline: ${discipline}</td>`;
+          container.appendChild(disciplineRow);
+
+          perSport[sport][discipline].forEach((r) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${r.sport}</td>
+              <td>${r.discipline || ""}</td>
+              <td>${r.geslacht}</td>
+              <td>${r.onderdeel}</td>
+              <td>${r.limiet}</td>
+              <td>${r.start}</td>
+              <td class="center actie-knoppen">
+                <button onclick="vulFormulier(${JSON.stringify(JSON.stringify(r))})">✏️</button>
+                <button onclick="verwijderLimiet('${r.id}')">🗑️</button>
+              </td>
+            `;
+            container.appendChild(tr);
+          });
+        }
+      }
     }
 
     function vulFormulier(json) {
