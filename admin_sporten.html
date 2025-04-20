@@ -9,26 +9,24 @@
   <script src="js/supabaseClient.js"></script>
   <style>
     body { font-family: sans-serif; padding: 20px; }
-    form, table {
-      max-width: 800px;
-      margin: auto;
-    }
+    form, table { max-width: 900px; margin: auto; }
     input, select, button {
-      margin: 5px;
+      margin: 5px 0;
       padding: 8px;
-    }
-    table {
       width: 100%;
-      border-collapse: collapse;
-      margin-top: 30px;
     }
-    th, td {
-      border: 1px solid #ccc;
+    table { width: 100%; border-collapse: collapse; margin-top: 30px; }
+    th, td { border: 1px solid #ccc; padding: 6px; text-align: left; }
+    th { background: #f0f0f0; }
+    .sport-header {
+      background-color: #004080;
+      color: white;
+      font-weight: bold;
       padding: 6px;
-      text-align: left;
     }
-    th {
-      background: #f0f0f0;
+    .discipline-header {
+      background-color: #dfefff;
+      font-style: italic;
     }
   </style>
 </head>
@@ -40,27 +38,43 @@
 
   <main>
     <form id="sportForm">
-      <select id="categorie" required></select>
-      <input type="text" id="discipline" placeholder="Discipline (optioneel)" />
+      <label for="sport">Sport (kies of typ)</label>
+      <input list="sportOpties" id="sport" required />
+      <datalist id="sportOpties"></datalist>
+
+      <label for="discipline">Discipline (optioneel)</label>
+      <input list="disciplineOpties" id="discipline" />
+      <datalist id="disciplineOpties"></datalist>
+
+      <label for="geslacht">Geslacht</label>
       <select id="geslacht" required>
         <option value="">Geslacht</option>
         <option value="Mannen">Mannen</option>
         <option value="Vrouwen">Vrouwen</option>
         <option value="Gemengd">Gemengd</option>
       </select>
+
+      <label for="onderdeel">Onderdeel</label>
       <input type="text" id="onderdeel" placeholder="Onderdeel" required />
+
       <button type="submit">➕ Toevoegen</button>
     </form>
 
+    <h2>📋 Overzicht Sporten & Onderdelen</h2>
     <table>
       <thead>
         <tr>
-          <th>Sport</th><th>Discipline</th><th>Geslacht</th><th>Onderdeel</th><th>Acties</th>
+          <th>Sport</th>
+          <th>Discipline</th>
+          <th>Geslacht</th>
+          <th>Onderdeel</th>
+          <th>Acties</th>
         </tr>
       </thead>
       <tbody id="sportTabel"></tbody>
     </table>
   </main>
+
   <script>
     let alleSporten = [];
 
@@ -68,25 +82,44 @@
       const { data } = await supabase.from("sportonderdelen").select("*").order("sport, discipline, geslacht, onderdeel");
       alleSporten = data || [];
       toonSporten();
-      laadCategorieSuggesties();
+      laadSuggesties();
     }
 
     function toonSporten() {
-      const tabel = document.getElementById("sportTabel");
-      tabel.innerHTML = "";
-      alleSporten.forEach((s, index) => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${s.sport}</td>
-          <td>${s.discipline || "-"}</td>
-          <td>${s.geslacht}</td>
-          <td>${s.onderdeel}</td>
-          <td>
-            <button onclick="verwijder(${s.id})">🗑️</button>
-          </td>
-        `;
-        tabel.appendChild(tr);
+      const tbody = document.getElementById("sportTabel");
+      tbody.innerHTML = "";
+
+      const perSport = {};
+      alleSporten.forEach((s) => {
+        if (!perSport[s.sport]) perSport[s.sport] = {};
+        const disc = s.discipline || "— Geen discipline —";
+        if (!perSport[s.sport][disc]) perSport[s.sport][disc] = [];
+        perSport[s.sport][disc].push(s);
       });
+
+      for (const sport in perSport) {
+        const trSport = document.createElement("tr");
+        trSport.innerHTML = `<td colspan="5" class="sport-header">${sport}</td>`;
+        tbody.appendChild(trSport);
+
+        for (const discipline in perSport[sport]) {
+          const trDisc = document.createElement("tr");
+          trDisc.innerHTML = `<td colspan="5" class="discipline-header">Discipline: ${discipline}</td>`;
+          tbody.appendChild(trDisc);
+
+          perSport[sport][discipline].forEach((s) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${s.sport}</td>
+              <td>${s.discipline || "-"}</td>
+              <td>${s.geslacht}</td>
+              <td>${s.onderdeel}</td>
+              <td><button onclick="verwijder(${s.id})">🗑️</button></td>
+            `;
+            tbody.appendChild(tr);
+          });
+        }
+      }
     }
 
     async function verwijder(id) {
@@ -96,12 +129,12 @@
 
     async function voegToe(event) {
       event.preventDefault();
-      const sport = document.getElementById("categorie").value.trim();
+      const sport = document.getElementById("sport").value.trim();
       const discipline = document.getElementById("discipline").value.trim();
       const geslacht = document.getElementById("geslacht").value;
       const onderdeel = document.getElementById("onderdeel").value.trim();
 
-      if (!sport || !geslacht || !onderdeel) return alert("Vul alles in!");
+      if (!sport || !geslacht || !onderdeel) return alert("Vul alle velden in!");
 
       const { error } = await supabase.from("sportonderdelen").insert([{ sport, discipline, geslacht, onderdeel }]);
       if (!error) {
@@ -110,16 +143,15 @@
       }
     }
 
-    function laadCategorieSuggesties() {
-      const categorieSelect = document.getElementById("categorie");
-      const unieke = [...new Set(alleSporten.map(s => s.sport))];
-      categorieSelect.innerHTML = '<option value="">Kies of typ sport</option>';
-      unieke.forEach(cat => {
-        const option = document.createElement("option");
-        option.value = cat;
-        option.textContent = cat;
-        categorieSelect.appendChild(option);
-      });
+    function laadSuggesties() {
+      const sportOpties = [...new Set(alleSporten.map(s => s.sport))];
+      const disciplineOpties = [...new Set(alleSporten.map(s => s.discipline).filter(Boolean))];
+
+      const sportDatalist = document.getElementById("sportOpties");
+      const disciplineDatalist = document.getElementById("disciplineOpties");
+
+      sportDatalist.innerHTML = sportOpties.map(s => `<option value="${s}">`).join("");
+      disciplineDatalist.innerHTML = disciplineOpties.map(d => `<option value="${d}">`).join("");
     }
 
     document.getElementById("sportForm").addEventListener("submit", voegToe);
