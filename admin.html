@@ -2,31 +2,71 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8" />
-  <title>Admin</title>
+  <title>Adminpaneel – Multisport-Manager</title>
   <link rel="stylesheet" href="css/style.css" />
   <style>
-    body { font-family: sans-serif; padding: 40px; }
-    h1 { margin-bottom: 30px; }
-    ul { list-style: none; padding: 0; }
-    li { margin: 10px 0; }
-    a { font-size: 18px; text-decoration: none; color: #0077cc; }
-    a:hover { text-decoration: underline; }
+    body {
+      font-family: sans-serif;
+      padding: 40px;
+      background: #f0f2f5;
+    }
+
+    h1 {
+      margin-bottom: 30px;
+      text-align: center;
+      font-size: 2em;
+    }
+
+    .admin-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 20px;
+    }
+
+    .admin-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      text-align: center;
+      transition: transform 0.2s ease;
+    }
+
+    .admin-card:hover {
+      transform: translateY(-4px);
+    }
+
+    .admin-card a {
+      text-decoration: none;
+      color: #004080;
+      font-weight: bold;
+      display: block;
+    }
+
+    .admin-icon {
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+
+    @media (max-width: 600px) {
+      h1 { font-size: 1.5em; }
+    }
   </style>
 </head>
 <body>
   <h1>🔧 Adminpaneel</h1>
-  <ul>
-    <li><a href="admin_editiebeheer.html">🗂️ Editie Beheer</a></li>
-    <li><a href="admin_landen.html">🌍 Landen</a></li>
-    <li><a href="admin_sporten.html">🏅 Sporten</a></li>
-    <li><a href="admin_atleetbeheer.html">👤 Atleten</a></li>
-    <li><a href="admin_limieten.html">📏 Limieten</a></li>
-    <li><a href="admin_tactieken.html">🧠 Tactieken</a></li>
-    <li><a href="admin_stats.html">📊 Statistiekcategorieën</a></li>
-    <li><a href="admin_combinaties.html">🔗 Combinaties</a></li>
-    <li><a href="admin_simulatieconfig.html">⚙️ Simulatieconfig</a></li>
-    <li><a href="admin_weer.html">🌤️ Weer</a></li>
-    <li><a href="admin_reset.html">🗑️ Reset</a></li>
-  </ul>
+  <div class="admin-grid">
+    <div class="admin-card"><div class="admin-icon">🗂️</div><a href="admin_editiebeheer.html">Editie Beheer</a></div>
+    <div class="admin-card"><div class="admin-icon">🌍</div><a href="admin_landen.html">Landen</a></div>
+    <div class="admin-card"><div class="admin-icon">🏅</div><a href="admin_sporten.html">Sporten</a></div>
+    <div class="admin-card"><div class="admin-icon">👤</div><a href="admin_atleetbeheer.html">Atleten</a></div>
+    <div class="admin-card"><div class="admin-icon">📏</div><a href="admin_limieten.html">Limieten</a></div>
+    <div class="admin-card"><div class="admin-icon">🧠</div><a href="admin_tactieken.html">Tactieken</a></div>
+    <div class="admin-card"><div class="admin-icon">📊</div><a href="admin_stats.html">Statistiekcategorieën</a></div>
+    <div class="admin-card"><div class="admin-icon">🔗</div><a href="admin_combinaties.html">Combinaties</a></div>
+    <div class="admin-card"><div class="admin-icon">⚙️</div><a href="admin_simulatieconfig.html">Simulatieconfig</a></div>
+    <div class="admin-card"><div class="admin-icon">🌤️</div><a href="admin_weer.html">Weer</a></div>
+    <div class="admin-card"><div class="admin-icon">🗑️</div><a href="admin_reset.html">Reset</a></div>
+  </div>
 </body>
 </html>
