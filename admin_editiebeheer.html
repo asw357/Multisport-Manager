@@ -293,9 +293,16 @@
 
   <script>
     function toonTab(id) {
-      document.querySelectorAll(\".tabblad\").forEach(t => t.classList.remove(\"active\"));
-      document.getElementById(id).classList.add(\"active\");
-    }
+  document.querySelectorAll(".tabblad").forEach(t => t.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+
+  // Automatisch juiste laadfunctie aanroepen
+  if (id === "tab-edities") laadEdities();
+  if (id === "tab-schema") laadSchema();
+  if (id === "tab-rondes") laadRondes();
+  if (id === "tab-ceremonies") laadCeremonies();
+  if (id === "tab-simulatie") laadSimulatie();
+}
   </script>
   <script>
   async function genereerVolgendeNaam(type) {
