@@ -1,181 +1,74 @@
-<section>
-  <h2>1️⃣ Kies sportonderdeel & editie</h2>
-
-  <label for="editieSelect">Editie</label>
-  <select id="editieSelect"></select>
-
-  <label for="onderdeelSelect">Sportonderdeel</label>
-  <select id="onderdeelSelect"></select>
-
-  <label for="finaleDag">Finale dagnummer</label>
-  <input type="number" id="finaleDag" placeholder="Bijv. 5" />
-
-  <label for="tijdslotFinale">Tijdslot finale</label>
-  <select id="tijdslotFinale">
-    <option value="Ochtend">Ochtend</option>
-    <option value="Middag">Middag</option>
-    <option value="Avond">Avond</option>
-  </select>
-
-  <button onclick="genereerSchema()">📅 Genereer automatisch schema</button>
-</section>
-
-<section>
-  <h2>2️⃣ Structuur & limieten</h2>
-
-  <label for="maxDeelnemers">Max. aantal deelnemers</label>
-  <input type="number" id="maxDeelnemers" />
-
-  <label for="maxPerLand">Max. per land</label>
-  <input type="number" id="maxPerLand" />
-
-  <label for="minLanden">Minimaal aantal landen</label>
-  <input type="number" id="minLanden" />
-
-  <label for="vorm">Type onderdeel</label>
-  <select id="vorm">
-    <option value="individueel">Individueel</option>
-    <option value="team">Team</option>
-    <option value="estafette">Estafette</option>
-  </select>
-
-  <label for="pogingen">Aantal pogingen per atleet (optioneel)</label>
-  <input type="number" id="pogingen" />
-
-  <label for="races">Aantal races per ronde (optioneel)</label>
-  <input type="number" id="races" />
-</section>
-<section>
-  <h2>3️⃣ Automatisch gegenereerd schema</h2>
-  <div id="schemaPreview">⚠️ Nog geen onderdeel geselecteerd.</div>
-  <button onclick="opslaanSchema()">💾 Opslaan in wedstrijdschema</button>
-</section>
-
-<section>
-  <h2>4️⃣ Opslaan als standaardformat</h2>
-  <label>
-    <input type="checkbox" id="opslaanAlsTemplate" />
-    Sla structuur op als sjabloon voor dit onderdeel
-  </label>
-</section>
-
-<section>
-  <h2>5️⃣ Simulatieregels</h2>
-
-  <label for="statNaam">Statnaam</label>
-  <input id="statNaam" placeholder="bijv. snelheid" />
-
-  <label for="statMin">Minimale waarde</label>
-  <input type="number" id="statMin" placeholder="0" />
-
-  <label for="statMax">Maximale waarde</label>
-  <input type="number" id="statMax" placeholder="100" />
-
-  <label for="statEenheid">Eenheid</label>
-  <input id="statEenheid" placeholder="bijv. sec, m" />
-
-  <button onclick="opslaanSimulatie()">💾 Opslaan simulatieregel</button>
-</section>
-
-<section>
-  <h2>6️⃣ Snelle planning</h2>
-  <button onclick="genereerVolledigePlanning()">⚡ Plan alle onderdelen van deze sport</button>
-</section>
-
-<section>
-  <h2>7️⃣ Simulatietest</h2>
-  <button onclick="testSimulatie()">🎮 Test simulatie voor dit onderdeel</button>
-  <div id="simulatiePreview">⏳ Resultaat verschijnt hier...</div>
-</section>
 <script>
-  async function laadSelecties() {
-    const { data: edities } = await supabase.from("edities").select("*").order("startdatum");
-    document.getElementById("editieSelect").innerHTML = edities.map(e =>
-      `<option value="${e.id}">${e.naam}</option>`).join("");
+  async function vulBestaandeGegevens() {
+    const [sport, discipline, onderdeel, geslacht] = document.getElementById("onderdeelSelect").value.split("|");
 
-    const { data: onderdelen } = await supabase.from("sportonderdelen").select("*").order("sport, discipline, onderdeel, geslacht");
-    const grouped = onderdelen.reduce((acc, o) => {
-      const label = `${o.sport} → ${o.discipline || "-"} → ${o.onderdeel} → ${o.geslacht}`;
-      acc.push({ label, value: `${o.sport}|${o.discipline}|${o.onderdeel}|${o.geslacht}` });
-      return acc;
-    }, []);
-    document.getElementById("onderdeelSelect").innerHTML = grouped.map(g =>
-      `<option value="${g.value}">${g.label}</option>`).join("");
-  }
-
-  async function haalToernooiformat(sport, discipline, onderdeel, geslacht) {
-    const { data } = await supabase.from("toernooiformats").select("rondes")
+    // Limieten ophalen
+    const { data: limiet } = await supabase
+      .from("limieten")
+      .select("*")
       .eq("sport", sport)
       .eq("discipline", discipline)
       .eq("onderdeel", onderdeel)
       .eq("geslacht", geslacht);
-    return data?.[0]?.rondes || [
-      { naam: "Series", offset: -2, tijd: "Ochtend", label: "kwalificatie" },
-      { naam: "Halve Finale", offset: -1, tijd: "Middag", label: "eliminatie" },
-      { naam: "Finale", offset: 0, tijd: "Avond", label: "medaille" }
-    ];
+
+    if (limiet?.length) {
+      document.getElementById("maxDeelnemers").value = limiet[0].max_deelnemers || "";
+      document.getElementById("maxPerLand").value = limiet[0].max_per_land || "";
+    }
+
+    // Simulatieregel ophalen
+    const { data: sim } = await supabase
+      .from("simulatie")
+      .select("*")
+      .eq("sport", sport)
+      .eq("discipline", discipline)
+      .eq("onderdeel", onderdeel)
+      .eq("geslacht", geslacht)
+      .limit(1);
+
+    if (sim?.length) {
+      document.getElementById("statNaam").value = sim[0].stat_naam || "";
+      document.getElementById("statMin").value = sim[0].min_waarde || "";
+      document.getElementById("statMax").value = sim[0].max_waarde || "";
+      document.getElementById("statEenheid").value = sim[0].eenheid || "";
+    }
+
+    // Format ophalen (tijdslot automatisch previewen)
+    await genereerSchema();
   }
 
-  async function genereerSchema() {
-    const finaleDag = parseInt(document.getElementById("finaleDag").value);
-    const tijdslotFinale = document.getElementById("tijdslotFinale").value;
-    if (!finaleDag) return alert("Finaledag vereist");
-
-    const [sport, discipline, onderdeel, geslacht] = document.getElementById("onderdeelSelect").value.split("|");
-    const rondes = await haalToernooiformat(sport, discipline, onderdeel, geslacht);
-
-    // overschrijf finale tijdslot indien opgegeven
-    rondes.find(r => r.offset === 0).tijd = tijdslotFinale;
-
-    const preview = rondes.map(r =>
-      `<p>🕑 Dag ${finaleDag + r.offset} – ${r.naam} (${r.tijd}) – [${r.label}]</p>`).join("");
-    document.getElementById("schemaPreview").innerHTML = preview;
-  }
+  document.getElementById("onderdeelSelect").addEventListener("change", vulBestaandeGegevens);
 </script>
 <script>
-  async function opslaanSchema() {
-    const editie_id = document.getElementById("editieSelect").value;
+  async function opslaanLimieten() {
     const [sport, discipline, onderdeel, geslacht] = document.getElementById("onderdeelSelect").value.split("|");
-    const finaleDag = parseInt(document.getElementById("finaleDag").value);
-    const tijdslotFinale = document.getElementById("tijdslotFinale").value;
-    const opslaanAlsTemplate = document.getElementById("opslaanAlsTemplate").checked;
 
-    const rondes = await haalToernooiformat(sport, discipline, onderdeel, geslacht);
-    rondes.find(r => r.offset === 0).tijd = tijdslotFinale;
+    const nieuweLimiet = {
+      sport,
+      discipline,
+      onderdeel,
+      geslacht,
+      max_deelnemers: parseInt(document.getElementById("maxDeelnemers").value),
+      max_per_land: parseInt(document.getElementById("maxPerLand").value),
+      min_landen: parseInt(document.getElementById("minLanden").value) || null,
+      teamvorm: document.getElementById("vorm").value,
+      pogingen: parseInt(document.getElementById("pogingen").value) || null,
+      races: parseInt(document.getElementById("races").value) || null
+    };
 
-    // Opslaan in schema
-    for (const r of rondes) {
-      await supabase.from("schema").insert({
-        editie_id,
-        dag: finaleDag + r.offset,
-        tijd: "00:00",
-        tijdslot: r.tijd,
-        locatie: "Standaard",
-        sport,
-        discipline,
-        onderdeel,
-        geslacht,
-        status: "gepland",
-        ronde: r.naam,
-        label: r.label
-      });
-    }
+    await supabase.from("limieten").upsert(nieuweLimiet, {
+      onConflict: ["sport", "discipline", "onderdeel", "geslacht"]
+    });
 
-    // Opslaan als toernooiformat indien aangevinkt
-    if (opslaanAlsTemplate) {
-      await supabase.from("toernooiformats").upsert({
-        sport, discipline, onderdeel, geslacht,
-        volgorde: 1,
-        rondes
-      }, { onConflict: ["sport", "discipline", "onderdeel", "geslacht"] });
-    }
-
-    alert("Schema opgeslagen");
+    alert("Limieten opgeslagen");
   }
-
+</script>
+<button onclick="opslaanLimieten()">💾 Opslaan limieten & structuur</button>
+<script>
   async function opslaanSimulatie() {
     const [sport, discipline, onderdeel, geslacht] = document.getElementById("onderdeelSelect").value.split("|");
-    await supabase.from("simulatie").insert({
+
+    const nieuweSim = {
       sport,
       discipline,
       onderdeel,
@@ -183,67 +76,13 @@
       stat_naam: document.getElementById("statNaam").value,
       min_waarde: parseFloat(document.getElementById("statMin").value),
       max_waarde: parseFloat(document.getElementById("statMax").value),
-      eenheid: document.getElementById("statEenheid").value
+      eenheid: document.getElementById("statEenheid").value || null
+    };
+
+    await supabase.from("simulatie").upsert(nieuweSim, {
+      onConflict: ["sport", "discipline", "onderdeel", "geslacht"]
     });
+
     alert("Simulatieregel opgeslagen");
   }
 </script>
-<script>
-  async function genereerVolledigePlanning() {
-    const editie_id = document.getElementById("editieSelect").value;
-    const onderdeelData = document.getElementById("onderdeelSelect").value.split("|");
-    const sport = onderdeelData[0];
-
-    const { data: onderdelen } = await supabase
-      .from("sportonderdelen")
-      .select("*")
-      .eq("sport", sport);
-
-    for (const o of onderdelen) {
-      const finaleDag = prompt(`Finale dag voor ${o.onderdeel} (${o.geslacht})?`, "5");
-      const tijdslot = prompt("Tijdslot (Ochtend/Middag/Avond)?", "Avond");
-
-      const rondes = await haalToernooiformat(o.sport, o.discipline, o.onderdeel, o.geslacht);
-      rondes.find(r => r.offset === 0).tijd = tijdslot;
-
-      for (const r of rondes) {
-        await supabase.from("schema").insert({
-          editie_id,
-          dag: parseInt(finaleDag) + r.offset,
-          tijd: "00:00",
-          tijdslot: r.tijd,
-          locatie: "Standaard",
-          sport: o.sport,
-          discipline: o.discipline,
-          onderdeel: o.onderdeel,
-          geslacht: o.geslacht,
-          status: "gepland",
-          ronde: r.naam,
-          label: r.label
-        });
-      }
-    }
-
-    alert("Volledige planning gegenereerd");
-  }
-
-  async function testSimulatie() {
-    const preview = document.getElementById("simulatiePreview");
-    preview.innerHTML = "⏳ Simulatie wordt gegenereerd...";
-
-    setTimeout(() => {
-      const voorbeeld = [
-        "🇳🇱 Nederland – 10.23s",
-        "🇺🇸 VS – 10.18s",
-        "🇯🇲 Jamaica – 9.97s 🥇",
-        "🇩🇪 Duitsland – 10.42s"
-      ];
-      preview.innerHTML = "<strong>Resultaat:</strong><ul>" + voorbeeld.map(v => `<li>${v}</li>`).join("") + "</ul>";
-    }, 1000);
-  }
-
-  // Init
-  laadSelecties();
-</script>
-</body>
-</html>
