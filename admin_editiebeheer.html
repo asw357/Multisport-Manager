@@ -297,5 +297,321 @@
       document.getElementById(id).classList.add(\"active\");
     }
   </script>
+  <script>
+  async function genereerVolgendeNaam(type) {
+    const { data } = await supabase.from("edities").select("type, nummer").eq("type", type);
+    const nummers = data?.map(e => e.nummer) || [];
+    const hoogste = Math.max(0, ...nummers);
+    return `${type}editie ${hoogste + 1}`;
+  }
+
+  async function laadEdities() {
+    const { data } = await supabase.from("edities").select("*").order("startdatum");
+    const tbody = document.getElementById("editiesTabel");
+    tbody.innerHTML = "";
+
+    data?.forEach(e => {
+      const rij = document.createElement("tr");
+      rij.innerHTML = `
+        <td><input value="${e.naam}" data-id="${e.id}" data-field="naam" /></td>
+        <td>${e.type}</td>
+        <td><input value="${e.plaats}" data-id="${e.id}" data-field="plaats" /></td>
+        <td><input value="${e.land}" data-id="${e.id}" data-field="land" /></td>
+        <td><input type="date" value="${e.startdatum || ''}" data-id="${e.id}" data-field="startdatum" /></td>
+        <td><input value="${e.status || ''}" data-id="${e.id}" data-field="status" /></td>
+        <td>
+          <button onclick="opslaanEditie('${e.id}')">💾</button>
+          <button onclick="verwijderEditie('${e.id}')">🗑️</button>
+        </td>
+      `;
+      tbody.appendChild(rij);
+    });
+  }
+
+  async function opslaanEditie(id) {
+    const inputs = document.querySelectorAll(`[data-id="${id}"]`);
+    const update = {};
+    inputs.forEach(input => {
+      update[input.dataset.field] = input.value;
+    });
+    await supabase.from("edities").update(update).eq("id", id);
+    laadEdities();
+  }
+
+  async function verwijderEditie(id) {
+    if (confirm("Weet je zeker dat je deze editie wilt verwijderen?")) {
+      await supabase.from("edities").delete().eq("id", id);
+      laadEdities();
+    }
+  }
+
+  document.getElementById("editieForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    const type = document.getElementById("type").value;
+    const naam = await genereerVolgendeNaam(type);
+    const nieuweEditie = {
+      type,
+      naam,
+      plaats: document.getElementById("plaats").value,
+      land: document.getElementById("land").value,
+      startdatum: document.getElementById("startdatum").value || null,
+      status: "gepland",
+      nummer: parseInt(naam.match(/\\d+$/)[0])
+    };
+    await supabase.from("edities").insert([nieuweEditie]);
+    this.reset();
+    laadEdities();
+  });
+
+  // 🚀 Initieel laden
+  laadEdities();
+</script>
+<script>
+  async function laadSchema() {
+    const { data } = await supabase.from("schema").select("*").order("dag, tijd");
+    const tbody = document.getElementById("schemaTabel");
+    tbody.innerHTML = "";
+
+    data?.forEach(s => {
+      const rij = document.createElement("tr");
+      rij.innerHTML = `
+        <td>${s.editie_id}</td>
+        <td>${s.dag}</td>
+        <td>${s.tijd}</td>
+        <td>${s.sport}</td>
+        <td>${s.discipline || "-"}</td>
+        <td>${s.onderdeel}</td>
+        <td>${s.geslacht}</td>
+        <td>${s.locatie}</td>
+        <td>${s.status}</td>
+        <td><button onclick="verwijderSchema(${s.id})">🗑️</button></td>
+      `;
+      tbody.appendChild(rij);
+    });
+  }
+
+  async function verwijderSchema(id) {
+    await supabase.from("schema").delete().eq("id", id);
+    laadSchema();
+  }
+
+  document.getElementById("schemaForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const nieuwe = {
+      editie_id: document.getElementById("schema_editie").value,
+      dag: parseInt(document.getElementById("schema_dag").value),
+      tijd: document.getElementById("schema_tijd").value,
+      locatie: document.getElementById("schema_locatie").value,
+      sport: document.getElementById("schema_sport").value,
+      discipline: document.getElementById("schema_discipline").value || null,
+      onderdeel: document.getElementById("schema_onderdeel").value,
+      geslacht: document.getElementById("schema_geslacht").value,
+      status: document.getElementById("schema_status").value || "gepland"
+    };
+
+    await supabase.from("schema").insert([nieuwe]);
+    this.reset();
+    laadSchema();
+  });
+
+  laadSchema();
+</script>
+<script>
+  async function laadRondes() {
+    const { data } = await supabase.from("rondes").select("*").order("ronde_nummer");
+    const tbody = document.getElementById("rondeTabel");
+    tbody.innerHTML = "";
+
+    data?.forEach(r => {
+      const rij = document.createElement("tr");
+      rij.innerHTML = `
+        <td>${r.naam}</td>
+        <td>${r.sport}</td>
+        <td>${r.onderdeel}</td>
+        <td>${r.max_deelnemers}</td>
+        <td>${r.max_per_land}</td>
+        <td>${r.type}</td>
+        <td>${r.aantal_wedstrijden || "-"}</td>
+        <td>${r.aantal_doorgaan || "-"}</td>
+        <td>${r.aantal_pogingen || "-"}</td>
+        <td>${r.aantal_races || "-"}</td>
+        <td><button onclick="verwijderRonde(${r.id})">🗑️</button></td>
+      `;
+      tbody.appendChild(rij);
+    });
+  }
+
+  async function verwijderRonde(id) {
+    await supabase.from("rondes").delete().eq("id", id);
+    laadRondes();
+  }
+
+  document.getElementById("rondeForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const editie_id = document.getElementById("ronde_editie").value;
+    const sport = document.getElementById("ronde_sport").value;
+    const discipline = document.getElementById("ronde_discipline").value;
+    const onderdeel = document.getElementById("ronde_onderdeel").value;
+    const geslacht = document.getElementById("ronde_geslacht").value;
+    const aantal = parseInt(document.getElementById("aantal_rondes").value);
+
+    for (let i = 1; i <= aantal; i++) {
+      const naam = prompt(`Naam ronde ${i} (bijv. Kwalificatie, Halve finale)?`, `Ronde ${i}`);
+      const max = parseInt(prompt("Max aantal deelnemers?", "16"));
+      const maxLand = parseInt(prompt("Max per land?", "2"));
+      const type = prompt("Type (individueel/team/estafette)?", "individueel");
+
+      await supabase.from("rondes").insert([{
+        editie_id,
+        sport,
+        discipline,
+        onderdeel,
+        geslacht,
+        ronde_nummer: i,
+        naam,
+        max_deelnemers: max,
+        max_per_land: maxLand,
+        type
+      }]);
+    }
+
+    this.reset();
+    laadRondes();
+  });
+
+  laadRondes();
+</script>
+<script>
+  async function laadCeremonies() {
+    const { data } = await supabase.from("ceremonies").select("*").order("datum");
+    const tbody = document.getElementById("ceremonieTabel");
+    tbody.innerHTML = "";
+
+    data?.forEach(c => {
+      const rij = document.createElement("tr");
+      rij.innerHTML = `
+        <td>${c.editie_id}</td>
+        <td>${c.type}</td>
+        <td>${c.datum}</td>
+        <td>${c.tijd}</td>
+        <td>${c.locatie}</td>
+        <td>${c.beschrijving || "-"}</td>
+        <td><button onclick="verwijderCeremonie(${c.id})">🗑️</button></td>
+      `;
+      tbody.appendChild(rij);
+    });
+  }
+
+  async function verwijderCeremonie(id) {
+    await supabase.from("ceremonies").delete().eq("id", id);
+    laadCeremonies();
+  }
+
+  document.getElementById("ceremonieForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const nieuwe = {
+      editie_id: document.getElementById("ceremonie_editie").value,
+      type: document.getElementById("ceremonie_type").value,
+      datum: document.getElementById("ceremonie_datum").value,
+      tijd: document.getElementById("ceremonie_tijd").value,
+      locatie: document.getElementById("ceremonie_locatie").value,
+      beschrijving: document.getElementById("ceremonie_beschrijving").value || null
+    };
+
+    await supabase.from("ceremonies").insert([nieuwe]);
+    this.reset();
+    laadCeremonies();
+  });
+
+  laadCeremonies();
+</script>
+<script>
+  async function laadSimulatie() {
+    const { data } = await supabase.from("simulatie").select("*").order("sport, onderdeel");
+    const tbody = document.getElementById("simulatieTabel");
+    tbody.innerHTML = "";
+
+    data?.forEach(s => {
+      const rij = document.createElement("tr");
+      rij.innerHTML = `
+        <td>${s.sport}</td>
+        <td>${s.onderdeel}</td>
+        <td>${s.geslacht}</td>
+        <td>${s.stat_naam}</td>
+        <td>${s.min_waarde}</td>
+        <td>${s.max_waarde}</td>
+        <td>${s.eenheid || "-"}</td>
+        <td><button onclick="verwijderSimulatie(${s.id})">🗑️</button></td>
+      `;
+      tbody.appendChild(rij);
+    });
+  }
+
+  async function verwijderSimulatie(id) {
+    await supabase.from("simulatie").delete().eq("id", id);
+    laadSimulatie();
+  }
+
+  document.getElementById("simulatieForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const nieuwe = {
+      editie_id: document.getElementById("sim_editie").value,
+      sport: document.getElementById("sim_sport").value,
+      discipline: document.getElementById("sim_discipline").value,
+      onderdeel: document.getElementById("sim_onderdeel").value,
+      geslacht: document.getElementById("sim_geslacht").value,
+      stat_naam: document.getElementById("sim_naam").value,
+      min_waarde: parseFloat(document.getElementById("sim_min").value),
+      max_waarde: parseFloat(document.getElementById("sim_max").value),
+      eenheid: document.getElementById("sim_eenheid").value || null
+    };
+
+    await supabase.from("simulatie").insert([nieuwe]);
+    this.reset();
+    laadSimulatie();
+  });
+
+  laadSimulatie();
+</script>
+<script>
+  async function laadSelecties() {
+    // 👉 Edities
+    const { data: edities } = await supabase.from("edities").select("*").order("startdatum");
+    const editieSelects = document.querySelectorAll("select[id$='_editie']");
+    editieSelects.forEach(sel => {
+      sel.innerHTML = edities.map(e => `<option value="${e.id}">${e.naam}</option>`).join("");
+    });
+
+    // 👉 Sportonderdelen
+    const { data: onderdelen } = await supabase.from("sportonderdelen").select("*").order("sport, discipline, onderdeel");
+
+    const sportSelects = document.querySelectorAll("select[id$='_sport']");
+    const disciplineSelects = document.querySelectorAll("select[id$='_discipline']");
+    const onderdeelSelects = document.querySelectorAll("select[id$='_onderdeel']");
+
+    const uniekeSporten = [...new Set(onderdelen.map(o => o.sport))];
+    const uniekeDisciplines = [...new Set(onderdelen.map(o => o.discipline).filter(Boolean))];
+    const uniekeOnderdelen = [...new Set(onderdelen.map(o => o.onderdeel))];
+
+    sportSelects.forEach(sel => {
+      sel.innerHTML = uniekeSporten.map(s => `<option value="${s}">${s}</option>`).join("");
+    });
+
+    disciplineSelects.forEach(sel => {
+      sel.innerHTML = '<option value=""></option>' + uniekeDisciplines.map(d => `<option value="${d}">${d}</option>`).join("");
+    });
+
+    onderdeelSelects.forEach(sel => {
+      sel.innerHTML = uniekeOnderdelen.map(o => `<option value="${o}">${o}</option>`).join("");
+    });
+  }
+
+  // 🚀 Alles inladen bij start
+  laadSelecties();
+</script>
 </body>
 </html>
