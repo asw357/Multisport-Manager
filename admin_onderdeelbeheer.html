@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎯 Onderdeelbeheer – Wedstrijdstructuur</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    section { background: #f8f8f8; padding: 20px; margin-bottom: 30px; border-radius: 6px; }
+    h2 { margin-top: 0; }
+    label, select, input, button { display: block; margin: 10px 0; width: 100%; max-width: 600px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 6px; text-align: left; }
+    th { background: #eee; }
+  </style>
+</head>
+<body>
+  <h1>🎯 Onderdeelbeheer</h1>
+  <nav><a href="admin.html">⬅️ Terug naar Admin</a></nav>
+
+  <section>
+    <h2>1️⃣ Kies sportonderdeel & editie</h2>
+    <label for="editieSelect">Editie</label>
+    <select id="editieSelect"></select>
+
+    <label for="onderdeelSelect">Sport - Onderdeel - Geslacht</label>
+    <select id="onderdeelSelect"></select>
+
+    <label for="finaleDag">Finale dagnummer</label>
+    <input type="number" id="finaleDag" placeholder="Bijv. 5">
+
+    <button onclick="genereerSchema()">📅 Genereer automatisch schema</button>
+  </section>
+
+  <section>
+    <h2>2️⃣ Automatisch gegenereerd schema</h2>
+    <div id="schemaPreview">⚠️ Nog geen onderdeel geselecteerd.</div>
+    <button onclick="opslaanSchema()">💾 Opslaan in wedstrijdschema</button>
+  </section>
+
+  <section>
+    <h2>3️⃣ Simulatieregels</h2>
+    <label for="statNaam">Statnaam</label>
+    <input id="statNaam" placeholder="bijv. snelheid">
+
+    <label for="statMin">Minimale waarde</label>
+    <input type="number" id="statMin" placeholder="0">
+
+    <label for="statMax">Maximale waarde</label>
+    <input type="number" id="statMax" placeholder="100">
+
+    <label for="statEenheid">Eenheid</label>
+    <input id="statEenheid" placeholder="bijv. sec, m">
+
+    <button onclick="opslaanSimulatie()">💾 Opslaan simulatieregel</button>
+  </section>
+
+  <script>
+    async function laadSelecties() {
+      const { data: edities } = await supabase.from("edities").select("*");
+      document.getElementById("editieSelect").innerHTML = edities.map(e => `<option value="${e.id}">${e.naam}</option>`).join("");
+
+      const { data: onderdelen } = await supabase.from("sportonderdelen").select("*");
+      document.getElementById("onderdeelSelect").innerHTML = onderdelen.map(o => `<option value="${o.sport}|${o.discipline}|${o.onderdeel}|${o.geslacht}">${o.sport} - ${o.onderdeel} - ${o.geslacht}</option>`).join("");
+    }
+
+    function genereerSchema() {
+      const finaleDag = parseInt(document.getElementById("finaleDag").value);
+      if (!finaleDag) return alert("Geef een finaledag op");
+
+      const rondes = ["Series", "Halve Finale", "Finale"];
+      const dagen = [finaleDag - 2, finaleDag - 1, finaleDag];
+
+      const preview = rondes.map((ronde, i) => `<p>🕑 Dag ${dagen[i]} – ${ronde}</p>`).join("");
+      document.getElementById("schemaPreview").innerHTML = preview;
+    }
+
+    async function opslaanSchema() {
+      const editie_id = document.getElementById("editieSelect").value;
+      const [sport, discipline, onderdeel, geslacht] = document.getElementById("onderdeelSelect").value.split("|");
+      const finaleDag = parseInt(document.getElementById("finaleDag").value);
+      const schema = [
+        { ronde: "Series", dag: finaleDag - 2 },
+        { ronde: "Halve Finale", dag: finaleDag - 1 },
+        { ronde: "Finale", dag: finaleDag }
+      ];
+      for (const s of schema) {
+        await supabase.from("schema").insert({
+          editie_id,
+          dag: s.dag,
+          tijd: "00:00",
+          locatie: "Standaard",
+          sport,
+          discipline,
+          onderdeel,
+          geslacht,
+          status: "gepland",
+          ronde: s.ronde
+        });
+      }
+      alert("Schema opgeslagen");
+    }
+
+    async function opslaanSimulatie() {
+      const [sport, discipline, onderdeel, geslacht] = document.getElementById("onderdeelSelect").value.split("|");
+      await supabase.from("simulatie").insert({
+        sport,
+        discipline,
+        onderdeel,
+        geslacht,
+        stat_naam: document.getElementById("statNaam").value,
+        min_waarde: parseFloat(document.getElementById("statMin").value),
+        max_waarde: parseFloat(document.getElementById("statMax").value),
+        eenheid: document.getElementById("statEenheid").value
+      });
+      alert("Simulatieregel opgeslagen");
+    }
+
+    laadSelecties();
+  </script>
+</body>
+</html>
