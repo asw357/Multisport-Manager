@@ -151,5 +151,48 @@
 
     document.getElementById("onderdeelSelect").addEventListener("change", vulBestaandeGegevens);
   </script>
+  <script>
+  async function vulBestaandeGegevens() {
+    const [sport, discipline, onderdeel, geslacht] = document.getElementById("onderdeelSelect").value.split("|");
+
+    // Limieten ophalen
+    const { data: limiet } = await supabase
+      .from("limieten")
+      .select("*")
+      .eq("sport", sport)
+      .eq("discipline", discipline)
+      .eq("onderdeel", onderdeel)
+      .eq("geslacht", geslacht);
+    if (limiet?.length) {
+      document.getElementById("maxDeelnemers").value = limiet[0].max_deelnemers || "";
+      document.getElementById("maxPerLand").value = limiet[0].max_per_land || "";
+      document.getElementById("minLanden").value = limiet[0].min_landen || "";
+      document.getElementById("vorm").value = limiet[0].teamvorm || "individueel";
+      document.getElementById("pogingen").value = limiet[0].pogingen || "";
+      document.getElementById("races").value = limiet[0].races || "";
+    }
+
+    // Simulatieregel ophalen
+    const { data: sim } = await supabase
+      .from("simulatie")
+      .select("*")
+      .eq("sport", sport)
+      .eq("discipline", discipline)
+      .eq("onderdeel", onderdeel)
+      .eq("geslacht", geslacht)
+      .limit(1);
+    if (sim?.length) {
+      document.getElementById("statNaam").value = sim[0].stat_naam || "";
+      document.getElementById("statMin").value = sim[0].min_waarde || "";
+      document.getElementById("statMax").value = sim[0].max_waarde || "";
+      document.getElementById("statEenheid").value = sim[0].eenheid || "";
+    }
+
+    // Schema opnieuw genereren met deze data
+    await genereerSchema();
+  }
+
+  document.getElementById("onderdeelSelect").addEventListener("change", vulBestaandeGegevens);
+</script>
 </body>
 </html>
