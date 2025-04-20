@@ -3,71 +3,44 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🗂️ Admin – Editiebeheer (Tabs)</title>
+  <title>🗂️ Editiebeheer</title>
   <link rel="stylesheet" href="css/style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script src="js/supabaseClient.js"></script>
   <style>
     body { font-family: sans-serif; padding: 20px; }
-    nav.admin-tabs {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-    nav.admin-tabs button {
-      padding: 10px 16px;
-      border: none;
-      background: #004080;
-      color: white;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    nav.admin-tabs button:hover {
-      background: #0066cc;
-    }
-    .tabblad { display: none; }
-    .tabblad.active { display: block; }
     section { margin-bottom: 40px; background: #f8f8f8; padding: 20px; border-radius: 6px; }
     h2 { margin-top: 0; }
     table { width: 100%; border-collapse: collapse; margin-top: 20px; }
     th, td { border: 1px solid #ccc; padding: 6px; text-align: left; }
-    th { background: #f0f0f0; }
-    input, select { width: 100%; padding: 6px; margin: 5px 0; }
-    button { padding: 8px 12px; margin-top: 10px; }
+    th { background: #eee; }
+    input { width: 100%; padding: 6px; margin: 4px 0; }
+    button { padding: 6px 12px; }
   </style>
 </head>
 <body>
-  <h1>🛠️ Editiebeheer</h1>
-  <nav class="admin-tabs">
-    <button onclick="toonTab('tab-edities')">🗂️ Edities</button>
-    <button onclick="toonTab('tab-schema')">📅 Schema</button>
-    <button onclick="toonTab('tab-rondes')">🧩 Rondes</button>
-    <button onclick="toonTab('tab-ceremonies')">🏛️ Ceremonies</button>
-    <button onclick="toonTab('tab-simulatie')">⚙️ Simulatie</button>
-  </nav>
+  <h1>🗂️ Editiebeheer</h1>
+  <nav><a href="admin.html">⬅️ Terug naar Admin</a></nav>
 
-  <section id="tab-edities" class="tabblad active">
-    <h2>🗂️ Edities</h2>
+  <section>
+    <h2>🎫 Nieuwe editie aanmaken</h2>
     <form id="editieForm">
-      <label for="type">Type</label>
+      <label for="type">Type editie</label>
       <select id="type" required>
         <option value="Zomer">Zomereditie</option>
         <option value="Winter">Wintereditie</option>
       </select>
-
       <label for="plaats">Gaststad</label>
       <input type="text" id="plaats" required />
-
       <label for="land">Gastland</label>
       <input type="text" id="land" required />
-
       <label for="startdatum">Startdatum</label>
       <input type="date" id="startdatum" />
-
       <button type="submit">➕ Voeg editie toe</button>
     </form>
-
-    <h3>Bestaande edities</h3>
+  </section>
+  <section>
+    <h2>📋 Bestaande edities</h2>
     <table>
       <thead>
         <tr>
@@ -83,542 +56,72 @@
       <tbody id="editiesTabel"></tbody>
     </table>
   </section>
-  <section id="tab-schema" class="tabblad">
-    <h2>📅 Wedstrijdschema</h2>
-    <form id="schemaForm">
-      <label for="schema_editie">Editie</label>
-      <select id="schema_editie" required></select>
-
-      <label for="schema_dag">Dagnummer</label>
-      <input type="number" id="schema_dag" required />
-
-      <label for="schema_tijd">Tijdstip</label>
-      <input type="time" id="schema_tijd" required />
-
-      <label for="schema_locatie">Locatie</label>
-      <input type="text" id="schema_locatie" required />
-
-      <label for="schema_sport">Sport</label>
-      <select id="schema_sport" required></select>
-
-      <label for="schema_discipline">Discipline (optioneel)</label>
-      <select id="schema_discipline"></select>
-
-      <label for="schema_onderdeel">Onderdeel</label>
-      <select id="schema_onderdeel" required></select>
-
-      <label for="schema_geslacht">Geslacht</label>
-      <select id="schema_geslacht" required>
-        <option value="Mannen">Mannen</option>
-        <option value="Vrouwen">Vrouwen</option>
-        <option value="Gemengd">Gemengd</option>
-      </select>
-
-      <label for="schema_status">Status</label>
-      <select id="schema_status">
-        <option value="gepland">Gepland</option>
-        <option value="bezig">Bezig</option>
-        <option value="afgerond">Afgerond</option>
-      </select>
-
-      <button type="submit">➕ Voeg wedstrijd toe</button>
-    </form>
-
-    <h3>📅 Geplande wedstrijden</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Editie</th>
-          <th>Dag</th>
-          <th>Tijd</th>
-          <th>Sport</th>
-          <th>Discipline</th>
-          <th>Onderdeel</th>
-          <th>Geslacht</th>
-          <th>Locatie</th>
-          <th>Status</th>
-          <th>Actie</th>
-        </tr>
-      </thead>
-      <tbody id="schemaTabel"></tbody>
-    </table>
-  </section>
-  <section id="tab-rondes" class="tabblad">
-    <h2>🧩 Toernooistructuur</h2>
-    <form id="rondeForm">
-      <label for="ronde_editie">Editie</label>
-      <select id="ronde_editie" required></select>
-
-      <label for="ronde_sport">Sport</label>
-      <select id="ronde_sport" required></select>
-
-      <label for="ronde_discipline">Discipline</label>
-      <select id="ronde_discipline"></select>
-
-      <label for="ronde_onderdeel">Onderdeel</label>
-      <select id="ronde_onderdeel" required></select>
-
-      <label for="ronde_geslacht">Geslacht</label>
-      <select id="ronde_geslacht" required>
-        <option value="Mannen">Mannen</option>
-        <option value="Vrouwen">Vrouwen</option>
-        <option value="Gemengd">Gemengd</option>
-      </select>
-
-      <label for="aantal_rondes">Aantal rondes</label>
-      <input type="number" id="aantal_rondes" min="1" max="8" value="1" required />
-
-      <div id="rondeVelden"></div>
-
-      <button type="submit">➕ Voeg rondes toe</button>
-    </form>
-
-    <h3>📑 Ingestelde rondes</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Ronde</th>
-          <th>Sport</th>
-          <th>Onderdeel</th>
-          <th>Max</th>
-          <th>Per land</th>
-          <th>Type</th>
-          <th>Wedstrijden</th>
-          <th>Doorgaan</th>
-          <th>Pogingen</th>
-          <th>Races</th>
-          <th>Actie</th>
-        </tr>
-      </thead>
-      <tbody id="rondeTabel"></tbody>
-    </table>
-  </section>
-  <section id="tab-ceremonies" class="tabblad">
-    <h2>🏛️ Openings- en sluitingsceremonies</h2>
-    <form id="ceremonieForm">
-      <label for="ceremonie_editie">Editie</label>
-      <select id="ceremonie_editie" required></select>
-
-      <label for="ceremonie_type">Type ceremonie</label>
-      <select id="ceremonie_type" required>
-        <option value="opening">Openingsceremonie</option>
-        <option value="sluiting">Sluitingsceremonie</option>
-      </select>
-
-      <label for="ceremonie_datum">Datum</label>
-      <input type="date" id="ceremonie_datum" required />
-
-      <label for="ceremonie_tijd">Tijd</label>
-      <input type="time" id="ceremonie_tijd" required />
-
-      <label for="ceremonie_locatie">Locatie</label>
-      <input type="text" id="ceremonie_locatie" required />
-
-      <label for="ceremonie_beschrijving">Beschrijving (optioneel)</label>
-      <input type="text" id="ceremonie_beschrijving" />
-
-      <button type="submit">➕ Voeg ceremonie toe</button>
-    </form>
-
-    <h3>🎟️ Ceremonie-overzicht</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Editie</th>
-          <th>Type</th>
-          <th>Datum</th>
-          <th>Tijd</th>
-          <th>Locatie</th>
-          <th>Beschrijving</th>
-          <th>Actie</th>
-        </tr>
-      </thead>
-      <tbody id="ceremonieTabel"></tbody>
-    </table>
-  </section>
-  <section id="tab-simulatie" class="tabblad">
-    <h2>⚙️ Simulatieregels per onderdeel</h2>
-    <form id="simulatieForm">
-      <label for="sim_editie">Editie</label>
-      <select id="sim_editie" required></select>
-
-      <label for="sim_sport">Sport</label>
-      <select id="sim_sport" required></select>
-
-      <label for="sim_discipline">Discipline</label>
-      <select id="sim_discipline"></select>
-
-      <label for="sim_onderdeel">Onderdeel</label>
-      <select id="sim_onderdeel" required></select>
-
-      <label for="sim_geslacht">Geslacht</label>
-      <select id="sim_geslacht" required>
-        <option value="Mannen">Mannen</option>
-        <option value="Vrouwen">Vrouwen</option>
-        <option value="Gemengd">Gemengd</option>
-      </select>
-
-      <label for="sim_naam">Naam stat</label>
-      <input type="text" id="sim_naam" required />
-
-      <label for="sim_min">Min. waarde</label>
-      <input type="number" id="sim_min" required />
-
-      <label for="sim_max">Max. waarde</label>
-      <input type="number" id="sim_max" required />
-
-      <label for="sim_eenheid">Eenheid</label>
-      <input type="text" id="sim_eenheid" placeholder="bijv. sec, m" />
-
-      <button type="submit">➕ Voeg simulatieregel toe</button>
-    </form>
-
-    <h3>📐 Instellingen per stat</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Sport</th>
-          <th>Onderdeel</th>
-          <th>Geslacht</th>
-          <th>Stat</th>
-          <th>Min</th>
-          <th>Max</th>
-          <th>Eenheid</th>
-          <th>Actie</th>
-        </tr>
-      </thead>
-      <tbody id="simulatieTabel"></tbody>
-    </table>
-  </section>
 
   <script>
-    function toonTab(id) {
-  document.querySelectorAll(".tabblad").forEach(t => t.classList.remove("active"));
-  document.getElementById(id).classList.add("active");
+    async function genereerVolgendeNaam(type) {
+      const { data } = await supabase.from("edities").select("type, nummer").eq("type", type);
+      const nummers = data?.map(e => e.nummer) || [];
+      const hoogste = Math.max(0, ...nummers);
+      return `${type}editie ${hoogste + 1}`;
+    }
 
-  // Automatisch juiste laadfunctie aanroepen
-  if (id === "tab-edities") laadEdities();
-  if (id === "tab-schema") laadSchema();
-  if (id === "tab-rondes") laadRondes();
-  if (id === "tab-ceremonies") laadCeremonies();
-  if (id === "tab-simulatie") laadSimulatie();
-}
-  </script>
-  <script>
-  async function genereerVolgendeNaam(type) {
-    const { data } = await supabase.from("edities").select("type, nummer").eq("type", type);
-    const nummers = data?.map(e => e.nummer) || [];
-    const hoogste = Math.max(0, ...nummers);
-    return `${type}editie ${hoogste + 1}`;
-  }
-
-  async function laadEdities() {
-    const { data } = await supabase.from("edities").select("*").order("startdatum");
-    const tbody = document.getElementById("editiesTabel");
-    tbody.innerHTML = "";
-
-    data?.forEach(e => {
-      const rij = document.createElement("tr");
-      rij.innerHTML = `
-        <td><input value="${e.naam}" data-id="${e.id}" data-field="naam" /></td>
-        <td>${e.type}</td>
-        <td><input value="${e.plaats}" data-id="${e.id}" data-field="plaats" /></td>
-        <td><input value="${e.land}" data-id="${e.id}" data-field="land" /></td>
-        <td><input type="date" value="${e.startdatum || ''}" data-id="${e.id}" data-field="startdatum" /></td>
-        <td><input value="${e.status || ''}" data-id="${e.id}" data-field="status" /></td>
-        <td>
-          <button onclick="opslaanEditie('${e.id}')">💾</button>
-          <button onclick="verwijderEditie('${e.id}')">🗑️</button>
-        </td>
-      `;
-      tbody.appendChild(rij);
-    });
-  }
-
-  async function opslaanEditie(id) {
-    const inputs = document.querySelectorAll(`[data-id="${id}"]`);
-    const update = {};
-    inputs.forEach(input => {
-      update[input.dataset.field] = input.value;
-    });
-    await supabase.from("edities").update(update).eq("id", id);
-    laadEdities();
-  }
-
-  async function verwijderEditie(id) {
-    if (confirm("Weet je zeker dat je deze editie wilt verwijderen?")) {
-      await supabase.from("edities").delete().eq("id", id);
+    async function laadEdities() {
+      const { data } = await supabase.from("edities").select("*").order("startdatum");
+      const tbody = document.getElementById("editiesTabel");
+      tbody.innerHTML = "";
+      data?.forEach(e => {
+        const rij = document.createElement("tr");
+        rij.innerHTML = `
+          <td><input value="${e.naam}" data-id="${e.id}" data-field="naam" /></td>
+          <td>${e.type}</td>
+          <td><input value="${e.plaats}" data-id="${e.id}" data-field="plaats" /></td>
+          <td><input value="${e.land}" data-id="${e.id}" data-field="land" /></td>
+          <td><input type="date" value="${e.startdatum || ''}" data-id="${e.id}" data-field="startdatum" /></td>
+          <td><input value="${e.status || ''}" data-id="${e.id}" data-field="status" /></td>
+          <td>
+            <button onclick="opslaanEditie('${e.id}')">💾</button>
+            <button onclick="verwijderEditie('${e.id}')">🗑️</button>
+          </td>`;
+        tbody.appendChild(rij);
+      });
+    }
+    async function opslaanEditie(id) {
+      const inputs = document.querySelectorAll(`[data-id="${id}"]`);
+      const update = {};
+      inputs.forEach(input => {
+        update[input.dataset.field] = input.value;
+      });
+      await supabase.from("edities").update(update).eq("id", id);
       laadEdities();
     }
-  }
 
-  document.getElementById("editieForm").addEventListener("submit", async function (e) {
-    e.preventDefault();
-    const type = document.getElementById("type").value;
-    const naam = await genereerVolgendeNaam(type);
-    const nieuweEditie = {
-      type,
-      naam,
-      plaats: document.getElementById("plaats").value,
-      land: document.getElementById("land").value,
-      startdatum: document.getElementById("startdatum").value || null,
-      status: "gepland",
-      nummer: parseInt(naam.match(/\\d+$/)[0])
-    };
-    await supabase.from("edities").insert([nieuweEditie]);
-    this.reset();
-    laadEdities();
-  });
-
-  // 🚀 Initieel laden
-  laadEdities();
-</script>
-<script>
-  async function laadSchema() {
-    const { data } = await supabase.from("schema").select("*").order("dag, tijd");
-    const tbody = document.getElementById("schemaTabel");
-    tbody.innerHTML = "";
-
-    data?.forEach(s => {
-      const rij = document.createElement("tr");
-      rij.innerHTML = `
-        <td>${s.editie_id}</td>
-        <td>${s.dag}</td>
-        <td>${s.tijd}</td>
-        <td>${s.sport}</td>
-        <td>${s.discipline || "-"}</td>
-        <td>${s.onderdeel}</td>
-        <td>${s.geslacht}</td>
-        <td>${s.locatie}</td>
-        <td>${s.status}</td>
-        <td><button onclick="verwijderSchema(${s.id})">🗑️</button></td>
-      `;
-      tbody.appendChild(rij);
-    });
-  }
-
-  async function verwijderSchema(id) {
-    await supabase.from("schema").delete().eq("id", id);
-    laadSchema();
-  }
-
-  document.getElementById("schemaForm").addEventListener("submit", async function (e) {
-    e.preventDefault();
-
-    const nieuwe = {
-      editie_id: document.getElementById("schema_editie").value,
-      dag: parseInt(document.getElementById("schema_dag").value),
-      tijd: document.getElementById("schema_tijd").value,
-      locatie: document.getElementById("schema_locatie").value,
-      sport: document.getElementById("schema_sport").value,
-      discipline: document.getElementById("schema_discipline").value || null,
-      onderdeel: document.getElementById("schema_onderdeel").value,
-      geslacht: document.getElementById("schema_geslacht").value,
-      status: document.getElementById("schema_status").value || "gepland"
-    };
-
-    await supabase.from("schema").insert([nieuwe]);
-    this.reset();
-    laadSchema();
-  });
-
-  laadSchema();
-</script>
-<script>
-  async function laadRondes() {
-    const { data } = await supabase.from("rondes").select("*").order("ronde_nummer");
-    const tbody = document.getElementById("rondeTabel");
-    tbody.innerHTML = "";
-
-    data?.forEach(r => {
-      const rij = document.createElement("tr");
-      rij.innerHTML = `
-        <td>${r.naam}</td>
-        <td>${r.sport}</td>
-        <td>${r.onderdeel}</td>
-        <td>${r.max_deelnemers}</td>
-        <td>${r.max_per_land}</td>
-        <td>${r.type}</td>
-        <td>${r.aantal_wedstrijden || "-"}</td>
-        <td>${r.aantal_doorgaan || "-"}</td>
-        <td>${r.aantal_pogingen || "-"}</td>
-        <td>${r.aantal_races || "-"}</td>
-        <td><button onclick="verwijderRonde(${r.id})">🗑️</button></td>
-      `;
-      tbody.appendChild(rij);
-    });
-  }
-
-  async function verwijderRonde(id) {
-    await supabase.from("rondes").delete().eq("id", id);
-    laadRondes();
-  }
-
-  document.getElementById("rondeForm").addEventListener("submit", async function (e) {
-    e.preventDefault();
-
-    const editie_id = document.getElementById("ronde_editie").value;
-    const sport = document.getElementById("ronde_sport").value;
-    const discipline = document.getElementById("ronde_discipline").value;
-    const onderdeel = document.getElementById("ronde_onderdeel").value;
-    const geslacht = document.getElementById("ronde_geslacht").value;
-    const aantal = parseInt(document.getElementById("aantal_rondes").value);
-
-    for (let i = 1; i <= aantal; i++) {
-      const naam = prompt(`Naam ronde ${i} (bijv. Kwalificatie, Halve finale)?`, `Ronde ${i}`);
-      const max = parseInt(prompt("Max aantal deelnemers?", "16"));
-      const maxLand = parseInt(prompt("Max per land?", "2"));
-      const type = prompt("Type (individueel/team/estafette)?", "individueel");
-
-      await supabase.from("rondes").insert([{
-        editie_id,
-        sport,
-        discipline,
-        onderdeel,
-        geslacht,
-        ronde_nummer: i,
-        naam,
-        max_deelnemers: max,
-        max_per_land: maxLand,
-        type
-      }]);
+    async function verwijderEditie(id) {
+      if (confirm("Weet je zeker dat je deze editie wilt verwijderen?")) {
+        await supabase.from("edities").delete().eq("id", id);
+        laadEdities();
+      }
     }
 
-    this.reset();
-    laadRondes();
-  });
-
-  laadRondes();
-</script>
-<script>
-  async function laadCeremonies() {
-    const { data } = await supabase.from("ceremonies").select("*").order("datum");
-    const tbody = document.getElementById("ceremonieTabel");
-    tbody.innerHTML = "";
-
-    data?.forEach(c => {
-      const rij = document.createElement("tr");
-      rij.innerHTML = `
-        <td>${c.editie_id}</td>
-        <td>${c.type}</td>
-        <td>${c.datum}</td>
-        <td>${c.tijd}</td>
-        <td>${c.locatie}</td>
-        <td>${c.beschrijving || "-"}</td>
-        <td><button onclick="verwijderCeremonie(${c.id})">🗑️</button></td>
-      `;
-      tbody.appendChild(rij);
-    });
-  }
-
-  async function verwijderCeremonie(id) {
-    await supabase.from("ceremonies").delete().eq("id", id);
-    laadCeremonies();
-  }
-
-  document.getElementById("ceremonieForm").addEventListener("submit", async function (e) {
-    e.preventDefault();
-
-    const nieuwe = {
-      editie_id: document.getElementById("ceremonie_editie").value,
-      type: document.getElementById("ceremonie_type").value,
-      datum: document.getElementById("ceremonie_datum").value,
-      tijd: document.getElementById("ceremonie_tijd").value,
-      locatie: document.getElementById("ceremonie_locatie").value,
-      beschrijving: document.getElementById("ceremonie_beschrijving").value || null
-    };
-
-    await supabase.from("ceremonies").insert([nieuwe]);
-    this.reset();
-    laadCeremonies();
-  });
-
-  laadCeremonies();
-</script>
-<script>
-  async function laadSimulatie() {
-    const { data } = await supabase.from("simulatie").select("*").order("sport, onderdeel");
-    const tbody = document.getElementById("simulatieTabel");
-    tbody.innerHTML = "";
-
-    data?.forEach(s => {
-      const rij = document.createElement("tr");
-      rij.innerHTML = `
-        <td>${s.sport}</td>
-        <td>${s.onderdeel}</td>
-        <td>${s.geslacht}</td>
-        <td>${s.stat_naam}</td>
-        <td>${s.min_waarde}</td>
-        <td>${s.max_waarde}</td>
-        <td>${s.eenheid || "-"}</td>
-        <td><button onclick="verwijderSimulatie(${s.id})">🗑️</button></td>
-      `;
-      tbody.appendChild(rij);
-    });
-  }
-
-  async function verwijderSimulatie(id) {
-    await supabase.from("simulatie").delete().eq("id", id);
-    laadSimulatie();
-  }
-
-  document.getElementById("simulatieForm").addEventListener("submit", async function (e) {
-    e.preventDefault();
-
-    const nieuwe = {
-      editie_id: document.getElementById("sim_editie").value,
-      sport: document.getElementById("sim_sport").value,
-      discipline: document.getElementById("sim_discipline").value,
-      onderdeel: document.getElementById("sim_onderdeel").value,
-      geslacht: document.getElementById("sim_geslacht").value,
-      stat_naam: document.getElementById("sim_naam").value,
-      min_waarde: parseFloat(document.getElementById("sim_min").value),
-      max_waarde: parseFloat(document.getElementById("sim_max").value),
-      eenheid: document.getElementById("sim_eenheid").value || null
-    };
-
-    await supabase.from("simulatie").insert([nieuwe]);
-    this.reset();
-    laadSimulatie();
-  });
-
-  laadSimulatie();
-</script>
-<script>
-  async function laadSelecties() {
-    // 👉 Edities
-    const { data: edities } = await supabase.from("edities").select("*").order("startdatum");
-    const editieSelects = document.querySelectorAll("select[id$='_editie']");
-    editieSelects.forEach(sel => {
-      sel.innerHTML = edities.map(e => `<option value="${e.id}">${e.naam}</option>`).join("");
+    document.getElementById("editieForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const type = document.getElementById("type").value;
+      const naam = await genereerVolgendeNaam(type);
+      const nieuweEditie = {
+        type,
+        naam,
+        plaats: document.getElementById("plaats").value,
+        land: document.getElementById("land").value,
+        startdatum: document.getElementById("startdatum").value || null,
+        status: "gepland",
+        nummer: parseInt(naam.match(/\\d+$/)[0])
+      };
+      await supabase.from("edities").insert([nieuweEditie]);
+      this.reset();
+      laadEdities();
     });
 
-    // 👉 Sportonderdelen
-    const { data: onderdelen } = await supabase.from("sportonderdelen").select("*").order("sport, discipline, onderdeel");
-
-    const sportSelects = document.querySelectorAll("select[id$='_sport']");
-    const disciplineSelects = document.querySelectorAll("select[id$='_discipline']");
-    const onderdeelSelects = document.querySelectorAll("select[id$='_onderdeel']");
-
-    const uniekeSporten = [...new Set(onderdelen.map(o => o.sport))];
-    const uniekeDisciplines = [...new Set(onderdelen.map(o => o.discipline).filter(Boolean))];
-    const uniekeOnderdelen = [...new Set(onderdelen.map(o => o.onderdeel))];
-
-    sportSelects.forEach(sel => {
-      sel.innerHTML = uniekeSporten.map(s => `<option value="${s}">${s}</option>`).join("");
-    });
-
-    disciplineSelects.forEach(sel => {
-      sel.innerHTML = '<option value=""></option>' + uniekeDisciplines.map(d => `<option value="${d}">${d}</option>`).join("");
-    });
-
-    onderdeelSelects.forEach(sel => {
-      sel.innerHTML = uniekeOnderdelen.map(o => `<option value="${o}">${o}</option>`).join("");
-    });
-  }
-
-  // 🚀 Alles inladen bij start
-  laadSelecties();
-</script>
+    // 🚀 Start
+    laadEdities();
+  </script>
 </body>
 </html>
