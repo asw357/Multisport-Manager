@@ -3,26 +3,51 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🗂️ Editie Beheer</title>
+  <title>🗂️ Admin – Editiebeheer (Tabs)</title>
   <link rel="stylesheet" href="css/style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script src="js/supabaseClient.js"></script>
   <style>
     body { font-family: sans-serif; padding: 20px; }
-    section { margin-bottom: 40px; }
+    nav.admin-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    nav.admin-tabs button {
+      padding: 10px 16px;
+      border: none;
+      background: #004080;
+      color: white;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    nav.admin-tabs button:hover {
+      background: #0066cc;
+    }
+    .tabblad { display: none; }
+    .tabblad.active { display: block; }
+    section { margin-bottom: 40px; background: #f8f8f8; padding: 20px; border-radius: 6px; }
+    h2 { margin-top: 0; }
     table { width: 100%; border-collapse: collapse; margin-top: 20px; }
     th, td { border: 1px solid #ccc; padding: 6px; text-align: left; }
     th { background: #f0f0f0; }
     input, select { width: 100%; padding: 6px; margin: 5px 0; }
-    button { margin-top: 10px; padding: 8px 12px; }
+    button { padding: 8px 12px; margin-top: 10px; }
   </style>
 </head>
 <body>
-  <h1>🗂️ Editie Beheer</h1>
-  
-  <!-- 🎯 Editie Instellen -->
-  <section>
-    <h2>🎯 Editie Instellen</h2>
+  <h1>🛠️ Editiebeheer</h1>
+  <nav class="admin-tabs">
+    <button onclick="toonTab('tab-edities')">🗂️ Edities</button>
+    <button onclick="toonTab('tab-schema')">📅 Schema</button>
+    <button onclick="toonTab('tab-rondes')">🧩 Rondes</button>
+    <button onclick="toonTab('tab-ceremonies')">🏛️ Ceremonies</button>
+    <button onclick="toonTab('tab-simulatie')">⚙️ Simulatie</button>
+  </nav>
+
+  <section id="tab-edities" class="tabblad active">
+    <h2>🗂️ Edities</h2>
     <form id="editieForm">
       <label for="type">Type</label>
       <select id="type" required>
@@ -58,84 +83,8 @@
       <tbody id="editiesTabel"></tbody>
     </table>
   </section>
-
-  <script>
-    async function genereerVolgendeNaam(type) {
-      const { data } = await supabase
-        .from("edities")
-        .select("type, nummer")
-        .eq("type", type);
-
-      const nummers = data?.map(e => e.nummer) || [];
-      const hoogste = Math.max(0, ...nummers);
-      return `${type}editie ${hoogste + 1}`;
-    }
-
-    async function laadEdities() {
-      const { data } = await supabase.from("edities").select("*").order("startdatum");
-      const tbody = document.getElementById("editiesTabel");
-      tbody.innerHTML = "";
-
-      data?.forEach(e => {
-        const rij = document.createElement("tr");
-        rij.innerHTML = `
-          <td><input value="${e.naam}" data-id="${e.id}" data-field="naam" /></td>
-          <td>${e.type}</td>
-          <td><input value="${e.plaats}" data-id="${e.id}" data-field="plaats" /></td>
-          <td><input value="${e.land}" data-id="${e.id}" data-field="land" /></td>
-          <td><input type="date" value="${e.startdatum || ''}" data-id="${e.id}" data-field="startdatum" /></td>
-          <td><input value="${e.status || ''}" data-id="${e.id}" data-field="status" /></td>
-          <td>
-            <button onclick="opslaanEditie('${e.id}')">💾</button>
-            <button onclick="verwijderEditie('${e.id}')">🗑️</button>
-          </td>
-        `;
-        tbody.appendChild(rij);
-      });
-    }
-
-    async function opslaanEditie(id) {
-      const inputs = document.querySelectorAll(`[data-id="${id}"]`);
-      const update = {};
-      inputs.forEach(input => {
-        update[input.dataset.field] = input.value;
-      });
-      await supabase.from("edities").update(update).eq("id", id);
-      laadEdities();
-    }
-
-    async function verwijderEditie(id) {
-      if (confirm("Weet je zeker dat je deze editie wilt verwijderen?")) {
-        await supabase.from("edities").delete().eq("id", id);
-        laadEdities();
-      }
-    }
-
-    document.getElementById("editieForm").addEventListener("submit", async function (e) {
-      e.preventDefault();
-      const type = document.getElementById("type").value;
-      const naam = await genereerVolgendeNaam(type);
-      const nieuweEditie = {
-        type,
-        naam,
-        plaats: document.getElementById("plaats").value,
-        land: document.getElementById("land").value,
-        startdatum: document.getElementById("startdatum").value || null,
-        status: "gepland",
-        nummer: parseInt(naam.match(/\d+$/)[0])
-      };
-      await supabase.from("edities").insert([nieuweEditie]);
-      this.reset();
-      laadEdities();
-    });
-
-    laadEdities();
-  </script>
-</body>
-</html>
-  <!-- 📋 Wedstrijdschema maken -->
-  <section>
-    <h2>📋 Wedstrijdschema maken</h2>
+  <section id="tab-schema" class="tabblad">
+    <h2>📅 Wedstrijdschema</h2>
     <form id="schemaForm">
       <label for="schema_editie">Editie</label>
       <select id="schema_editie" required></select>
@@ -194,373 +143,100 @@
       <tbody id="schemaTabel"></tbody>
     </table>
   </section>
+  <section id="tab-rondes" class="tabblad">
+    <h2>🧩 Toernooistructuur</h2>
+    <form id="rondeForm">
+      <label for="ronde_editie">Editie</label>
+      <select id="ronde_editie" required></select>
 
-  <script>
-    async function laadSchemaDropdowns() {
-      const { data: edities } = await supabase.from("edities").select("id, naam").order("startdatum");
-      const editieSelect = document.getElementById("schema_editie");
-      edities?.forEach(e => {
-        const opt = document.createElement("option");
-        opt.value = e.id;
-        opt.textContent = e.naam;
-        editieSelect.appendChild(opt);
-      });
+      <label for="ronde_sport">Sport</label>
+      <select id="ronde_sport" required></select>
 
-      const { data: onderdelen } = await supabase.from("sportonderdelen").select("*").order("sport");
+      <label for="ronde_discipline">Discipline</label>
+      <select id="ronde_discipline"></select>
 
-      const sporten = [...new Set(onderdelen.map(o => o.sport))];
-      const disciplines = [...new Set(onderdelen.map(o => o.discipline))];
-      const onderdelenset = [...new Set(onderdelen.map(o => o.onderdeel))];
+      <label for="ronde_onderdeel">Onderdeel</label>
+      <select id="ronde_onderdeel" required></select>
 
-      sporten.forEach(s => schema_sport.innerHTML += `<option value="${s}">${s}</option>`);
-      disciplines.forEach(d => schema_discipline.innerHTML += `<option value="${d}">${d}</option>`);
-      onderdelenset.forEach(o => schema_onderdeel.innerHTML += `<option value="${o}">${o}</option>`);
-    }
+      <label for="ronde_geslacht">Geslacht</label>
+      <select id="ronde_geslacht" required>
+        <option value="Mannen">Mannen</option>
+        <option value="Vrouwen">Vrouwen</option>
+        <option value="Gemengd">Gemengd</option>
+      </select>
 
-    async function laadSchemaTabel() {
-      const { data } = await supabase.from("schema").select("*").order("dag, tijd");
-      const edities = await supabase.from("edities").select("id, naam");
-      const editieMap = Object.fromEntries(edities.data.map(e => [e.id, e.naam]));
+      <label for="aantal_rondes">Aantal rondes</label>
+      <input type="number" id="aantal_rondes" min="1" max="8" value="1" required />
 
-      const tbody = document.getElementById("schemaTabel");
-      tbody.innerHTML = "";
+      <div id="rondeVelden"></div>
 
-      data?.forEach(s => {
-        const rij = document.createElement("tr");
-        rij.innerHTML = `
-          <td>${editieMap[s.editie_id] || "-"}</td>
-          <td>${s.dag}</td>
-          <td>${s.tijd}</td>
-          <td>${s.sport}</td>
-          <td>${s.discipline || "-"}</td>
-          <td>${s.onderdeel}</td>
-          <td>${s.geslacht}</td>
-          <td>${s.locatie}</td>
-          <td>${s.status}</td>
-          <td><button onclick="verwijderWedstrijd('${s.id}')">🗑️</button></td>
-        `;
-        tbody.appendChild(rij);
-      });
-    }
+      <button type="submit">➕ Voeg rondes toe</button>
+    </form>
 
-    async function verwijderWedstrijd(id) {
-      if (confirm("Weet je zeker dat je deze wedstrijd wilt verwijderen?")) {
-        await supabase.from("schema").delete().eq("id", id);
-        laadSchemaTabel();
-      }
-    }
+    <h3>📑 Ingestelde rondes</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Ronde</th>
+          <th>Sport</th>
+          <th>Onderdeel</th>
+          <th>Max</th>
+          <th>Per land</th>
+          <th>Type</th>
+          <th>Wedstrijden</th>
+          <th>Doorgaan</th>
+          <th>Pogingen</th>
+          <th>Races</th>
+          <th>Actie</th>
+        </tr>
+      </thead>
+      <tbody id="rondeTabel"></tbody>
+    </table>
+  </section>
+  <section id="tab-ceremonies" class="tabblad">
+    <h2>🏛️ Openings- en sluitingsceremonies</h2>
+    <form id="ceremonieForm">
+      <label for="ceremonie_editie">Editie</label>
+      <select id="ceremonie_editie" required></select>
 
-    document.getElementById("schemaForm").addEventListener("submit", async function (e) {
-      e.preventDefault();
-      const nieuwe = {
-        editie_id: schema_editie.value,
-        dag: parseInt(schema_dag.value),
-        tijd: schema_tijd.value,
-        locatie: schema_locatie.value,
-        sport: schema_sport.value,
-        discipline: schema_discipline.value || null,
-        onderdeel: schema_onderdeel.value,
-        geslacht: schema_geslacht.value,
-        status: schema_status.value
-      };
-      await supabase.from("schema").insert([nieuwe]);
-      this.reset();
-      laadSchemaTabel();
-    });
+      <label for="ceremonie_type">Type ceremonie</label>
+      <select id="ceremonie_type" required>
+        <option value="opening">Openingsceremonie</option>
+        <option value="sluiting">Sluitingsceremonie</option>
+      </select>
 
-    laadSchemaDropdowns();
-    laadSchemaTabel();
-  </script>
-  <!-- 🧩 Toernooistructuur bouwen -->
- <!-- 🧩 Toernooistructuur bouwen -->
-<section>
-  <h2>🧩 Toernooistructuur bouwen</h2>
-  <form id="rondeForm">
-    <label for="ronde_editie">Editie</label>
-    <select id="ronde_editie" required></select>
+      <label for="ceremonie_datum">Datum</label>
+      <input type="date" id="ceremonie_datum" required />
 
-    <label for="ronde_sport">Sport</label>
-    <select id="ronde_sport" required></select>
+      <label for="ceremonie_tijd">Tijd</label>
+      <input type="time" id="ceremonie_tijd" required />
 
-    <label for="ronde_discipline">Discipline</label>
-    <select id="ronde_discipline"></select>
+      <label for="ceremonie_locatie">Locatie</label>
+      <input type="text" id="ceremonie_locatie" required />
 
-    <label for="ronde_onderdeel">Onderdeel</label>
-    <select id="ronde_onderdeel" required></select>
+      <label for="ceremonie_beschrijving">Beschrijving (optioneel)</label>
+      <input type="text" id="ceremonie_beschrijving" />
 
-    <label for="ronde_geslacht">Geslacht</label>
-    <select id="ronde_geslacht" required>
-      <option value="Mannen">Mannen</option>
-      <option value="Vrouwen">Vrouwen</option>
-      <option value="Gemengd">Gemengd</option>
-    </select>
+      <button type="submit">➕ Voeg ceremonie toe</button>
+    </form>
 
-    <label for="aantal_rondes">Aantal rondes</label>
-    <input type="number" id="aantal_rondes" min="1" max="8" value="1" required />
-
-    <div id="rondeVelden"></div>
-
-    <button type="submit">➕ Voeg rondes toe</button>
-  </form>
-
-  <h3>📑 Ingestelde rondes</h3>
-  <table>
-    <thead>
-      <tr>
-        <th>Ronde</th>
-        <th>Sport</th>
-        <th>Onderdeel</th>
-        <th>Max</th>
-        <th>Per land</th>
-        <th>Type</th>
-        <th>Wedstrijden</th>
-        <th>Doorgaan</th>
-        <th>Pogingen</th>
-        <th>Races</th>
-        <th>Actie</th>
-      </tr>
-    </thead>
-    <tbody id="rondeTabel"></tbody>
-  </table>
-</section>
-
-<script>
-  async function laadRondeDropdowns() {
-    const { data: edities } = await supabase.from("edities").select("id, naam").order("startdatum");
-    edities?.forEach(e => {
-      ronde_editie.innerHTML += `<option value="${e.id}">${e.naam}</option>`;
-    });
-
-    const { data: onderdelen } = await supabase.from("sportonderdelen").select("*").order("sport");
-    const sporten = [...new Set(onderdelen.map(o => o.sport))];
-    const disciplines = [...new Set(onderdelen.map(o => o.discipline))];
-    const onderdelenset = [...new Set(onderdelen.map(o => o.onderdeel))];
-
-    sporten.forEach(s => ronde_sport.innerHTML += `<option value="${s}">${s}</option>`);
-    disciplines.forEach(d => ronde_discipline.innerHTML += `<option value="${d}">${d}</option>`);
-    onderdelenset.forEach(o => ronde_onderdeel.innerHTML += `<option value="${o}">${o}</option>`);
-  }
-
-  document.getElementById("aantal_rondes").addEventListener("input", () => {
-    genereerRondeVelden(parseInt(document.getElementById("aantal_rondes").value));
-  });
-
-  function genereerRondeVelden(aantal) {
-    const container = document.getElementById("rondeVelden");
-    container.innerHTML = "";
-
-    for (let i = 1; i <= aantal; i++) {
-      container.innerHTML += `
-        <fieldset style="margin: 10px 0; padding: 10px; border: 1px solid #ccc;">
-          <legend>🔁 Ronde ${i}</legend>
-          <label>Naam</label>
-          <input type="text" id="ronde_${i}_naam" required />
-          <label>Volgorde</label>
-          <input type="number" id="ronde_${i}_volgorde" value="${i}" required />
-          <label>Max. deelnemers totaal</label>
-          <input type="number" id="ronde_${i}_max" required />
-          <label>Max. per land</label>
-          <input type="number" id="ronde_${i}_perland" required />
-          <label>Ronde-type</label>
-          <input type="text" id="ronde_${i}_type" placeholder="groep / knock-out / herkansing" />
-          <label>Aantal wedstrijden</label>
-          <input type="number" id="ronde_${i}_aantalwedstrijden" min="1" value="1" required />
-          <label>Wedstrijdnamen (gescheiden met komma)</label>
-          <input type="text" id="ronde_${i}_wedstrijdnamen" placeholder="Bijv: Groep A, Groep B" />
-          <label>Doorgaan per wedstrijd (gescheiden met komma)</label>
-          <input type="text" id="ronde_${i}_doorgaan" placeholder="Bijv: 2,2" />
-          <label>Aantal pogingen (optioneel)</label>
-          <input type="number" id="ronde_${i}_pogingen" />
-          <label>Aantal races (optioneel)</label>
-          <input type="number" id="ronde_${i}_races" />
-        </fieldset>
-      `;
-    }
-  }
-
-  laadRondeDropdowns();
-  genereerRondeVelden(parseInt(document.getElementById("aantal_rondes").value));
-</script>
-<script>
-  async function laadRondeTabel() {
-    const { data } = await supabase.from("rondes").select("*").order("volgorde");
-    const tbody = document.getElementById("rondeTabel");
-    tbody.innerHTML = "";
-
-    data?.forEach(r => {
-      const wedstrijdNamen = r.wedstrijd_namen ? JSON.parse(r.wedstrijd_namen).join(", ") : "-";
-      const doorgaan = r.aantal_doorgaan ? JSON.parse(r.aantal_doorgaan).join(", ") : "-";
-      const rij = document.createElement("tr");
-      rij.innerHTML = `
-        <td>${r.ronde}</td>
-        <td>${r.sport}</td>
-        <td>${r.onderdeel}</td>
-        <td>${r.max_algemeen}</td>
-        <td>${r.max_per_land}</td>
-        <td>${r.ronde_type || "-"}</td>
-        <td>${r.aantal_wedstrijden || "-"}</td>
-        <td>${doorgaan}</td>
-        <td>${r.aantal_pogingen || "-"}</td>
-        <td>${r.aantal_races || "-"}</td>
-        <td><button onclick="verwijderRonde('${r.id}')">🗑️</button></td>
-      `;
-      tbody.appendChild(rij);
-    });
-  }
-
-  async function verwijderRonde(id) {
-    if (confirm("Verwijder deze ronde?")) {
-      await supabase.from("rondes").delete().eq("id", id);
-      laadRondeTabel();
-    }
-  }
-
-  document.getElementById("rondeForm").addEventListener("submit", async function (e) {
-    e.preventDefault();
-    const aantal = parseInt(document.getElementById("aantal_rondes").value);
-    const records = [];
-
-    for (let i = 1; i <= aantal; i++) {
-      const wedstrijdNamen = document.getElementById(`ronde_${i}_wedstrijdnamen`).value
-        .split(",").map(s => s.trim()).filter(s => s !== "");
-      const doorgaanPerWedstrijd = document.getElementById(`ronde_${i}_doorgaan`).value
-        .split(",").map(s => parseInt(s.trim())).filter(n => !isNaN(n));
-
-      const record = {
-        editie_id: ronde_editie.value,
-        sport: ronde_sport.value,
-        discipline: ronde_discipline.value || null,
-        onderdeel: ronde_onderdeel.value,
-        geslacht: ronde_geslacht.value,
-        ronde: document.getElementById(`ronde_${i}_naam`).value,
-        volgorde: parseInt(document.getElementById(`ronde_${i}_volgorde`).value),
-        max_algemeen: parseInt(document.getElementById(`ronde_${i}_max`).value),
-        max_per_land: parseInt(document.getElementById(`ronde_${i}_perland`).value),
-        ronde_type: document.getElementById(`ronde_${i}_type`).value || null,
-        aantal_wedstrijden: parseInt(document.getElementById(`ronde_${i}_aantalwedstrijden`).value) || null,
-        wedstrijd_namen: JSON.stringify(wedstrijdNamen),
-        aantal_doorgaan: JSON.stringify(doorgaanPerWedstrijd),
-        aantal_pogingen: parseInt(document.getElementById(`ronde_${i}_pogingen`).value) || null,
-        aantal_races: parseInt(document.getElementById(`ronde_${i}_races`).value) || null
-      };
-      records.push(record);
-    }
-
-    await supabase.from("rondes").insert(records);
-    this.reset();
-    genereerRondeVelden(1);
-    laadRondeTabel();
-  });
-
-  laadRondeTabel();
-</script>
-<!-- 🏛️ Ceremonies beheren -->
-<section>
-  <h2>🏛️ Openings- en sluitingsceremonies</h2>
-  <form id="ceremonieForm">
-    <label for="ceremonie_editie">Editie</label>
-    <select id="ceremonie_editie" required></select>
-
-    <label for="ceremonie_type">Type ceremonie</label>
-    <select id="ceremonie_type" required>
-      <option value="opening">Openingsceremonie</option>
-      <option value="sluiting">Sluitingsceremonie</option>
-    </select>
-
-    <label for="ceremonie_datum">Datum</label>
-    <input type="date" id="ceremonie_datum" required />
-
-    <label for="ceremonie_tijd">Tijd</label>
-    <input type="time" id="ceremonie_tijd" required />
-
-    <label for="ceremonie_locatie">Locatie</label>
-    <input type="text" id="ceremonie_locatie" required />
-
-    <label for="ceremonie_beschrijving">Beschrijving (optioneel)</label>
-    <input type="text" id="ceremonie_beschrijving" />
-
-    <button type="submit">➕ Voeg ceremonie toe</button>
-  </form>
-
-  <h3>🎟️ Ceremonie-overzicht</h3>
-  <table>
-    <thead>
-      <tr>
-        <th>Editie</th>
-        <th>Type</th>
-        <th>Datum</th>
-        <th>Tijd</th>
-        <th>Locatie</th>
-        <th>Beschrijving</th>
-        <th>Actie</th>
-      </tr>
-    </thead>
-    <tbody id="ceremonieTabel"></tbody>
-  </table>
-</section>
-
-<script>
-  async function laadCeremonieDropdowns() {
-    const { data: edities } = await supabase.from("edities").select("id, naam").order("startdatum");
-    const select = document.getElementById("ceremonie_editie");
-    edities?.forEach(e => {
-      const opt = document.createElement("option");
-      opt.value = e.id;
-      opt.textContent = e.naam;
-      select.appendChild(opt);
-    });
-  }
-
-  async function laadCeremonies() {
-    const { data: ceremonies } = await supabase.from("ceremonies").select("*").order("datum, tijd");
-    const edities = await supabase.from("edities").select("id, naam");
-    const editieMap = Object.fromEntries(edities.data.map(e => [e.id, e.naam]));
-
-    const tbody = document.getElementById("ceremonieTabel");
-    tbody.innerHTML = "";
-
-    ceremonies?.forEach(c => {
-      const rij = document.createElement("tr");
-      rij.innerHTML = `
-        <td>${editieMap[c.editie_id] || "-"}</td>
-        <td>${c.type}</td>
-        <td>${c.datum}</td>
-        <td>${c.tijd}</td>
-        <td>${c.locatie}</td>
-        <td>${c.beschrijving || "-"}</td>
-        <td><button onclick="verwijderCeremonie('${c.id}')">🗑️</button></td>
-      `;
-      tbody.appendChild(rij);
-    });
-  }
-
-  async function verwijderCeremonie(id) {
-    if (confirm("Weet je zeker dat je deze ceremonie wilt verwijderen?")) {
-      await supabase.from("ceremonies").delete().eq("id", id);
-      laadCeremonies();
-    }
-  }
-
-  document.getElementById("ceremonieForm").addEventListener("submit", async function (e) {
-    e.preventDefault();
-    const ceremonie = {
-      editie_id: document.getElementById("ceremonie_editie").value,
-      type: document.getElementById("ceremonie_type").value,
-      datum: document.getElementById("ceremonie_datum").value,
-      tijd: document.getElementById("ceremonie_tijd").value,
-      locatie: document.getElementById("ceremonie_locatie").value,
-      beschrijving: document.getElementById("ceremonie_beschrijving").value || null
-    };
-    await supabase.from("ceremonies").insert([ceremonie]);
-    this.reset();
-    laadCeremonies();
-  });
-
-  laadCeremonieDropdowns();
-  laadCeremonies();
-</script>
-  <!-- ⚙️ Simulatieregels per onderdeel -->
-  <section>
+    <h3>🎟️ Ceremonie-overzicht</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Editie</th>
+          <th>Type</th>
+          <th>Datum</th>
+          <th>Tijd</th>
+          <th>Locatie</th>
+          <th>Beschrijving</th>
+          <th>Actie</th>
+        </tr>
+      </thead>
+      <tbody id="ceremonieTabel"></tbody>
+    </table>
+  </section>
+  <section id="tab-simulatie" class="tabblad">
     <h2>⚙️ Simulatieregels per onderdeel</h2>
     <form id="simulatieForm">
       <label for="sim_editie">Editie</label>
@@ -616,65 +292,10 @@
   </section>
 
   <script>
-    async function laadSimulatieDropdowns() {
-      const { data: edities } = await supabase.from("edities").select("id, naam");
-      edities?.forEach(e => sim_editie.innerHTML += `<option value="${e.id}">${e.naam}</option>`);
-
-      const { data: onderdelen } = await supabase.from("sportonderdelen").select("*");
-      const sporten = [...new Set(onderdelen.map(o => o.sport))];
-      const disciplines = [...new Set(onderdelen.map(o => o.discipline))];
-      const onderdelenset = [...new Set(onderdelen.map(o => o.onderdeel))];
-
-      sporten.forEach(s => sim_sport.innerHTML += `<option value="${s}">${s}</option>`);
-      disciplines.forEach(d => sim_discipline.innerHTML += `<option value="${d}">${d}</option>`);
-      onderdelenset.forEach(o => sim_onderdeel.innerHTML += `<option value="${o}">${o}</option>`);
+    function toonTab(id) {
+      document.querySelectorAll(\".tabblad\").forEach(t => t.classList.remove(\"active\"));
+      document.getElementById(id).classList.add(\"active\");
     }
-
-    async function laadSimulatieTabel() {
-      const { data } = await supabase.from("statcategorieen").select("*");
-      const tbody = document.getElementById("simulatieTabel");
-      tbody.innerHTML = "";
-      data?.forEach(s => {
-        const rij = document.createElement("tr");
-        rij.innerHTML = `
-          <td>${s.sport}</td>
-          <td>${s.onderdeel}</td>
-          <td>${s.geslacht}</td>
-          <td>${s.naam}</td>
-          <td>${s.min_waarde}</td>
-          <td>${s.max_waarde}</td>
-          <td>${s.eenheid || "-"}</td>
-          <td><button onclick="verwijderSimulatie('${s.id}')">🗑️</button></td>
-        `;
-        tbody.appendChild(rij);
-      });
-    }
-
-    async function verwijderSimulatie(id) {
-      if (confirm("Simulatieregel verwijderen?")) {
-        await supabase.from("statcategorieen").delete().eq("id", id);
-        laadSimulatieTabel();
-      }
-    }
-
-    document.getElementById("simulatieForm").addEventListener("submit", async function (e) {
-      e.preventDefault();
-      const nieuwe = {
-        sport: sim_sport.value,
-        discipline: sim_discipline.value || null,
-        onderdeel: sim_onderdeel.value,
-        geslacht: sim_geslacht.value,
-        naam: sim_naam.value,
-        min_waarde: parseFloat(sim_min.value),
-        max_waarde: parseFloat(sim_max.value),
-        eenheid: sim_eenheid.value || null
-      };
-      await supabase.from("statcategorieen").insert([nieuwe]);
-      this.reset();
-      laadSimulatieTabel();
-    });
-
-    laadSimulatieDropdowns();
-    laadSimulatieTabel();
   </script>
+</body>
 </html>
