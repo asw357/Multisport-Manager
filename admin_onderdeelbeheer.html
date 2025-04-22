@@ -1,39 +1,13 @@
-<!DOCTYPE html>
-<html lang="nl">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🎯 Onderdeelbeheer – Wedstrijdstructuur</title>
-  <link rel="stylesheet" href="css/style.css" />
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-  <script src="js/supabaseClient.js"></script>
-  <style>
-    body { font-family: sans-serif; padding: 20px; }
-    section { background: #f8f8f8; padding: 20px; margin-bottom: 30px; border-radius: 6px; }
-    h2 { margin-top: 0; }
-    label, select, input, button {
-      display: block;
-      margin: 8px 0;
-      width: 100%;
-      max-width: 600px;
-    }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { border: 1px solid #ccc; padding: 6px; text-align: left; }
-    th { background: #eee; }
-  </style>
-</head>
-<body>
-  <h1>🎯 Onderdeelbeheer</h1>
-  <nav><a href="admin.html">⬅️ Terug naar Admin</a></nav>
+<section>
+  <h2>1️⃣ Kies editie & sportonderdeel</h2>
 
-  <section>
-    <h2>1️⃣ Kies editie & sportonderdeel</h2>
-    <label for="editieSelect">Editie</label>
-    <select id="editieSelect"></select>
+  <label for="editieSelect">Editie</label>
+  <select id="editieSelect"></select>
 
-    <label for="onderdeelSelect">Sport → Discipline → Onderdeel → Geslacht</label>
-    <select id="onderdeelSelect"></select>
+  <label for="onderdeelSelect">Sport → Discipline → Onderdeel → Geslacht</label>
+  <select id="onderdeelSelect"></select>
 
+  <div id="finaleInstellingen" style="display: none;">
     <label for="finaleDag">Finale dag</label>
     <input type="number" id="finaleDag" />
 
@@ -43,83 +17,12 @@
       <option value="Middag">Middag</option>
       <option value="Avond">Avond</option>
     </select>
+
     <button onclick="genereerSchema()">📅 Genereer automatisch schema</button>
-  </section>
+  </div>
+</section>
 
-  <section>
-    <h2>2️⃣ Structuur & limieten</h2>
-    <label for="maxDeelnemers">Max. deelnemers</label>
-    <input type="number" id="maxDeelnemers" />
-
-    <label for="maxPerLand">Max. per land</label>
-    <input type="number" id="maxPerLand" />
-
-    <label for="minLanden">Minimaal aantal landen</label>
-    <input type="number" id="minLanden" />
-
-    <label for="vorm">Type onderdeel</label>
-    <select id="vorm">
-      <option value="individueel">Individueel</option>
-      <option value="team">Team</option>
-      <option value="estafette">Estafette</option>
-    </select>
-
-    <label for="pogingen">Aantal pogingen</label>
-    <input type="number" id="pogingen" />
-
-    <label for="races">Aantal races</label>
-    <input type="number" id="races" />
-
-    <button onclick="opslaanLimieten()">💾 Opslaan limieten & structuur</button>
-  </section>
-
-  <section>
-    <h2>3️⃣ Automatisch gegenereerd schema</h2>
-    <div id="schemaPreview">⚠️ Nog geen onderdeel geselecteerd.</div>
-    <button onclick="opslaanSchema()">💾 Opslaan in wedstrijdschema</button>
-  </section>
-
-  <section>
-    <h2>4️⃣ Rondebeheer</h2>
-
-    <label for="rondeNaam">Ronde-naam (kies of typ)</label>
-    <input list="rondeSuggesties" id="rondeNaam" placeholder="bijv. Finale, Kwalificatie, 1/4 finale" />
-    <datalist id="rondeSuggesties">
-      <option value="Kwalificatie">
-      <option value="Eliminatie">
-      <option value="1/8 finale">
-      <option value="1/4 finale">
-      <option value="Halve Finale">
-      <option value="Ranking Round">
-      <option value="Knock-out">
-      <option value="Finale">
-    </datalist>
-
-    <label for="rondeOffset">Offset t.o.v. finale (bijv. -2)</label>
-    <input type="number" id="rondeOffset" />
-
-    <label for="rondeTijd">Tijdslot</label>
-    <select id="rondeTijd">
-      <option value="Ochtend">Ochtend</option>
-      <option value="Middag">Middag</option>
-      <option value="Avond">Avond</option>
-    </select>
-
-    <label for="rondeLabel">Simulatie-label</label>
-    <select id="rondeLabel">
-      <option value="kwalificatie">Kwalificatie</option>
-      <option value="eliminatie">Eliminatie</option>
-      <option value="medaille">Medaille</option>
-    </select>
-
-    <button onclick="voegRondeToe()">➕ Voeg ronde toe</button>
-    <button onclick="opslaanRondes()">💾 Opslaan rondestructuur</button>
-
-    <div id="rondesPreview" style="margin-top: 20px;"></div>
-  </section>
 <script>
-  let huidigeRondes = [];
-
   async function laadSelecties() {
     const editieRes = await supabase.from("edities").select("*").order("startdatum");
     const editieSelect = document.getElementById("editieSelect");
@@ -128,56 +31,137 @@
       : '<option disabled selected>⚠️ Geen edities gevonden</option>';
 
     const onderdelenRes = await supabase.from("sportonderdelen").select("*").order("sport, discipline, onderdeel, geslacht");
+    const gegroepeerd = {};
+    onderdelenRes.data.forEach(o => {
+      const key = `${o.sport} → ${o.discipline || "-"}`;
+      if (!gegroepeerd[key]) gegroepeerd[key] = [];
+      gegroepeerd[key].push(`<option value="${o.sport}|${o.discipline}|${o.onderdeel}|${o.geslacht}">${o.onderdeel} – ${o.geslacht}</option>`);
+    });
+
     const onderdeelSelect = document.getElementById("onderdeelSelect");
-    onderdeelSelect.innerHTML = onderdelenRes?.data?.length
-      ? onderdelenRes.data.map(o => `<option value="${o.sport}|${o.discipline}|${o.onderdeel}|${o.geslacht}">${o.sport} → ${o.discipline || '-'} → ${o.onderdeel} → ${o.geslacht}</option>`).join("")
-      : '<option disabled selected>⚠️ Geen sportonderdelen gevonden</option>';
+    onderdeelSelect.innerHTML = Object.entries(gegroepeerd).map(([groep, opties]) => `
+      <optgroup label="${groep}">
+        ${opties.join("")}
+      </optgroup>
+    `).join("");
   }
 
-  async function vulBestaandeGegevens() {
+  function toonFinaleVelden() {
+    const editieGekozen = document.getElementById("editieSelect").value;
+    const onderdeelGekozen = document.getElementById("onderdeelSelect").value;
+    document.getElementById("finaleInstellingen").style.display = (editieGekozen && onderdeelGekozen) ? "block" : "none";
+  }
+
+  document.getElementById("editieSelect").addEventListener("change", toonFinaleVelden);
+  document.getElementById("onderdeelSelect").addEventListener("change", () => {
+    toonFinaleVelden();
+    vulBestaandeGegevens();
+  });
+
+  laadSelecties();
+</script>
+<section>
+  <h2>2️⃣ Structuur & limieten</h2>
+
+  <label for="maxDeelnemers">Max. deelnemers</label>
+  <input type="number" id="maxDeelnemers" />
+
+  <label for="maxPerLand">Max. per land</label>
+  <input type="number" id="maxPerLand" />
+
+  <div id="minLandenWrapper" style="display: none;">
+    <label for="minLanden">Minimaal aantal landen (alleen bij teamsporten)</label>
+    <input type="number" id="minLanden" />
+  </div>
+
+  <label for="vorm">Type onderdeel</label>
+  <select id="vorm" onchange="toonMinLanden()">
+    <option value="individueel">Individueel</option>
+    <option value="team">Team</option>
+    <option value="estafette">Estafette</option>
+  </select>
+
+  <label for="pogingen">Aantal pogingen</label>
+  <input type="number" id="pogingen" />
+
+  <label for="races">Aantal races</label>
+  <input type="number" id="races" />
+
+  <button onclick="opslaanLimieten()">💾 Opslaan limieten & structuur</button>
+</section>
+
+<script>
+  function toonMinLanden() {
+    const vorm = document.getElementById("vorm").value;
+    const wrapper = document.getElementById("minLandenWrapper");
+    wrapper.style.display = (vorm === "team" || vorm === "estafette") ? "block" : "none";
+  }
+
+  async function opslaanLimieten() {
     const [sport, discipline, onderdeel, geslacht] = document.getElementById("onderdeelSelect").value.split("|");
 
-    const { data: limiet } = await supabase.from("limieten").select("*").eq("sport", sport).eq("discipline", discipline).eq("onderdeel", onderdeel).eq("geslacht", geslacht);
-    if (limiet?.length) {
-      document.getElementById("maxDeelnemers").value = limiet[0].max_deelnemers || "";
-      document.getElementById("maxPerLand").value = limiet[0].max_per_land || "";
-      document.getElementById("minLanden").value = limiet[0].min_landen || "";
-      document.getElementById("vorm").value = limiet[0].teamvorm || "individueel";
-      document.getElementById("pogingen").value = limiet[0].pogingen || "";
-      document.getElementById("races").value = limiet[0].races || "";
-    }
+    const nieuweLimiet = {
+      sport,
+      discipline,
+      onderdeel,
+      geslacht,
+      max_deelnemers: parseInt(document.getElementById("maxDeelnemers").value),
+      max_per_land: parseInt(document.getElementById("maxPerLand").value),
+      min_landen: (document.getElementById("vorm").value !== "individueel")
+        ? parseInt(document.getElementById("minLanden").value) : null,
+      teamvorm: document.getElementById("vorm").value,
+      pogingen: parseInt(document.getElementById("pogingen").value),
+      races: parseInt(document.getElementById("races").value)
+    };
 
-    const { data: sim } = await supabase.from("simulatie").select("*").eq("sport", sport).eq("discipline", discipline).eq("onderdeel", onderdeel).eq("geslacht", geslacht).limit(1);
-    if (sim?.length) {
-      document.getElementById("statNaam").value = sim[0].stat_naam || "";
-      document.getElementById("statMin").value = sim[0].min_waarde || "";
-      document.getElementById("statMax").value = sim[0].max_waarde || "";
-      document.getElementById("statEenheid").value = sim[0].eenheid || "";
-    }
+    await supabase.from("limieten").upsert(nieuweLimiet, {
+      onConflict: ["sport", "discipline", "onderdeel", "geslacht"]
+    });
 
-    const format = await supabase.from("toernooiformats").select("rondes")
-      .eq("sport", sport).eq("discipline", discipline).eq("onderdeel", onderdeel).eq("geslacht", geslacht);
-    huidigeRondes = format?.data?.[0]?.rondes || [];
-    toonRondes();
-
-    await genereerSchema();
+    alert("Limieten opgeslagen");
   }
+</script>
+<section>
+  <h2>3️⃣ Rondebeheer</h2>
 
-  async function genereerSchema() {
-    const finaleDag = parseInt(document.getElementById("finaleDag").value);
-    const tijdslotFinale = document.getElementById("tijdslotFinale").value;
+  <label for="rondeNaam">Ronde-naam (kies of typ)</label>
+  <input list="rondeSuggesties" id="rondeNaam" placeholder="bijv. Finale, Kwalificatie, 1/4 finale" />
+  <datalist id="rondeSuggesties">
+    <option value="Kwalificatie">
+    <option value="Eliminatie">
+    <option value="1/8 finale">
+    <option value="1/4 finale">
+    <option value="Halve Finale">
+    <option value="Ranking Round">
+    <option value="Knock-out">
+    <option value="Finale">
+  </datalist>
 
-    if (!finaleDag || isNaN(finaleDag)) {
-      alert("Geef een geldige finaledag op");
-      return;
-    }
+  <label for="rondeOffset">Offset t.o.v. finale (bijv. -2)</label>
+  <input type="number" id="rondeOffset" />
 
-    const preview = huidigeRondes.map(r =>
-      `<p>🕑 Dag ${finaleDag + r.offset} – ${r.naam} (${r.tijd}) – [${r.label}]</p>`
-    ).join("");
+  <label for="rondeTijd">Tijdslot</label>
+  <select id="rondeTijd">
+    <option value="Ochtend">Ochtend</option>
+    <option value="Middag">Middag</option>
+    <option value="Avond">Avond</option>
+  </select>
 
-    document.getElementById("schemaPreview").innerHTML = preview;
-  }
+  <label for="rondeLabel">Simulatielabel</label>
+  <select id="rondeLabel">
+    <option value="kwalificatie">Kwalificatie</option>
+    <option value="eliminatie">Eliminatie</option>
+    <option value="medaille">Medaille</option>
+  </select>
+
+  <button onclick="voegRondeToe()">➕ Voeg ronde toe</button>
+  <button onclick="opslaanRondes()">💾 Opslaan rondestructuur</button>
+
+  <div id="rondesPreview" style="margin-top: 20px;"></div>
+</section>
+
+<script>
+  let huidigeRondes = [];
 
   function voegRondeToe() {
     const naam = document.getElementById("rondeNaam").value;
@@ -242,31 +226,127 @@
 
     alert("Rondestructuur opgeslagen.");
   }
+</script>
+<section>
+  <h2>4️⃣ Automatisch gegenereerd schema</h2>
+  <div id="schemaPreview">⚠️ Nog geen finale of rondes gekozen.</div>
+  <button onclick="opslaanSchema()">💾 Opslaan in wedstrijdschema</button>
+</section>
 
-  async function opslaanLimieten() {
+<script>
+  async function genereerSchema() {
+    const finaleDag = parseInt(document.getElementById("finaleDag").value);
+    const tijdslotFinale = document.getElementById("tijdslotFinale").value;
+
+    if (isNaN(finaleDag) || !huidigeRondes.length) {
+      document.getElementById("schemaPreview").innerHTML = "⚠️ Vul finale dag én rondes in.";
+      return;
+    }
+
+    const preview = huidigeRondes.map(r =>
+      `<p>🕑 Dag ${finaleDag + r.offset} – ${r.naam} (${r.tijd}) – [${r.label}]</p>`
+    ).join("");
+
+    document.getElementById("schemaPreview").innerHTML = preview;
+  }
+
+  async function opslaanSchema() {
+    const editieId = document.getElementById("editieSelect").value;
+    const finaleDag = parseInt(document.getElementById("finaleDag").value);
     const [sport, discipline, onderdeel, geslacht] = document.getElementById("onderdeelSelect").value.split("|");
-    const nieuweLimiet = {
+
+    if (!editieId || isNaN(finaleDag) || !huidigeRondes.length) {
+      alert("Vul eerst editie, onderdeel, finaledag en rondes in.");
+      return;
+    }
+
+    const schemaEntries = huidigeRondes.map(r => ({
+      editie_id: editieId,
       sport,
       discipline,
       onderdeel,
       geslacht,
-      max_deelnemers: parseInt(document.getElementById("maxDeelnemers").value),
-      max_per_land: parseInt(document.getElementById("maxPerLand").value),
-      min_landen: parseInt(document.getElementById("minLanden").value),
-      teamvorm: document.getElementById("vorm").value,
-      pogingen: parseInt(document.getElementById("pogingen").value),
-      races: parseInt(document.getElementById("races").value)
+      dag: finaleDag + r.offset,
+      tijd: "00:00", // standaardtijd
+      tijdslot: r.tijd,
+      locatie: "", // optioneel
+      ronde: r.naam,
+      label: r.label,
+      status: "gepland"
+    }));
+
+    // Verwijder bestaande schema voor dit onderdeel & editie
+    await supabase
+      .from("schema")
+      .delete()
+      .eq("editie_id", editieId)
+      .eq("sport", sport)
+      .eq("discipline", discipline)
+      .eq("onderdeel", onderdeel)
+      .eq("geslacht", geslacht);
+
+    // Voeg nieuwe in
+    await supabase.from("schema").insert(schemaEntries);
+
+    alert("Wedstrijdschema opgeslagen.");
+  }
+</script>
+<section>
+  <h2>5️⃣ Simulatietest (optioneel)</h2>
+  <button onclick="testSimulatie()">🎮 Test simulatie</button>
+  <div id="simulatiePreview">⏳ Resultaten komen hier…</div>
+</section>
+
+<section>
+  <h2>🧠 Simulatieregels (optioneel)</h2>
+
+  <label for="statNaam">Statnaam</label>
+  <input id="statNaam" placeholder="bijv. snelheid" />
+
+  <label for="statMin">Minimale waarde</label>
+  <input type="number" id="statMin" />
+
+  <label for="statMax">Maximale waarde</label>
+  <input type="number" id="statMax" />
+
+  <label for="statEenheid">Eenheid</label>
+  <input id="statEenheid" placeholder="bijv. sec" />
+
+  <button onclick="opslaanSimulatie()">💾 Opslaan simulatieregel</button>
+</section>
+
+<script>
+  async function opslaanSimulatie() {
+    const [sport, discipline, onderdeel, geslacht] = document.getElementById("onderdeelSelect").value.split("|");
+
+    const nieuweSim = {
+      sport,
+      discipline,
+      onderdeel,
+      geslacht,
+      stat_naam: document.getElementById("statNaam").value,
+      min_waarde: parseFloat(document.getElementById("statMin").value),
+      max_waarde: parseFloat(document.getElementById("statMax").value),
+      eenheid: document.getElementById("statEenheid").value
     };
 
-    await supabase.from("limieten").upsert(nieuweLimiet, {
+    await supabase.from("simulatie").upsert(nieuweSim, {
       onConflict: ["sport", "discipline", "onderdeel", "geslacht"]
     });
 
-    alert("Limieten opgeslagen");
+    alert("Simulatieregel opgeslagen.");
   }
 
-  document.getElementById("onderdeelSelect").addEventListener("change", vulBestaandeGegevens);
-  laadSelecties();
+  function testSimulatie() {
+    const statNaam = document.getElementById("statNaam").value;
+    const min = parseFloat(document.getElementById("statMin").value);
+    const max = parseFloat(document.getElementById("statMax").value);
+    const eenheid = document.getElementById("statEenheid").value;
+    const result = (Math.random() * (max - min) + min).toFixed(2);
+    document.getElementById("simulatiePreview").innerHTML =
+      `Testwaarde voor ${statNaam}: <strong>${result} ${eenheid}</strong>`;
+  }
 </script>
+
 </body>
 </html>
