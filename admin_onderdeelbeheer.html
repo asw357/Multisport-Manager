@@ -316,3 +316,65 @@
     alert("Wedstrijdschema opgeslagen.");
   }
 </script>
+<section>
+  <h2>5️⃣ Simulatieregels (optioneel)</h2>
+
+  <label for="statNaam">Statnaam</label>
+  <input id="statNaam" placeholder="bijv. snelheid" />
+
+  <label for="statMin">Minimale waarde</label>
+  <input type="number" id="statMin" />
+
+  <label for="statMax">Maximale waarde</label>
+  <input type="number" id="statMax" />
+
+  <label for="statEenheid">Eenheid</label>
+  <input id="statEenheid" placeholder="bijv. sec" />
+
+  <button onclick="opslaanSimulatie()">💾 Opslaan simulatieregel</button>
+  <button onclick="testSimulatie()">🎮 Test simulatie</button>
+
+  <div id="simulatiePreview" style="margin-top: 10px;">⏳ Resultaten komen hier…</div>
+</section>
+
+<script>
+  async function opslaanSimulatie() {
+    const [sport, discipline, onderdeel, geslacht] = document.getElementById("onderdeelSelect").value.split("|");
+
+    const nieuweSim = {
+      sport,
+      discipline,
+      onderdeel,
+      geslacht,
+      stat_naam: document.getElementById("statNaam").value,
+      min_waarde: parseFloat(document.getElementById("statMin").value),
+      max_waarde: parseFloat(document.getElementById("statMax").value),
+      eenheid: document.getElementById("statEenheid").value
+    };
+
+    await supabase.from("simulatie").upsert(nieuweSim, {
+      onConflict: ["sport", "discipline", "onderdeel", "geslacht"]
+    });
+
+    alert("Simulatieregel opgeslagen.");
+  }
+
+  function testSimulatie() {
+    const statNaam = document.getElementById("statNaam").value;
+    const min = parseFloat(document.getElementById("statMin").value);
+    const max = parseFloat(document.getElementById("statMax").value);
+    const eenheid = document.getElementById("statEenheid").value;
+
+    if (isNaN(min) || isNaN(max) || !statNaam) {
+      document.getElementById("simulatiePreview").innerHTML = "⚠️ Vul eerst een geldige range en statnaam in.";
+      return;
+    }
+
+    const resultaat = (Math.random() * (max - min) + min).toFixed(2);
+    document.getElementById("simulatiePreview").innerHTML =
+      `Testresultaat voor ${statNaam}: <strong>${resultaat} ${eenheid}</strong>`;
+  }
+</script>
+
+</body>
+</html>
