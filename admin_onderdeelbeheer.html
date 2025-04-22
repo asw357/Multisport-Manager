@@ -77,6 +77,44 @@
     <h2>3️⃣ Automatisch gegenereerd schema</h2>
     <div id="schemaPreview">⚠️ Nog geen onderdeel geselecteerd.</div>
     <button onclick="opslaanSchema()">💾 Opslaan in wedstrijdschema</button>
+    <section>
+  <h2>4️⃣ Rondebeheer</h2>
+
+  <label for="rondeNaam">Ronde-naam (kies of typ)</label>
+  <input list="rondeSuggesties" id="rondeNaam" placeholder="bijv. Finale, Kwalificatie, 1/4 finale" />
+  <datalist id="rondeSuggesties">
+    <option value="Kwalificatie">
+    <option value="Eliminatie">
+    <option value="1/8 finale">
+    <option value="1/4 finale">
+    <option value="Halve Finale">
+    <option value="Ranking Round">
+    <option value="Knock-out">
+    <option value="Finale">
+  </datalist>
+
+  <label for="rondeOffset">Offset t.o.v. finale (bijv. -2 = 2 dagen vóór)</label>
+  <input type="number" id="rondeOffset" />
+
+  <label for="rondeTijd">Tijdslot</label>
+  <select id="rondeTijd">
+    <option value="Ochtend">Ochtend</option>
+    <option value="Middag">Middag</option>
+    <option value="Avond">Avond</option>
+  </select>
+
+  <label for="rondeLabel">Simulatielabel</label>
+  <select id="rondeLabel">
+    <option value="kwalificatie">Kwalificatie</option>
+    <option value="eliminatie">Eliminatie</option>
+    <option value="medaille">Medaille</option>
+  </select>
+
+  <button onclick="voegRondeToe()">➕ Voeg ronde toe</button>
+  <button onclick="opslaanRondes()">💾 Opslaan rondestructuur</button>
+
+  <div id="rondesPreview" style="margin-top: 20px;"></div>
+</section>
   </section>
 
   <script>
@@ -195,6 +233,75 @@
 
     document.getElementById("onderdeelSelect").addEventListener("change", vulBestaandeGegevens);
     laadSelecties();
+  <script>
+  let huidigeRondes = [];
+
+  function voegRondeToe() {
+    const naam = document.getElementById("rondeNaam").value;
+    const offset = parseInt(document.getElementById("rondeOffset").value);
+    const tijd = document.getElementById("rondeTijd").value;
+    const label = document.getElementById("rondeLabel").value;
+
+    if (!naam || isNaN(offset)) {
+      alert("Vul een geldige ronde-naam en offset in.");
+      return;
+    }
+
+    huidigeRondes.push({ naam, offset, tijd, label });
+    toonRondes();
+
+    // Laat de rondeNaam staan voor gemak, wis offset
+    document.getElementById("rondeOffset").value = "";
+  }
+
+  function toonRondes() {
+    const container = document.getElementById("rondesPreview");
+    if (huidigeRondes.length === 0) {
+      container.innerHTML = "<p>⚠️ Nog geen rondes toegevoegd.</p>";
+      return;
+    }
+
+    container.innerHTML = `
+      <table>
+        <thead><tr><th>Ronde</th><th>Offset</th><th>Tijdslot</th><th>Label</th><th></th></tr></thead>
+        <tbody>
+          ${huidigeRondes.map((r, i) => `
+            <tr>
+              <td>${r.naam}</td>
+              <td>${r.offset}</td>
+              <td>${r.tijd}</td>
+              <td>${r.label}</td>
+              <td><button onclick="verwijderRonde(${i})">❌</button></td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>`;
+  }
+
+  function verwijderRonde(index) {
+    huidigeRondes.splice(index, 1);
+    toonRondes();
+  }
+
+  async function opslaanRondes() {
+    const [sport, discipline, onderdeel, geslacht] = document.getElementById("onderdeelSelect").value.split("|");
+
+    if (!huidigeRondes.length) {
+      alert("Je hebt nog geen rondes toegevoegd.");
+      return;
+    }
+
+    await supabase.from("toernooiformats").upsert({
+      sport, discipline, onderdeel, geslacht,
+      volgorde: 1,
+      rondes: huidigeRondes
+    }, {
+      onConflict: ["sport", "discipline", "onderdeel", "geslacht"]
+    });
+
+    alert("Rondestructuur opgeslagen.");
+  }
+</script>
   </script>
 </body>
 </html>
