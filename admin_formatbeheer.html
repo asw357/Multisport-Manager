@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🎯 Formatbeheer – Toernooistructuur</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    section { background: #f8f8f8; padding: 20px; margin-bottom: 30px; border-radius: 6px; }
+    label, select, input, button {
+      display: block;
+      margin: 8px 0;
+      width: 100%;
+      max-width: 600px;
+    }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 6px; text-align: left; }
+    th { background: #eee; }
+  </style>
+</head>
+<body>
+  <h1>🎯 Formatbeheer</h1>
+  <nav><a href="admin.html">⬅️ Terug naar Admin</a></nav>
+
+  <section>
+    <h2>1️⃣ Kies sportonderdeel</h2>
+    <label for="onderdeelSelect">Sport → Discipline → Onderdeel → Geslacht</label>
+    <select id="onderdeelSelect"></select>
+  </section>
+
+  <section>
+    <h2>2️⃣ Bestaande rondestructuur</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Ronde</th>
+          <th>Offset (dag t.o.v. finale)</th>
+          <th>Tijdslot</th>
+          <th>Label</th>
+          <th>🗑️</th>
+        </tr>
+      </thead>
+      <tbody id="formatTabelBody">
+        <tr><td colspan="5">⚠️ Nog geen onderdeel gekozen.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <script>
+    async function laadOnderdelen() {
+      const { data } = await supabase.from("sportonderdelen").select("*").order("sport, discipline, onderdeel, geslacht");
+      const select = document.getElementById("onderdeelSelect");
+      select.innerHTML = data.map(o => 
+        `<option value="${o.sport}|${o.discipline}|${o.onderdeel}|${o.geslacht}">${o.sport} → ${o.discipline || '-'} → ${o.onderdeel} → ${o.geslacht}</option>`).join("");
+    }
+
+    async function laadFormat() {
+      const [sport, discipline, onderdeel, geslacht] = document.getElementById("onderdeelSelect").value.split("|");
+      const { data } = await supabase.from("toernooiformats").select("*")
+        .eq("sport", sport)
+        .eq("discipline", discipline)
+        .eq("onderdeel", onderdeel)
+        .eq("geslacht", geslacht);
+      
+      const tbody = document.getElementById("formatTabelBody");
+      if (!data?.length || !data[0].rondes?.length) {
+        tbody.innerHTML = `<tr><td colspan="5">⚠️ Geen rondes gevonden.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = data[0].rondes.map((r, i) => `
+        <tr>
+          <td>${r.naam}</td>
+          <td>${r.offset}</td>
+          <td>${r.tijd}</td>
+          <td>${r.label}</td>
+          <td><button onclick="verwijderRonde(${i})">❌</button></td>
+        </tr>`).join("");
+    }
+
+    document.getElementById("onderdeelSelect").addEventListener("change", laadFormat);
+    laadOnderdelen();
+  </script>
+</body>
+</html>
+  <section>
+    <h2>3️⃣ Ronde toevoegen</h2>
+    <label for="rondeNaam">Naam van de ronde</label>
+    <input id="rondeNaam" placeholder="bijv. Kwalificatie of Finale" />
+
+    <label for="rondeOffset">Offset t.o.v. finaledag (bijv. -2)</label>
+    <input type="number" id="rondeOffset" />
+
+    <label for="rondeTijd">Tijdslot</label>
+    <select id="rondeTijd">
+      <option value="Ochtend">Ochtend</option>
+      <option value="Middag">Middag</option>
+      <option value="Avond">Avond</option>
+    </select>
+
+    <label for="rondeLabel">Simulatie-label</label>
+    <select id="rondeLabel">
+      <option value="kwalificatie">Kwalificatie</option>
+      <option value="eliminatie">Eliminatie</option>
+      <option value="medaille">Medaille</option>
+    </select>
+
+    <button onclick="voegRondeToe()">➕ Voeg ronde toe</button>
+    <button onclick="opslaanRondes()">💾 Opslaan alle rondes</button>
+  </section>
+
+  <script>
+    let huidigeRondes = [];
+
+    function verwijderRonde(index) {
+      huidigeRondes.splice(index, 1);
+      toonRondes();
+    }
+
+    function voegRondeToe() {
+      const ronde = {
+        naam: document.getElementById("rondeNaam").value,
+        offset: parseInt(document.getElementById("rondeOffset").value),
+        tijd: document.getElementById("rondeTijd").value,
+        label: document.getElementById("rondeLabel").value
+      };
+      huidigeRondes.push(ronde);
+      toonRondes();
+      document.getElementById("rondeNaam").value = "";
+      document.getElementById("rondeOffset").value = "";
+    }
+
+    function toonRondes() {
+      const tbody = document.getElementById("formatTabelBody");
+      if (!huidigeRondes.length) {
+        tbody.innerHTML = "<tr><td colspan='5'>⚠️ Geen rondes toegevoegd.</td></tr>";
+        return;
+      }
+      tbody.innerHTML = huidigeRondes.map((r, i) => `
+        <tr>
+          <td>${r.naam}</td>
+          <td>${r.offset}</td>
+          <td>${r.tijd}</td>
+          <td>${r.label}</td>
+          <td><button onclick="verwijderRonde(${i})">❌</button></td>
+        </tr>
+      `).join("");
+    }
+
+    async function opslaanRondes() {
+      const [sport, discipline, onderdeel, geslacht] = document.getElementById("onderdeelSelect").value.split("|");
+
+      await supabase.from("toernooiformats").upsert({
+        sport, discipline, onderdeel, geslacht,
+        volgorde: 1,
+        rondes: huidigeRondes
+      }, {
+        onConflict: ["sport", "discipline", "onderdeel", "geslacht"]
+      });
+
+      alert("Rondestructuur opgeslagen!");
+    }
+  </script>
