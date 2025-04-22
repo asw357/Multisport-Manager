@@ -72,6 +72,7 @@
 
     <button onclick="opslaanLimieten()">💾 Opslaan limieten & structuur</button>
   </section>
+
   <section>
     <h2>3️⃣ Automatisch gegenereerd schema</h2>
     <div id="schemaPreview">⚠️ Nog geen onderdeel geselecteerd.</div>
@@ -113,125 +114,48 @@
 
   <script>
     async function laadSelecties() {
-      const { data: edities } = await supabase.from("edities").select("*").order("startdatum");
-      document.getElementById("editieSelect").innerHTML = edities.map(e =>
-        `<option value="${e.id}">${e.naam}</option>`).join("");
+      const editieRes = await supabase.from("edities").select("*").order("startdatum");
+      const editieSelect = document.getElementById("editieSelect");
+      editieSelect.innerHTML = editieRes?.data?.length
+        ? editieRes.data.map(e => `<option value="${e.id}">${e.naam}</option>`).join("")
+        : '<option disabled selected>⚠️ Geen edities gevonden</option>';
 
-      const { data: onderdelen } = await supabase.from("sportonderdelen").select("*").order("sport, discipline, onderdeel, geslacht");
-      const opties = onderdelen.map(o => ({
-        label: `${o.sport} → ${o.discipline || '-'} → ${o.onderdeel} → ${o.geslacht}`,
-        value: `${o.sport}|${o.discipline}|${o.onderdeel}|${o.geslacht}`
-      }));
-      document.getElementById("onderdeelSelect").innerHTML = opties.map(o =>
-        `<option value="${o.value}">${o.label}</option>`).join("");
+      const onderdelenRes = await supabase.from("sportonderdelen").select("*").order("sport, discipline, onderdeel, geslacht");
+      const onderdeelSelect = document.getElementById("onderdeelSelect");
+      onderdeelSelect.innerHTML = onderdelenRes?.data?.length
+        ? onderdelenRes.data.map(o => `<option value="${o.sport}|${o.discipline}|${o.onderdeel}|${o.geslacht}">${o.sport} → ${o.discipline || '-'} → ${o.onderdeel} → ${o.geslacht}</option>`).join("")
+        : '<option disabled selected>⚠️ Geen sportonderdelen gevonden</option>';
     }
 
-    async function haalToernooiformat(sport, discipline, onderdeel, geslacht) {
-      const { data } = await supabase.from("toernooiformats").select("rondes")
-        .eq("sport", sport).eq("discipline", discipline).eq("onderdeel", onderdeel).eq("geslacht", geslacht);
-      return data?.[0]?.rondes || [
-        { naam: "Series", offset: -2, tijd: "Ochtend", label: "kwalificatie" },
-        { naam: "Halve Finale", offset: -1, tijd: "Middag", label: "eliminatie" },
-        { naam: "Finale", offset: 0, tijd: "Avond", label: "medaille" }
-      ];
-    }
-
-    async function genereerSchema() {
-      const finaleDag = parseInt(document.getElementById("finaleDag").value);
-      const tijdslotFinale = document.getElementById("tijdslotFinale").value;
-      if (!finaleDag) return alert("Geef een finaledag op");
-
+    async function vulBestaandeGegevens() {
       const [sport, discipline, onderdeel, geslacht] = document.getElementById("onderdeelSelect").value.split("|");
-      const rondes = await haalToernooiformat(sport, discipline, onderdeel, geslacht);
-      rondes.find(r => r.offset === 0).tijd = tijdslotFinale;
 
-      document.getElementById("schemaPreview").innerHTML = rondes.map(r =>
-        `<p>🕑 Dag ${finaleDag + r.offset} – ${r.naam} (${r.tijd}) – [${r.label}]</p>`).join("");
+      const { data: limiet } = await supabase.from("limieten").select("*").eq("sport", sport).eq("discipline", discipline).eq("onderdeel", onderdeel).eq("geslacht", geslacht);
+      if (limiet?.length) {
+        document.getElementById("maxDeelnemers").value = limiet[0].max_deelnemers || "";
+        document.getElementById("maxPerLand").value = limiet[0].max_per_land || "";
+        document.getElementById("minLanden").value = limiet[0].min_landen || "";
+        document.getElementById("vorm").value = limiet[0].teamvorm || "individueel";
+        document.getElementById("pogingen").value = limiet[0].pogingen || "";
+        document.getElementById("races").value = limiet[0].races || "";
+      }
+
+      const { data: sim } = await supabase.from("simulatie").select("*").eq("sport", sport).eq("discipline", discipline).eq("onderdeel", onderdeel).eq("geslacht", geslacht).limit(1);
+      if (sim?.length) {
+        document.getElementById("statNaam").value = sim[0].stat_naam || "";
+        document.getElementById("statMin").value = sim[0].min_waarde || "";
+        document.getElementById("statMax").value = sim[0].max_waarde || "";
+        document.getElementById("statEenheid").value = sim[0].eenheid || "";
+      }
+
+      await genereerSchema();
     }
 
     document.getElementById("onderdeelSelect").addEventListener("change", vulBestaandeGegevens);
+    laadSelecties();
   </script>
-  <script>
-  async function vulBestaandeGegevens() {
-    const [sport, discipline, onderdeel, geslacht] = document.getElementById("onderdeelSelect").value.split("|");
-
-    // Limieten ophalen
-    const { data: limiet } = await supabase
-      .from("limieten")
-      .select("*")
-      .eq("sport", sport)
-      .eq("discipline", discipline)
-      .eq("onderdeel", onderdeel)
-      .eq("geslacht", geslacht);
-    if (limiet?.length) {
-      document.getElementById("maxDeelnemers").value = limiet[0].max_deelnemers || "";
-      document.getElementById("maxPerLand").value = limiet[0].max_per_land || "";
-      document.getElementById("minLanden").value = limiet[0].min_landen || "";
-      document.getElementById("vorm").value = limiet[0].teamvorm || "individueel";
-      document.getElementById("pogingen").value = limiet[0].pogingen || "";
-      document.getElementById("races").value = limiet[0].races || "";
-    }
-
-    // Simulatieregel ophalen
-    const { data: sim } = await supabase
-      .from("simulatie")
-      .select("*")
-      .eq("sport", sport)
-      .eq("discipline", discipline)
-      .eq("onderdeel", onderdeel)
-      .eq("geslacht", geslacht)
-      .limit(1);
-    if (sim?.length) {
-      document.getElementById("statNaam").value = sim[0].stat_naam || "";
-      document.getElementById("statMin").value = sim[0].min_waarde || "";
-      document.getElementById("statMax").value = sim[0].max_waarde || "";
-      document.getElementById("statEenheid").value = sim[0].eenheid || "";
-    }
-
-    // Schema opnieuw genereren met deze data
-    await genereerSchema();
-  }
-
-  document.getElementById("onderdeelSelect").addEventListener("change", vulBestaandeGegevens);
-    async function vulBestaandeGegevens() {
-  const [sport, discipline, onderdeel, geslacht] = document.getElementById("onderdeelSelect").value.split("|");
-
-  // Limieten ophalen
-  const { data: limiet } = await supabase
-    .from("limieten")
-    .select("*")
-    .eq("sport", sport)
-    .eq("discipline", discipline)
-    .eq("onderdeel", onderdeel)
-    .eq("geslacht", geslacht);
-  if (limiet?.length) {
-    document.getElementById("maxDeelnemers").value = limiet[0].max_deelnemers || "";
-    document.getElementById("maxPerLand").value = limiet[0].max_per_land || "";
-    document.getElementById("minLanden").value = limiet[0].min_landen || "";
-    document.getElementById("vorm").value = limiet[0].teamvorm || "individueel";
-    document.getElementById("pogingen").value = limiet[0].pogingen || "";
-    document.getElementById("races").value = limiet[0].races || "";
-  }
-
-  // Simulatieregel ophalen
-  const { data: sim } = await supabase
-    .from("simulatie")
-    .select("*")
-    .eq("sport", sport)
-    .eq("discipline", discipline)
-    .eq("onderdeel", onderdeel)
-    .eq("geslacht", geslacht)
-    .limit(1);
-  if (sim?.length) {
-    document.getElementById("statNaam").value = sim[0].stat_naam || "";
-    document.getElementById("statMin").value = sim[0].min_waarde || "";
-    document.getElementById("statMax").value = sim[0].max_waarde || "";
-    document.getElementById("statEenheid").value = sim[0].eenheid || "";
-  }
-
-  // Schema preview automatisch herladen
-  await genereerSchema();
-}
+</body>
+</html>
 </script>
 </body>
 </html>
