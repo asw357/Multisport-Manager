@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Register - Multisport-Manager</title>
+</head>
+<body>
+  <h1 id="register-title">Register</h1>
+
+  <form id="register-form">
+    <label for="email" id="email-label">Email:</label><br />
+    <input type="email" id="email" required /><br /><br />
+
+    <label for="password" id="password-label">Password:</label><br />
+    <input type="password" id="password" required /><br /><br />
+
+    <button type="submit" id="submit-btn">Register</button>
+  </form>
+
+  <p id="message"></p>
+
+  <script src="lang.js"></script>
+  <script src="supabase.js"></script>
+  <script>
+    const t = translations[localStorage.getItem('lang') || 'en'];
+    document.getElementById('register-title').innerText = t.register;
+    document.getElementById('email-label').innerText = "Email:";
+    document.getElementById('password-label').innerText = "Password:";
+    document.getElementById('submit-btn').innerText = t.register;
+
+    document.getElementById('register-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      const { data, error } = await supabase.auth.signUp({ email, password });
+
+      if (error) {
+        document.getElementById('message').innerText = error.message;
+        return;
+      }
+
+      // Zoek een vrij land
+      const { data: countryData, error: countryError } = await supabase
+        .from('countries')
+        .select('id')
+        .eq('assigned', false)
+        .limit(1)
+        .single();
+
+      if (countryError || !countryData) {
+        document.getElementById('message').innerText = "No countries available.";
+        return;
+      }
+
+      // Sla extra gebruikersdata op in users_extra
+      await supabase
+        .from('users_extra')
+        .insert({
+          user_id: data.user.id,
+          country_id: countryData.id,
+          mp: 100, // Start MP
+          last_login: new Date().toISOString(),
+        });
+
+      // Markeer land als toegewezen
+      await supabase
+        .from('countries')
+        .update({ assigned: true })
+        .eq('id', countryData.id);
+
+      window.location.href = "dashboard.html";
+    });
+  </script>
+</body>
+</html>
