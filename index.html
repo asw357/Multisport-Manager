@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Multisport-Manager</title>
+</head>
+<body>
+  <h1 id="welcome-text">Welcome to Multisport-Manager</h1>
+
+  <div>
+    <label for="language-select">Language:</label>
+    <select id="language-select">
+      <option value="en">English</option>
+      <option value="nl">Nederlands</option>
+      <option value="fr">Français</option>
+      <option value="de">Deutsch</option>
+    </select>
+  </div>
+
+  <div style="margin-top: 20px;">
+    <button onclick="goTo('register.html')" id="register-btn">Register</button>
+    <button onclick="goTo('login.html')" id="login-btn">Login</button>
+  </div>
+
+  <script src="lang.js"></script>
+  <script>
+    const goTo = (page) => {
+      window.location.href = page;
+    };
+
+    document.getElementById('language-select').addEventListener('change', function () {
+      localStorage.setItem('lang', this.value);
+      applyTranslations();
+    });
+
+    function applyTranslations() {
+      const lang = localStorage.getItem('lang') || 'en';
+      document.getElementById('language-select').value = lang;
+      const t = translations[lang];
+      document.getElementById('welcome-text').innerText = t.welcome;
+      document.getElementById('register-btn').innerText = t.register;
+      document.getElementById('login-btn').innerText = t.login;
+    }
+
+    applyTranslations();
+  </script>
+</body>
+</html>
