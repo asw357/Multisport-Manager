@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Medaillespiegel – Multisport-Manager</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <h1>Medaillespiegel</h1>
+    <table>
+      <thead>
+        <tr>
+          <th>Land</th><th>🥇</th><th>🥈</th><th>🥉</th><th>Totaal</th>
+        </tr>
+      </thead>
+      <tbody id="tabelBody"></tbody>
+    </table>
+  </main>
+
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+    const supabase = createClient("https://bhpmdtivyripebburakf.supabase.co", "YOUR_PUBLIC_ANON_KEY");
+
+    const tbody = document.getElementById("tabelBody");
+
+    async function laadSpiegel() {
+      const { data, error } = await supabase
+        .from("medaillespiegel")
+        .select("*")
+        .order("totaal", { ascending: false });
+
+      if (error || !data) {
+        tbody.innerHTML = "<tr><td colspan='5'>Geen gegevens beschikbaar.</td></tr>";
+        return;
+      }
+
+      tbody.innerHTML = data.map(r => `
+        <tr>
+          <td>${r.land}</td>
+          <td>${r.goud}</td>
+          <td>${r.zilver}</td>
+          <td>${r.bronzen}</td>
+          <td>${r.totaal}</td>
+        </tr>
+      `).join("");
+    }
+
+    laadSpiegel();
+  </script>
+</body>
+</html>
