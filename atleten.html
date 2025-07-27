@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mijn Atleten – Multisport-Manager</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <h1>Mijn Atleten</h1>
+    <div id="atletenContainer">Laden...</div>
+  </main>
+
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+    const supabase = createClient("https://bhpmdtivyripebburakf.supabase.co", "YOUR_PUBLIC_ANON_KEY");
+
+    const container = document.getElementById("atletenContainer");
+
+    async function laadAtleten() {
+      const { data: session } = await supabase.auth.getSession();
+      const userId = session?.session?.user?.id;
+      if (!userId) {
+        container.textContent = "Niet ingelogd.";
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("atleten")
+        .select("*")
+        .eq("manager_id", userId);
+
+      if (error || !data) {
+        container.innerHTML = "<p>Fout bij laden.</p>";
+        return;
+      }
+
+      container.innerHTML = data.map(a => `
+        <div>
+          <strong>${a.naam}</strong> – ${a.onderdeel}<br/>
+          Leeftijd: ${a.leeftijd}, Niveau: ${a.niveau}
+        </div>
+        <hr/>
+      `).join("");
+    }
+
+    laadAtleten();
+  </script>
+</body>
+</html>
