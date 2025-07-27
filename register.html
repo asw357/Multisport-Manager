@@ -52,13 +52,9 @@
           return;
         }
 
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-          email,
-          password
-        });
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email, password });
 
         if (signUpError) {
-          console.error("Auth error:", signUpError);
           melding.textContent = "Fout bij registreren: " + signUpError.message;
           return;
         }
@@ -103,7 +99,6 @@
           .update({ toegekend: true })
           .eq("land", gekozenLand);
 
-        console.log("Registratie geslaagd:", managernaam, gekozenLand);
         window.location.href = "dashboard.html";
       });
     });
