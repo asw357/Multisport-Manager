@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profiel – Multisport-Manager</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <h1>Mijn Profiel</h1>
+    <div id="profielData">Laden...</div>
+  </main>
+
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+    const supabase = createClient(
+      "https://bhpmdtivyripebburakf.supabase.co",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    );
+
+    const profielData = document.getElementById("profielData");
+
+    async function laadProfiel() {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData?.session?.user?.id;
+      if (!userId) {
+        profielData.textContent = "Niet ingelogd.";
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("users")
+        .select("email, managernaam, land")
+        .eq("id", userId)
+        .single();
+
+      if (error || !data) {
+        profielData.textContent = "Fout bij ophalen profiel.";
+        return;
+      }
+
+      profielData.innerHTML = `
+        <p><strong>Email:</strong> ${data.email}</p>
+        <p><strong>Managernaam:</strong> ${data.managernaam}</p>
+        <p><strong>Land:</strong> ${data.land}</p>
+      `;
+    }
+
+    laadProfiel();
+  </script>
+</body>
+</html>
