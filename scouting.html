@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scouting – Multisport-Manager</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <h1>Scouting</h1>
+    <p>Hier ontdek je potentiële nieuwe atleten.</p>
+    <div id="scoutContainer">Laden...</div>
+  </main>
+
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+    const supabase = createClient("https://bhpmdtivyripebburakf.supabase.co", "YOUR_PUBLIC_ANON_KEY");
+
+    const container = document.getElementById("scoutContainer");
+
+    async function laadScouting() {
+      const { data, error } = await supabase
+        .from("scouting")
+        .select("*")
+        .order("potentie", { descending: true });
+
+      if (error || !data || data.length === 0) {
+        container.innerHTML = "<p>Geen atleten beschikbaar voor scouting.</p>";
+        return;
+      }
+
+      container.innerHTML = data.map(s => `
+        <div>
+          <strong>${s.naam}</strong> – ${s.onderdeel}<br/>
+          Potentie: ${s.potentie} / Leeftijd: ${s.leeftijd}
+        </div>
+        <hr/>
+      `).join("");
+    }
+
+    laadScouting();
+  </script>
+</body>
+</html>
