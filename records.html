@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Multi Records – Multisport-Manager</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main>
+    <h1>Multi Records (MR) & Nationale Records (NR)</h1>
+    <div id="recordsContainer">Laden...</div>
+  </main>
+
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+    const supabase = createClient("https://bhpmdtivyripebburakf.supabase.co", "YOUR_PUBLIC_ANON_KEY");
+
+    const container = document.getElementById("recordsContainer");
+
+    async function laadRecords() {
+      const { data, error } = await supabase
+        .from("records")
+        .select("*")
+        .order("onderdeel");
+
+      if (error || !data) {
+        container.innerHTML = "<p>Geen records beschikbaar.</p>";
+        return;
+      }
+
+      container.innerHTML = data.map(r => `
+        <div>
+          <h3>${r.onderdeel}</h3>
+          <p>MR: ${r.mr_tijd} (${r.mr_atleet} – ${r.mr_land})</p>
+          <p>NR: ${r.nr_tijd} (${r.nr_atleet} – ${r.nr_land})</p>
+        </div>
+      `).join("");
+    }
+
+    laadRecords();
+  </script>
+</body>
+</html>
