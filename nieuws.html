@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nieuws – Multisport-Manager</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main>
+    <h1>Nieuws</h1>
+    <div id="nieuwsContainer">
+      <p>Laatste berichten worden geladen...</p>
+    </div>
+  </main>
+
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+    const supabase = createClient("https://bhpmdtivyripebburakf.supabase.co", "YOUR_PUBLIC_ANON_KEY");
+
+    const container = document.getElementById("nieuwsContainer");
+
+    async function laadNieuws() {
+      const { data, error } = await supabase
+        .from("nieuws")
+        .select("*")
+        .order("datum", { ascending: false });
+
+      if (error || !data || data.length === 0) {
+        container.innerHTML = "<p>Geen nieuwsberichten beschikbaar.</p>";
+        return;
+      }
+
+      container.innerHTML = data.map(item => `
+        <article>
+          <h3>${item.titel}</h3>
+          <p><em>${new Date(item.datum).toLocaleDateString()}</em></p>
+          <p>${item.inhoud}</p>
+        </article>
+        <hr/>
+      `).join("");
+    }
+
+    laadNieuws();
+  </script>
+</body>
+</html>
