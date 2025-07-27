@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Uitslagen – Multisport-Manager</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <h1>Uitslagen</h1>
+    <div id="uitslagContainer">Laden...</div>
+  </main>
+
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+    const supabase = createClient("https://bhpmdtivyripebburakf.supabase.co", "YOUR_PUBLIC_ANON_KEY");
+
+    const container = document.getElementById("uitslagContainer");
+
+    async function laadUitslagen() {
+      const { data, error } = await supabase
+        .from("uitslagen")
+        .select("*")
+        .order("dag", { ascending: false });
+
+      if (error || !data || data.length === 0) {
+        container.innerHTML = "<p>Geen uitslagen beschikbaar.</p>";
+        return;
+      }
+
+      container.innerHTML = data.map(u => `
+        <div>
+          <h3>${u.sport} – ${u.onderdeel} (${u.ronde})</h3>
+          <p><strong>1.</strong> ${u.goud} <br/>
+             <strong>2.</strong> ${u.zilver} <br/>
+             <strong>3.</strong> ${u.bronzen}</p>
+        </div>
+        <hr/>
+      `).join("");
+    }
+
+    laadUitslagen();
+  </script>
+</body>
+</html>
