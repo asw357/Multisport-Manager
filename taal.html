@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Taalinstellingen – Multisport-Manager</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main>
+    <h1>Taalkeuze</h1>
+    <p>Kies je voorkeurstaal:</p>
+    <select id="taalKiezer">
+      <option value="nl">Nederlands</option>
+      <option value="en">English</option>
+      <option value="fr">Français</option>
+      <option value="de">Deutsch</option>
+    </select>
+  </main>
+
+  <script>
+    const select = document.getElementById("taalKiezer");
+    select.value = localStorage.getItem("taal") || "nl";
+
+    select.addEventListener("change", () => {
+      localStorage.setItem("taal", select.value);
+      alert("Taalvoorkeur opgeslagen: " + select.value);
+    });
+  </script>
+</body>
+</html>
