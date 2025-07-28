@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Startatleten – Admin</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <h1>Startatleten instellen</h1>
+    <div id="startContainer">Laden...</div>
+  </main>
+
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+    const supabase = createClient("https://bhpmdtivyripebburakf.supabase.co", "YOUR_PUBLIC_ANON_KEY");
+
+    const container = document.getElementById("startContainer");
+
+    async function laadStartaantallen() {
+      const { data } = await supabase.from("onderdelen").select("*");
+      container.innerHTML = data.map(o => `
+        <div>
+          <strong>${o.sport} – ${o.naam}</strong><br/>
+          <label>Startaantal:</label>
+          <input type="number" id="start-${o.id}" value="${o.startaantal || 0}" onchange="updateStart(${o.id}, this.value)">
+        </div><hr/>
+      `).join("");
+    }
+
+    window.updateStart = async (id, aantal) => {
+      await supabase.from("onderdelen").update({ startaantal: parseInt(aantal) }).eq("id", id);
+    };
+
+    laadStartaantallen();
+  </script>
+</body>
+</html>
