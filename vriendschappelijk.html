@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vriendschappelijke Wedstrijden – Multisport-Manager</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <h1>Vriendschappelijke Wedstrijden</h1>
+    <p>Plan een testwedstrijd tegen andere landen.</p>
+    <div id="testContainer">Laden...</div>
+  </main>
+
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+    const supabase = createClient("https://bhpmdtivyripebburakf.supabase.co", "YOUR_PUBLIC_ANON_KEY");
+
+    const container = document.getElementById("testContainer");
+
+    async function laadManagers() {
+      const { data: session } = await supabase.auth.getSession();
+      const ownId = session?.session?.user?.id;
+
+      const { data, error } = await supabase
+        .from("users")
+        .select("id, managernaam, land")
+        .neq("id", ownId);
+
+      if (error || !data) {
+        container.textContent = "Kon geen andere managers laden.";
+        return;
+      }
+
+      container.innerHTML = data.map(u => `
+        <div>
+          <strong>${u.managernaam}</strong> (${u.land})
+          <button onclick="uitdagen('${u.id}')">Uitdagen</button>
+        </div>
+      `).join("");
+    }
+
+    window.uitdagen = async (tegenstander_id) => {
+      const { data: session } = await supabase.auth.getSession();
+      const manager_id = session?.session?.user?.id;
+      await supabase.from("vriendschappelijk").insert({ manager_id, tegenstander_id });
+      alert("Uitdaging verstuurd!");
+    };
+
+    laadManagers();
+  </script>
+</body>
+</html>
