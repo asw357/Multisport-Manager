@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Complimenten – Multisport-Manager</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main>
+    <h1>Stuur een Compliment</h1>
+    <div id="complimentenContainer">Laden...</div>
+  </main>
+
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+    const supabase = createClient("https://bhpmdtivyripebburakf.supabase.co", "YOUR_PUBLIC_ANON_KEY");
+
+    const container = document.getElementById("complimentenContainer");
+
+    async function laadAndereManagers() {
+      const { data: session } = await supabase.auth.getSession();
+      const ownId = session?.session?.user?.id;
+
+      const { data, error } = await supabase
+        .from("users")
+        .select("id, managernaam, land")
+        .neq("id", ownId);
+
+      if (error || !data) {
+        container.innerHTML = "<p>Geen managers beschikbaar.</p>";
+        return;
+      }
+
+      container.innerHTML = data.map(m => `
+        <div>
+          <strong>${m.managernaam}</strong> (${m.land})
+          <button onclick="stuurCompliment('${m.id}')">Geef compliment</button>
+        </div>
+      `).join("");
+    }
+
+    window.stuurCompliment = async (ontvanger_id) => {
+      const { data: session } = await supabase.auth.getSession();
+      const afzender_id = session?.session?.user?.id;
+      await supabase.from("complimenten").insert({ afzender_id, ontvanger_id });
+      alert("Compliment verstuurd!");
+    };
+
+    laadAndereManagers();
+  </script>
+</body>
+</html>
