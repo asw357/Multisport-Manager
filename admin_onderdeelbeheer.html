@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Onderdeelbeheer – Admin</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <h1>Sportonderdelen beheren</h1>
+    <form id="onderdeelForm">
+      <label>Sport:</label><input type="text" id="sport" required>
+      <label>Discipline:</label><input type="text" id="discipline">
+      <label>Onderdeel:</label><input type="text" id="naam" required>
+      <label>Geslacht:</label>
+      <select id="geslacht">
+        <option value="M">M</option>
+        <option value="V">V</option>
+      </select>
+      <button type="submit">Toevoegen</button>
+    </form>
+    <hr/>
+    <div id="lijst">Laden...</div>
+  </main>
+
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+    const supabase = createClient("https://bhpmdtivyripebburakf.supabase.co", "YOUR_PUBLIC_ANON_KEY");
+
+    const form = document.getElementById("onderdeelForm");
+    const lijst = document.getElementById("lijst");
+
+    form.addEventListener("submit", async e => {
+      e.preventDefault();
+      const sport = document.getElementById("sport").value;
+      const discipline = document.getElementById("discipline").value;
+      const naam = document.getElementById("naam").value;
+      const geslacht = document.getElementById("geslacht").value;
+
+      await supabase.from("onderdelen").insert({ sport, discipline, naam, geslacht });
+      form.reset();
+      laadOnderdelen();
+    });
+
+    async function laadOnderdelen() {
+      const { data } = await supabase.from("onderdelen").select("*").order("sport");
+      lijst.innerHTML = data.map(o => `<p>${o.sport} – ${o.discipline} – ${o.naam} (${o.geslacht})</p>`).join("");
+    }
+
+    laadOnderdelen();
+  </script>
+</body>
+</html>
