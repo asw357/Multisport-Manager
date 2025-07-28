@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Atletenlimieten – Admin</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <h1>Limieten instellen per onderdeel</h1>
+    <div id="limietenContainer">Laden...</div>
+  </main>
+
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+    const supabase = createClient("https://bhpmdtivyripebburakf.supabase.co", "YOUR_PUBLIC_ANON_KEY");
+
+    const container = document.getElementById("limietenContainer");
+
+    async function laadLimieten() {
+      const { data } = await supabase.from("onderdelen").select("*");
+      container.innerHTML = data.map(o => `
+        <div>
+          <strong>${o.sport} – ${o.naam} (${o.geslacht})</strong><br/>
+          <label>Max. per land:</label>
+          <input type="number" id="limiet-${o.id}" value="${o.limiet || 1}" onchange="updateLimiet(${o.id}, this.value)">
+        </div><hr/>
+      `).join("");
+    }
+
+    window.updateLimiet = async (id, waarde) => {
+      await supabase.from("onderdelen").update({ limiet: parseInt(waarde) }).eq("id", id);
+    };
+
+    laadLimieten();
+  </script>
+</body>
+</html>
