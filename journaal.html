@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dagjournaal – Multisport-Manager</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main>
+    <h1>Dagjournaal</h1>
+    <div id="journaalContainer">Laden...</div>
+  </main>
+
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+    const supabase = createClient("https://bhpmdtivyripebburakf.supabase.co", "YOUR_PUBLIC_ANON_KEY");
+
+    const container = document.getElementById("journaalContainer");
+
+    async function laadJournaal() {
+      const { data, error } = await supabase
+        .from("journaal")
+        .select("*")
+        .order("dag", { descending: true });
+
+      if (error || !data) {
+        container.innerHTML = "<p>Geen journaalberichten beschikbaar.</p>";
+        return;
+      }
+
+      container.innerHTML = data.map(j => `
+        <div>
+          <h3>Dag ${j.dag} – ${j.titel}</h3>
+          <p>${j.beschrijving}</p>
+          <small><em>${j.bron}</em></small>
+        </div>
+        <hr/>
+      `).join("");
+    }
+
+    laadJournaal();
+  </script>
+</body>
+</html>
