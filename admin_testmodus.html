@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Testmodus – Admin</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <h1>Testmodus (Simuleer los onderdeel)</h1>
+    <form id="testForm">
+      <label>Onderdeel ID:</label>
+      <input type="number" id="onderdeel" required>
+      <label>Ronde:</label>
+      <input type="text" id="ronde" required>
+      <button type="submit">Simuleer</button>
+    </form>
+    <pre id="uitvoer"></pre>
+  </main>
+
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+    const supabase = createClient("https://bhpmdtivyripebburakf.supabase.co", "YOUR_PUBLIC_ANON_KEY");
+
+    const form = document.getElementById("testForm");
+    const uitvoer = document.getElementById("uitvoer");
+
+    form.addEventListener("submit", async e => {
+      e.preventDefault();
+      const onderdeel = document.getElementById("onderdeel").value;
+      const ronde = document.getElementById("ronde").value;
+
+      uitvoer.textContent = `Simulatie ${ronde} van onderdeel ${onderdeel} uitgevoerd.\nResultaten (gesimuleerd):\n\n- Atleet A: 9.89\n- Atleet B: 10.03\n- Atleet C: 10.15`;
+    });
+  </script>
+</body>
+</html>
