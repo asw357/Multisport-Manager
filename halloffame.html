@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hall of Fame – Multisport-Manager</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main>
+    <h1>🏆 Hall of Fame</h1>
+    <div id="fameContainer">Laden...</div>
+  </main>
+
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+    const supabase = createClient("https://bhpmdtivyripebburakf.supabase.co", "YOUR_PUBLIC_ANON_KEY");
+
+    const container = document.getElementById("fameContainer");
+
+    async function laadFame() {
+      const { data, error } = await supabase
+        .from("hof_atleten")
+        .select("*")
+        .order("mp", { descending: true })
+        .limit(10);
+
+      if (error || !data) {
+        container.innerHTML = "<p>Geen records gevonden.</p>";
+        return;
+      }
+
+      container.innerHTML = data.map((a, i) => `
+        <div>
+          <strong>#${i + 1}</strong> ${a.naam} (${a.land}) – ${a.mp} MP
+        </div>
+      `).join("");
+    }
+
+    laadFame();
+  </script>
+</body>
+</html>
