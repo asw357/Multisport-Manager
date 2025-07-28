@@ -1,10 +1,17 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Inloggen – Multisport-Manager</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css">
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+    window.supabase = createClient(
+      "https://bhpmdtivyripebburakf.supabase.co",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJocG1kdGl2eXJpcGViYnVyYWtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM2Mjc4NzYsImV4cCI6MjA2OTIwMzg3Nn0.kb733XLzUnc-aTbW_RzpeVJqylZ608egVShDCgIJkKI"
+    );
+  </script>
 </head>
 <body>
   <main>
@@ -12,10 +19,10 @@
 
     <form id="loginForm">
       <label for="email">E-mailadres:</label>
-      <input type="email" id="email" required />
+      <input type="email" id="email" required>
 
       <label for="password">Wachtwoord:</label>
-      <input type="password" id="password" required />
+      <input type="password" id="password" required>
 
       <button type="submit">Inloggen</button>
     </form>
@@ -24,29 +31,28 @@
   </main>
 
   <script type="module">
-    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-    const supabase = createClient(
-      "https://bhpmdtivyripebburakf.supabase.co",
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJocG1kdGl2eXJpcGViYnVyYWtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM2Mjc4NzYsImV4cCI6MjA2OTIwMzg3Nn0.kb733XLzUnc-aTbW_RzpeVJqylZ608egVShDCgIJkKI"
-    );
-
     document.getElementById("loginForm").addEventListener("submit", async (e) => {
       e.preventDefault();
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const melding = document.getElementById("melding");
 
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
       if (error) {
-        document.getElementById("melding").textContent = "Fout bij inloggen: " + error.message;
+        console.error(error);
+        melding.textContent = "Inloggen mislukt: " + error.message;
         return;
       }
 
+      const { data: userData, error: userError } = await supabase.from("users").select("*").eq("id", data.user.id).single();
+
+      if (userError || !userData) {
+        melding.textContent = "Gebruiker niet gevonden.";
+        return;
+      }
+
+      // Doorsturen naar dashboard
       window.location.href = "dashboard.html";
     });
   </script>
