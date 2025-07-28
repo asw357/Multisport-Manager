@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Managerprofielen – Multisport-Manager</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main>
+    <h1>Publieke Profielen</h1>
+    <div id="profielenContainer">Laden...</div>
+  </main>
+
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+    const supabase = createClient("https://bhpmdtivyripebburakf.supabase.co", "YOUR_PUBLIC_ANON_KEY");
+
+    const container = document.getElementById("profielenContainer");
+
+    async function laadProfielen() {
+      const { data, error } = await supabase
+        .from("users")
+        .select("managernaam, land");
+
+      if (error || !data) {
+        container.innerHTML = "<p>Kon geen managers laden.</p>";
+        return;
+      }
+
+      container.innerHTML = data.map(p => `
+        <div>
+          <strong>${p.managernaam}</strong> (${p.land})
+        </div>
+      `).join("");
+    }
+
+    laadProfielen();
+  </script>
+</body>
+</html>
