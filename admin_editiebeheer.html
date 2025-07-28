@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Editiebeheer – Admin</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <h1>Edities beheren</h1>
+    <form id="editieForm">
+      <label>Naam:</label>
+      <input type="text" id="naam" required>
+      <label>Locatie:</label>
+      <input type="text" id="locatie" required>
+      <label>Startdag:</label>
+      <input type="number" id="startdag" required>
+      <button type="submit">Toevoegen</button>
+    </form>
+    <hr/>
+    <h2>Bestaande edities</h2>
+    <div id="editiesLijst">Laden...</div>
+  </main>
+
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+    const supabase = createClient("https://bhpmdtivyripebburakf.supabase.co", "YOUR_PUBLIC_ANON_KEY");
+
+    const lijst = document.getElementById("editiesLijst");
+    const form = document.getElementById("editieForm");
+
+    form.addEventListener("submit", async e => {
+      e.preventDefault();
+      const naam = document.getElementById("naam").value;
+      const locatie = document.getElementById("locatie").value;
+      const startdag = parseInt(document.getElementById("startdag").value);
+
+      await supabase.from("edities").insert({ naam, locatie, startdag });
+      form.reset();
+      laadEdities();
+    });
+
+    async function laadEdities() {
+      const { data } = await supabase.from("edities").select("*").order("id", { ascending: false });
+      lijst.innerHTML = data.map(e => `<p><strong>${e.naam}</strong> – ${e.locatie} (Startdag: ${e.startdag})</p>`).join("");
+    }
+
+    laadEdities();
+  </script>
+</body>
+</html>
