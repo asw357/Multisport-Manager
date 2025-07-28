@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inschrijving – Multisport-Manager</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <h1>Inschrijven voor Editie</h1>
+    <div id="inschrijfContainer">Laden...</div>
+  </main>
+
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+    const supabase = createClient("https://bhpmdtivyripebburakf.supabase.co", "YOUR_PUBLIC_ANON_KEY");
+
+    const container = document.getElementById("inschrijfContainer");
+
+    async function laadOnderdelen() {
+      const { data } = await supabase.from("onderdelen").select("*");
+      container.innerHTML = data.map(o => `
+        <div>
+          <input type="checkbox" id="onderdeel-${o.id}" onchange="inschrijven(${o.id}, this.checked)" />
+          <label for="onderdeel-${o.id}">${o.sport} – ${o.naam}</label>
+        </div>
+      `).join("");
+    }
+
+    window.inschrijven = async (onderdeel_id, actief) => {
+      const { data: session } = await supabase.auth.getSession();
+      const manager_id = session?.session?.user?.id;
+
+      if (actief) {
+        await supabase.from("inschrijvingen").insert({ manager_id, onderdeel_id });
+      } else {
+        await supabase.from("inschrijvingen").delete().match({ manager_id, onderdeel_id });
+      }
+    };
+
+    laadOnderdelen();
+  </script>
+</body>
+</html>
