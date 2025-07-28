@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MP-verdeling – Admin</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <h1>MP-verdeling instellen</h1>
+    <form id="mpForm">
+      <label>Prestatie:</label><input type="text" id="prestatie" required>
+      <label>MP:</label><input type="number" id="punten" required>
+      <button type="submit">Toevoegen</button>
+    </form>
+    <hr/>
+    <div id="mpLijst">Laden...</div>
+  </main>
+
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+    const supabase = createClient("https://bhpmdtivyripebburakf.supabase.co", "YOUR_PUBLIC_ANON_KEY");
+
+    const form = document.getElementById("mpForm");
+    const lijst = document.getElementById("mpLijst");
+
+    form.addEventListener("submit", async e => {
+      e.preventDefault();
+      const prestatie = document.getElementById("prestatie").value;
+      const punten = parseInt(document.getElementById("punten").value);
+
+      await supabase.from("mpverdeling").insert({ prestatie, punten });
+      form.reset();
+      laadMP();
+    });
+
+    async function laadMP() {
+      const { data } = await supabase.from("mpverdeling").select("*");
+      lijst.innerHTML = data.map(m => `<p>${m.prestatie}: ${m.punten} MP</p>`).join("");
+    }
+
+    laadMP();
+  </script>
+</body>
+</html>
