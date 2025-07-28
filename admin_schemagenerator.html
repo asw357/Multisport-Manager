@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Schema Generator – Admin</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <h1>Finaledag instellen (genereert volledige planning)</h1>
+    <form id="schemaForm">
+      <label>Onderdeel ID:</label>
+      <input type="number" id="onderdeel_id" required>
+      <label>Finaledag:</label>
+      <input type="number" id="finaledag" required>
+      <button type="submit">Genereer schema</button>
+    </form>
+    <p id="melding"></p>
+  </main>
+
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+    const supabase = createClient("https://bhpmdtivyripebburakf.supabase.co", "YOUR_PUBLIC_ANON_KEY");
+
+    const form = document.getElementById("schemaForm");
+    const melding = document.getElementById("melding");
+
+    form.addEventListener("submit", async e => {
+      e.preventDefault();
+      const onderdeel_id = parseInt(document.getElementById("onderdeel_id").value);
+      const finaledag = parseInt(document.getElementById("finaledag").value);
+
+      // Simpele planning met halve finale dag ervoor
+      const insert = [
+        { onderdeel_id, ronde: "Halve Finale", dag: finaledag - 1, tijd: "14:00" },
+        { onderdeel_id, ronde: "Finale", dag: finaledag, tijd: "18:00" },
+      ];
+
+      const { error } = await supabase.from("schema").insert(insert);
+      melding.textContent = error ? "Fout bij invoeren" : "Schema gegenereerd!";
+    });
+  </script>
+</body>
+</html>
