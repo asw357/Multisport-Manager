@@ -56,8 +56,8 @@
 const { data: userData, error: userError } = await supabase
   .from("users")
   .select("*")
-  .eq("id", userId)
-  .maybeSingle(); // ✅ veiliger: geen fout bij 0 rijen
+  .eq("id", data.user.id)
+  .single();
 
 
       if (userError || !userData) {
