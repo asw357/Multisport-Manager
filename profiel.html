@@ -5,50 +5,76 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Profiel – Multisport-Manager</title>
   <link rel="stylesheet" href="style.css">
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+    window.supabase = createClient(
+      "https://bhpmdtivyripebburakf.supabase.co",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJocG1kdGl2eXJpcGViYnVyYWtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM2Mjc4NzYsImV4cCI6MjA2OTIwMzg3Nn0.kb733XLzUnc-aTbW_RzpeVJqylZ608egVShDCgIJkKI"
+    );
+  </script>
 </head>
 <body>
   <main>
-    <h1>Mijn Profiel</h1>
-    <div id="profielData">Laden...</div>
+    <h1>Profiel</h1>
+
+    <section id="profielSectie">
+      <p><strong>Managernaam:</strong> <span id="managernaam"></span></p>
+      <p><strong>E-mailadres:</strong> <span id="email"></span></p>
+      <p><strong>Land:</strong> <span id="land"></span></p>
+    </section>
+
+    <section>
+      <h2>Wachtwoord wijzigen</h2>
+      <form id="wachtwoordForm">
+        <label for="nieuwWachtwoord">Nieuw wachtwoord:</label>
+        <input type="password" id="nieuwWachtwoord" required>
+        <button type="submit">Wijzigen</button>
+      </form>
+      <p id="melding" style="color: red;"></p>
+    </section>
   </main>
 
   <script type="module">
-    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+    const { data: session } = await supabase.auth.getSession();
+    const user = session?.session?.user;
 
-    const supabase = createClient(
-      "https://bhpmdtivyripebburakf.supabase.co",
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-    );
+    const melding = document.getElementById("melding");
 
-    const profielData = document.getElementById("profielData");
-
-    async function laadProfiel() {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const userId = sessionData?.session?.user?.id;
-      if (!userId) {
-        profielData.textContent = "Niet ingelogd.";
-        return;
-      }
-
-      const { data, error } = await supabase
+    if (!user) {
+      window.location.href = "login.html";
+    } else {
+      const { data: profiel, error } = await supabase
         .from("users")
-        .select("email, managernaam, land")
-        .eq("id", userId)
+        .select("managernaam, email, land")
+        .eq("id", user.id)
         .single();
 
-      if (error || !data) {
-        profielData.textContent = "Fout bij ophalen profiel.";
+      if (error || !profiel) {
+        melding.textContent = "Fout bij ophalen profiel.";
+      } else {
+        document.getElementById("managernaam").textContent = profiel.managernaam;
+        document.getElementById("email").textContent = profiel.email;
+        document.getElementById("land").textContent = profiel.land;
+      }
+    }
+
+    document.getElementById("wachtwoordForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const nieuwWachtwoord = document.getElementById("nieuwWachtwoord").value.trim();
+      if (nieuwWachtwoord.length < 6) {
+        melding.textContent = "Wachtwoord moet minstens 6 tekens zijn.";
         return;
       }
 
-      profielData.innerHTML = `
-        <p><strong>Email:</strong> ${data.email}</p>
-        <p><strong>Managernaam:</strong> ${data.managernaam}</p>
-        <p><strong>Land:</strong> ${data.land}</p>
-      `;
-    }
+      const { error } = await supabase.auth.updateUser({ password: nieuwWachtwoord });
 
-    laadProfiel();
+      if (error) {
+        melding.textContent = "Fout bij bijwerken wachtwoord.";
+      } else {
+        melding.style.color = "green";
+        melding.textContent = "Wachtwoord succesvol gewijzigd.";
+      }
+    });
   </script>
 </body>
 </html>
