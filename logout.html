@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Uitloggen – Multisport-Manager</title>
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+    const supabase = createClient(
+      "https://bhpmdtivyripebburakf.supabase.co",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJocG1kdGl2eXJpcGViYnVyYWtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM2Mjc4NzYsImV4cCI6MjA2OTIwMzg3Nn0.kb733XLzUnc-aTbW_RzpeVJqylZ608egVShDCgIJkKI"
+    );
+
+    const logout = async () => {
+      await supabase.auth.signOut();
+      window.location.href = "login.html";
+    };
+
+    logout();
+  </script>
+</head>
+<body>
+  <p>Uitloggen...</p>
+</body>
+</html>
