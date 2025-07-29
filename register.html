@@ -36,78 +36,79 @@
   <script type="module">
     const ADMIN_EMAIL = "wilcoboesveld12@hotmail.com";
 
-    document.addEventListener("DOMContentLoaded", () => {
-      const form = document.getElementById("registerForm");
+    document.getElementById("registerForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
       const melding = document.getElementById("melding");
+      melding.textContent = "";
 
-      form.addEventListener("submit", async (e) => {
-        e.preventDefault();
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const managernaam = document.getElementById("managernaam").value.trim();
 
-        const email = document.getElementById("email").value.trim();
-        const password = document.getElementById("password").value.trim();
-        const managernaam = document.getElementById("managernaam").value.trim();
-
-        if (!email || !password || !managernaam) {
-          melding.textContent = "Vul alle velden in.";
-          return;
-        }
-
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-          email,
-          password
-        });
-
-        if (signUpError) {
-          console.error("Auth error:", signUpError);
-          melding.textContent = "Fout bij registreren: " + signUpError.message;
-          return;
-        }
-
-        const userId = signUpData.user?.id;
-        if (!userId) {
-          melding.textContent = "Er ging iets mis met het aanmaken van het account.";
-          return;
-        }
-
-        const { data: landen, error: landError } = await supabase
-          .from("landen")
-          .select("*")
-          .eq("toegekend", false)
-          .order("volgorde", { ascending: true })
-          .limit(1);
-
-        if (landError || !landen || landen.length === 0) {
-          console.error("Geen vrij land:", landError);
-          melding.textContent = "Geen beschikbaar land gevonden.";
-          return;
-        }
-
-        const gekozenLand = landen[0].land;
-
-        const { error: insertError } = await supabase.from("users").insert([
-          {
-            id: userId,
-            email,
-            managernaam,
-            land: gekozenLand,
-            is_admin: email.toLowerCase() === ADMIN_EMAIL
-          }
-        ]);
-
-        if (insertError) {
-          console.error("Insert error:", insertError);
-          melding.textContent = "Kon gebruiker niet opslaan.";
-          return;
-        }
-
-        await supabase
-          .from("landen")
-          .update({ toegekend: true })
-          .eq("land", gekozenLand);
-
-        console.log("Registratie gelukt. Land:", gekozenLand);
-        window.location.href = "dashboard.html";
+      // Stap 1: account aanmaken
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password
       });
+
+      if (signUpError) {
+        console.error("Auth fout:", signUpError);
+        melding.textContent = "Fout bij registreren: " + signUpError.message;
+        return;
+      }
+
+      const user = signUpData.user;
+      if (!user || !user.id) {
+        console.error("Geen gebruikers-ID ontvangen:", signUpData);
+        melding.textContent = "Kon gebruiker-ID niet ophalen.";
+        return;
+      }
+
+      const userId = user.id;
+
+      // Stap 2: vrij land zoeken
+      const { data: landen, error: landError } = await supabase
+        .from("landen")
+        .select("*")
+        .eq("toegekend", false)
+        .order("volgorde", { ascending: true })
+        .limit(1);
+
+      if (landError || !landen || landen.length === 0) {
+        console.error("Geen vrij land:", landError);
+        melding.textContent = "Geen beschikbaar land gevonden.";
+        return;
+      }
+
+      const gekozenLand = landen[0].land;
+
+      // Stap 3: gegevens opslaan in users-tabel
+      const { error: insertError } = await supabase.from("users").insert([{
+        id: userId,
+        email,
+        managernaam,
+        land: gekozenLand,
+        is_admin: email.toLowerCase() === ADMIN_EMAIL
+      }]);
+
+      if (insertError) {
+        console.error("Fout bij toevoegen aan users-tabel:", insertError);
+        melding.textContent = "Kon gebruiker niet opslaan: " + insertError.message;
+        return;
+      }
+
+      // Stap 4: land markeren als toegekend
+      const { error: updateError } = await supabase
+        .from("landen")
+        .update({ toegekend: true })
+        .eq("land", gekozenLand);
+
+      if (updateError) {
+        console.warn("Let op: Land is wel toegewezen, maar markeren als 'toegekend' is mislukt:", updateError);
+      }
+
+      console.log("Registratie voltooid voor:", email, "Land:", gekozenLand);
+      window.location.href = "dashboard.html";
     });
   </script>
 </body>
