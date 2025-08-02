@@ -34,27 +34,26 @@
   </main>
 
   <script type="module">
-  const { data: authData, error: authError } = await supabase.auth.getUser();
+    const { data: authData, error: authError } = await supabase.auth.getUser();
 
-  if (authError || !authData?.user) {
-    window.location.href = "login.html";
-  } else {
-    const user = authData.user;
-
-    const { data: gebruiker, error } = await supabase
-      .from("users")
-      .select("managernaam, land")
-      .eq("id", user.id)
-      .single();
-
-    if (gebruiker) {
-      document.getElementById("managernaam").textContent = gebruiker.managernaam;
-      document.getElementById("land").textContent = gebruiker.land;
+    if (authError || !authData?.user) {
+      window.location.href = "login.html";
     } else {
-      console.error("Kon gebruikersgegevens niet ophalen:", error);
-    }
-  }
-</script>
+      const user = authData.user;
 
+      const { data: gebruiker, error } = await supabase
+        .from("users")
+        .select("managernaam, land")
+        .eq("id", user.id)
+        .single();
+
+      if (gebruiker) {
+        document.getElementById("managernaam").textContent = gebruiker.managernaam;
+        document.getElementById("land").textContent = gebruiker.land;
+      } else {
+        console.error("Kon gebruikersgegevens niet ophalen:", error);
+      }
+    }
+  </script>
 </body>
 </html>
