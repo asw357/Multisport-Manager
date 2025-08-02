@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard – Multisport-Manager</title>
+  <title>Admin Dashboard – Multisport-Manager</title>
   <link rel="stylesheet" href="style.css">
   <script type="module">
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -14,54 +14,29 @@
   </script>
 </head>
 <body>
-  <header>
-    <h1>Welkom bij Multisport-Manager</h1>
-    <nav>
-      <a href="profiel.html">Profiel</a>
-      <a href="atleten.html">Atleten</a>
-      <a href="schema.html">Schema</a>
-      <a href="uitslagen.html">Uitslagen</a>
-      <a href="logout.html">Uitloggen</a>
-    </nav>
-  </header>
-
   <main>
-    <section>
-      <h2>Jouw Managergegevens</h2>
-      <p><strong>Managernaam:</strong> <span id="managernaam"></span></p>
-      <p><strong>Land:</strong> <span id="land"></span></p>
+    <h1>Admin Dashboard</h1>
+    <p>Welkom, admin!</p>
 
-      <div id="adminLinks" style="display:none; margin-top:1em;">
-        <h3>🔧 Beheer</h3>
-        <a href="admin_dashboard.html">Ga naar Admin Dashboard</a>
-      </div>
-    </section>
+    <ul>
+      <li><a href="admin_editiebeheer.html">Edities beheren</a></li>
+      <li><a href="admin_onderdeelbeheer.html">Onderdelen beheren</a></li>
+      <li><a href="admin_limieten.html">Limieten instellen</a></li>
+      <li><a href="admin_startatleten.html">Startatleten instellen</a></li>
+      <li><a href="admin_schemagenerator.html">Schema genereren</a></li>
+      <li><a href="admin_simulatie.html">Simuleer wedstrijden</a></li>
+      <li><a href="admin_testmodus.html">Testmodus</a></li>
+      <li><a href="admin_mpbeheer.html">MP-beheer</a></li>
+      <li><a href="admin_logs.html">Logs & Activiteit</a></li>
+    </ul>
   </main>
 
   <script type="module">
-    const { data: authData, error: authError } = await supabase.auth.getUser();
+    const { data, error } = await supabase.auth.getUser();
+    const user = data?.user;
 
-    if (authError || !authData?.user) {
-      window.location.href = "login.html";
-    } else {
-      const user = authData.user;
-
-      const { data: gebruiker, error } = await supabase
-        .from("users")
-        .select("managernaam, land")
-        .eq("id", user.id)
-        .single();
-
-      if (gebruiker) {
-        document.getElementById("managernaam").textContent = gebruiker.managernaam;
-        document.getElementById("land").textContent = gebruiker.land;
-
-        if (user.email === "wilcoboesveld12@hotmail.com") {
-          document.getElementById("adminLinks").style.display = "block";
-        }
-      } else {
-        console.error("Kon gebruikersgegevens niet ophalen:", error);
-      }
+    if (!user || user.email !== "wilcoboesveld12@hotmail.com") {
+      window.location.href = "index.html";
     }
   </script>
 </body>
