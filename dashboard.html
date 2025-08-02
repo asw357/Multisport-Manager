@@ -11,6 +11,14 @@
       "https://bhpmdtivyripebburakf.supabase.co",
       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJocG1kdGl2eXJpcGViYnVyYWtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM2Mjc4NzYsImV4cCI6MjA2OTIwMzg3Nn0.kb733XLzUnc-aTbW_RzpeVJqylZ608egVShDCgIJkKI"
     );
+    if (gebruiker) {
+  document.getElementById("managernaam").textContent = gebruiker.managernaam;
+  document.getElementById("land").textContent = gebruiker.land;
+
+  if (user.email === "wilcoboesveld12@hotmail.com") {
+    document.getElementById("adminLinks").style.display = "block";
+  }
+}
   </script>
 </head>
 <body>
