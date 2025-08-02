@@ -76,7 +76,7 @@
 
       const { data: gebruiker, error } = await supabase
         .from("users")
-        .select("managernaam, land")
+        .select("managernaam, land, is_admin")
         .eq("id", user.id)
         .single();
 
@@ -84,7 +84,7 @@
         document.getElementById("managernaam").textContent = gebruiker.managernaam;
         document.getElementById("land").textContent = gebruiker.land;
 
-        if (user.email === "wilcoboesveld12@hotmail.com") {
+        if (gebruiker.is_admin === true) {
           document.getElementById("adminLinks").style.display = "block";
         }
       } else {
