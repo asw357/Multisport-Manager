@@ -34,25 +34,27 @@
   </main>
 
   <script type="module">
-    const { data: session } = await supabase.auth.getSession();
-    const user = session?.session?.user;
+  const { data: authData, error: authError } = await supabase.auth.getUser();
 
-    if (!user) {
-      window.location.href = "login.html";
+  if (authError || !authData?.user) {
+    window.location.href = "login.html";
+  } else {
+    const user = authData.user;
+
+    const { data: gebruiker, error } = await supabase
+      .from("users")
+      .select("managernaam, land")
+      .eq("id", user.id)
+      .single();
+
+    if (gebruiker) {
+      document.getElementById("managernaam").textContent = gebruiker.managernaam;
+      document.getElementById("land").textContent = gebruiker.land;
     } else {
-      const { data: gebruiker, error } = await supabase
-        .from("users")
-        .select("managernaam, land")
-        .eq("id", user.id)
-        .single();
-
-      if (gebruiker) {
-        document.getElementById("managernaam").textContent = gebruiker.managernaam;
-        document.getElementById("land").textContent = gebruiker.land;
-      } else {
-        console.error("Kon gebruikersgegevens niet ophalen:", error);
-      }
+      console.error("Kon gebruikersgegevens niet ophalen:", error);
     }
-  </script>
+  }
+</script>
+
 </body>
 </html>
