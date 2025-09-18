@@ -1,3 +1,4 @@
+// /js/admin.js
 import { supabase } from "./supabaseClient.js";
 
 const guard = document.getElementById("guard");
@@ -14,11 +15,13 @@ async function ensureAdmin() {
   const user = session.user;
 
   // Admin check
-  const { data: isAdmin } = await supabase
+  const { data: isAdmin, error } = await supabase
     .from("admins")
     .select("email")
     .eq("email", user.email)
     .maybeSingle();
+
+  if (error) console.error("Admin check error:", error);
 
   if (!isAdmin) {
     guard.innerHTML = `<p>Geen toegang. <a href="index.html">Terug</a></p>`;
@@ -49,7 +52,6 @@ document.getElementById("addCountriesBtn").addEventListener("click", async () =>
   }
 
   const payload = lines.map(name => ({ name }));
-  // Insert, ignore duplicates via upsert on name
   const { error } = await supabase
     .from("countries")
     .upsert(payload, { onConflict: "name", ignoreDuplicates: true });
