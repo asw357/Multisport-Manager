@@ -19,7 +19,7 @@
   <header>
     <h1>Multisport Manager</h1>
     <nav>
-      <a id="adminLink" href="admin.html" style="display:none;">Admin</a>
+      <a id="adminLink" href="./admin.html" style="display:none;">Admin</a>
       <button id="logoutBtn" style="display:none;">Uitloggen</button>
       <button id="forceLogoutBtn" style="display:none;" title="Wis alle sessies & tokens">Forceer uitloggen</button>
     </nav>
@@ -58,10 +58,16 @@
         <ul id="editionsList"></ul>
       </div>
     </section>
+
+    <!-- DIAGNOSE: deze knop moet ALTIJD een alert geven als JS laadt -->
+    <section>
+      <h3>Diagnose</h3>
+      <button id="diagBtn">Test: klik zou alert moeten tonen</button>
+      <p id="diagMsg" class="muted"></p>
+    </section>
   </main>
 
-  <script type="module">
-    import "./js/app.js";
-  </script>
+  <!-- Belangrijk: expliciet via src laden (sommige browsers cachen inline imports harder) -->
+  <script type="module" src="./js/app.js"></script>
 </body>
 </html>
