@@ -16,33 +16,42 @@ const claimCountryBtn = document.getElementById("claimCountryBtn");
 const editionsList = document.getElementById("editionsList");
 
 function setMsg(text, ok = false) {
+  if (!authMsg) return;
   authMsg.textContent = text;
   authMsg.className = ok ? "ok" : "error";
 }
 
+async function isAdminRPC() {
+  // Gebruik de serverfunctie i.p.v. SELECT op de admins-tabel
+  const { data, error } = await supabase.rpc("is_current_user_admin");
+  if (error) {
+    console.warn("Admin RPC error:", error);
+    return false;
+  }
+  return !!data;
+}
+
 async function updateUI(session) {
   if (!session) {
-    authSection.style.display = "block";
-    appSection.style.display = "none";
-    logoutBtn.style.display = "none";
-    adminLink.style.display = "none";
+    authSection?.style && (authSection.style.display = "block");
+    appSection?.style && (appSection.style.display = "none");
+    logoutBtn?.style && (logoutBtn.style.display = "none");
+    adminLink?.style && (adminLink.style.display = "none");
     return;
   }
-  authSection.style.display = "none";
-  appSection.style.display = "block";
-  logoutBtn.style.display = "inline-block";
+
+  authSection?.style && (authSection.style.display = "none");
+  appSection?.style && (appSection.style.display = "block");
+  logoutBtn?.style && (logoutBtn.style.display = "inline-block");
 
   const user = session.user;
-  welcome.textContent = `Welkom, ${user.email}`;
+  if (welcome) welcome.textContent = `Welkom, ${user.email}`;
 
-  const { data: isAdmin, error: aErr } = await supabase
-    .from("admins")
-    .select("email")
-    .eq("email", user.email)
-    .maybeSingle();
-  if (aErr) console.error("Admin check error:", aErr);
-  adminLink.style.display = isAdmin ? "inline-block" : "none";
+  // 🔐 Betrouwbare admin-check
+  const isAdmin = await isAdminRPC();
+  if (adminLink) adminLink.style.display = isAdmin ? "inline-block" : "none";
 
+  // Profiel + land
   const { data: profile, error: pErr } = await supabase
     .from("profiles")
     .select("country_id")
@@ -57,23 +66,23 @@ async function updateUI(session) {
       .eq("id", profile.country_id)
       .maybeSingle();
     if (cErr) console.error("Country fetch error:", cErr);
-    countryInfo.textContent = country ? country.name : `Land #${profile.country_id}`;
-    claimCountryBtn.style.display = "none";
+    if (countryInfo) countryInfo.textContent = country ? country.name : `Land #${profile.country_id}`;
+    if (claimCountryBtn) claimCountryBtn.style.display = "none";
   } else {
-    countryInfo.textContent = "Nog geen land gekoppeld.";
-    claimCountryBtn.style.display = "inline-block";
+    if (countryInfo) countryInfo.textContent = "Nog geen land gekoppeld.";
+    if (claimCountryBtn) claimCountryBtn.style.display = "inline-block";
   }
 
-  // Edities tonen (zonder jaar_fictief)
+  // Edities tonen
   const { data: eds, error: edErr } = await supabase
     .from("editions")
     .select("*")
     .order("editie_id", { ascending: true });
 
-  editionsList.innerHTML = "";
+  if (editionsList) editionsList.innerHTML = "";
   if (edErr) {
     console.error("Editions error:", edErr);
-  } else if (eds) {
+  } else if (eds && editionsList) {
     eds.forEach(e => {
       const li = document.createElement("li");
       let text = `${e.type}editie ${e.nummer} – ${e.locatie}`;
@@ -89,41 +98,45 @@ async function updateUI(session) {
 }
 
 // Inloggen
-authForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  authMsg.textContent = "";
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value;
+if (authForm) {
+  authForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    setMsg("", true);
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
 
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) {
-    console.error("Login error:", error);
-    setMsg(error.message || "Inloggen mislukt.");
-  } else {
-    setMsg("Ingelogd.", true);
-    await updateUI(data.session);
-  }
-});
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      console.error("Login error:", error);
+      setMsg(error.message || "Inloggen mislukt.");
+    } else {
+      setMsg("Ingelogd.", true);
+      await updateUI(data.session);
+    }
+  });
+}
 
 // Registreren
-registerBtn.addEventListener("click", async () => {
-  authMsg.textContent = "";
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value;
+if (registerBtn) {
+  registerBtn.addEventListener("click", async () => {
+    setMsg("", true);
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
 
-  const { data, error } = await supabase.auth.signUp({ email, password });
-  if (error) {
-    console.error("SignUp error:", error);
-    setMsg(error.message || "Registratie mislukt.");
-  } else {
-    setMsg("Registratie gestart — check je e-mail om te bevestigen.", true);
-  }
-});
+    const { error } = await supabase.auth.signUp({ email, password });
+    if (error) {
+      console.error("SignUp error:", error);
+      setMsg(error.message || "Registratie mislukt.");
+    } else {
+      setMsg("Registratie gestart — check je e-mail om te bevestigen.", true);
+    }
+  });
+}
 
 // Magic link
 if (magicBtn) {
   magicBtn.addEventListener("click", async () => {
-    authMsg.textContent = "";
+    setMsg("", true);
     const email = document.getElementById("email").value.trim();
     if (!email) {
       setMsg("Vul een e-mail in om een magic link te sturen.");
@@ -131,9 +144,7 @@ if (magicBtn) {
     }
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: {
-        emailRedirectTo: window.location.href
-      }
+      options: { emailRedirectTo: window.location.href }
     });
     if (error) {
       console.error("Magic link error:", error);
@@ -145,22 +156,26 @@ if (magicBtn) {
 }
 
 // Uitloggen
-logoutBtn.addEventListener("click", async () => {
-  await supabase.auth.signOut();
-  await updateUI(null);
-});
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", async () => {
+    await supabase.auth.signOut();
+    await updateUI(null);
+  });
+}
 
 // Claim land via RPC
-claimCountryBtn.addEventListener("click", async () => {
-  const { data, error } = await supabase.rpc("claim_country");
-  if (error) {
-    console.error("claim_country error:", error);
-    alert(error.message || "Claimen mislukt.");
-    return;
-  }
-  countryInfo.textContent = data?.name ?? "Land toegekend";
-  claimCountryBtn.style.display = "none";
-});
+if (claimCountryBtn) {
+  claimCountryBtn.addEventListener("click", async () => {
+    const { data, error } = await supabase.rpc("claim_country");
+    if (error) {
+      console.error("claim_country error:", error);
+      alert(error.message || "Claimen mislukt. Tip: voeg eerst landen toe als admin.");
+      return;
+    }
+    if (countryInfo) countryInfo.textContent = data?.name ?? "Land toegekend";
+    claimCountryBtn.style.display = "none";
+  });
+}
 
 // Sessiewijzigingen volgen
 supabase.auth.onAuthStateChange((_event, session) => updateUI(session));
