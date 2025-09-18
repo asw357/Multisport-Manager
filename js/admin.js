@@ -71,7 +71,7 @@ document.getElementById("addSportBtn").addEventListener("click", async () => {
   document.getElementById("sportMsg").textContent = error ? error.message : "Sport opgeslagen.";
 });
 
-// Disciplines
+// Disciplines (optioneel)
 document.getElementById("addDisciplineBtn").addEventListener("click", async () => {
   const sport_id = Number(document.getElementById("disciplineSportId").value);
   const naam = document.getElementById("disciplineName").value.trim();
@@ -95,18 +95,21 @@ document.getElementById("addEventBtn").addEventListener("click", async () => {
   document.getElementById("eventMsg").textContent = error ? error.message : "Event opgeslagen.";
 });
 
-// Editions
+// Editions (jaar weg; datums optioneel)
 document.getElementById("createEditionBtn").addEventListener("click", async () => {
   const type = document.getElementById("edType").value;
   const nummer = Number(document.getElementById("edNum").value);
   const locatie = document.getElementById("edLoc").value.trim();
-  const jaar_fictief = Number(document.getElementById("edYear").value);
-  const start_datum = document.getElementById("edStart").value;
-  const eind_datum = document.getElementById("edEnd").value;
+  const start_datum_raw = document.getElementById("edStart").value;
+  const eind_datum_raw = document.getElementById("edEnd").value;
 
-  const { error } = await supabase.from("editions").insert([
-    { type, nummer, locatie, jaar_fictief, start_datum, eind_datum }
-  ]);
+  const payload = { type, nummer, locatie };
+
+  // Alleen meesturen als ingevuld (de kolommen zijn nu optioneel)
+  if (start_datum_raw) payload.start_datum = start_datum_raw;
+  if (eind_datum_raw) payload.eind_datum = eind_datum_raw;
+
+  const { error } = await supabase.from("editions").insert([payload]);
 
   document.getElementById("editionMsg").textContent = error ? error.message : "Editie aangemaakt.";
 });
