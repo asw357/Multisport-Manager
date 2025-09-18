@@ -1,5 +1,5 @@
 // /js/admin.js
-import { supabase } from "./supabaseClient.s";
+import { supabase } from "./supabaseClient.js";
 
 const guard = document.getElementById("guard");
 const panel = document.getElementById("adminPanel");
