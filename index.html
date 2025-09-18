@@ -12,6 +12,7 @@
     .muted { color: #666; }
     .error { color: #b00020; }
     .ok { color: #0a7a25; }
+    .small { font-size:.9rem; color:#666; }
   </style>
 </head>
 <body>
@@ -20,6 +21,7 @@
     <nav>
       <a id="adminLink" href="admin.html" style="display:none;">Admin</a>
       <button id="logoutBtn" style="display:none;">Uitloggen</button>
+      <button id="forceLogoutBtn" style="display:none;" title="Wis alle sessies & tokens">Forceer uitloggen</button>
     </nav>
   </header>
 
@@ -41,6 +43,9 @@
     <section id="appSection" style="display:none;">
       <h2>Dashboard</h2>
       <p id="welcome"></p>
+      <p class="small" id="switchHint" style="display:none;">
+        Niet jij? Klik <a href="#" id="switchAccount">hier</a> om van account te wisselen.
+      </p>
 
       <div id="countryCard">
         <h3>Land</h3>
