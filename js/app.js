@@ -8,8 +8,11 @@ const registerBtn = document.getElementById("registerBtn");
 const magicBtn = document.getElementById("magicBtn");
 const authMsg = document.getElementById("authMsg");
 const logoutBtn = document.getElementById("logoutBtn");
+const forceLogoutBtn = document.getElementById("forceLogoutBtn");
 const welcome = document.getElementById("welcome");
 const adminLink = document.getElementById("adminLink");
+const switchHint = document.getElementById("switchHint");
+const switchAccount = document.getElementById("switchAccount");
 
 const countryInfo = document.getElementById("countryInfo");
 const claimCountryBtn = document.getElementById("claimCountryBtn");
@@ -22,7 +25,8 @@ function setMsg(text, ok = false) {
 }
 
 async function isAdminRPC() {
-  // Gebruik de serverfunctie i.p.v. SELECT op de admins-tabel
+  // We gebruiken de bestaande functie; als je hem nog niet als RPC hebt aangemaakt:
+  // create or replace function is_current_user_admin() returns boolean ...
   const { data, error } = await supabase.rpc("is_current_user_admin");
   if (error) {
     console.warn("Admin RPC error:", error);
@@ -31,11 +35,27 @@ async function isAdminRPC() {
   return !!data;
 }
 
+async function forceLogout() {
+  try { await supabase.auth.signOut(); } catch (_) {}
+  try {
+    // Wis Supabase token(s) in storage
+    Object.keys(localStorage).forEach((k) => {
+      if (k.startsWith("sb-") && k.includes("auth-token")) localStorage.removeItem(k);
+      if (k.includes("supabase.auth.token")) localStorage.removeItem(k);
+    });
+    sessionStorage.clear();
+  } catch (_) {}
+  // Herlaad “schoon”
+  const base = window.location.pathname.split("?")[0].split("#")[0];
+  window.location.replace(base);
+}
+
 async function updateUI(session) {
   if (!session) {
     authSection?.style && (authSection.style.display = "block");
     appSection?.style && (appSection.style.display = "none");
     logoutBtn?.style && (logoutBtn.style.display = "none");
+    forceLogoutBtn?.style && (forceLogoutBtn.style.display = "none");
     adminLink?.style && (adminLink.style.display = "none");
     return;
   }
@@ -43,11 +63,13 @@ async function updateUI(session) {
   authSection?.style && (authSection.style.display = "none");
   appSection?.style && (appSection.style.display = "block");
   logoutBtn?.style && (logoutBtn.style.display = "inline-block");
+  forceLogoutBtn?.style && (forceLogoutBtn.style.display = "inline-block");
+  switchHint?.style && (switchHint.style.display = "block");
 
   const user = session.user;
   if (welcome) welcome.textContent = `Welkom, ${user.email}`;
 
-  // 🔐 Betrouwbare admin-check
+  // Admin-link
   const isAdmin = await isAdminRPC();
   if (adminLink) adminLink.style.display = isAdmin ? "inline-block" : "none";
 
@@ -73,7 +95,7 @@ async function updateUI(session) {
     if (claimCountryBtn) claimCountryBtn.style.display = "inline-block";
   }
 
-  // Edities tonen
+  // Edities
   const { data: eds, error: edErr } = await supabase
     .from("editions")
     .select("*")
@@ -155,11 +177,26 @@ if (magicBtn) {
   });
 }
 
-// Uitloggen
+// Uitloggen (normaal)
 if (logoutBtn) {
   logoutBtn.addEventListener("click", async () => {
     await supabase.auth.signOut();
     await updateUI(null);
+  });
+}
+
+// Forceer uitloggen (wis tokens + reload)
+if (forceLogoutBtn) {
+  forceLogoutBtn.addEventListener("click", async () => {
+    await forceLogout();
+  });
+}
+
+// Wissel van account (zelfde als force logout)
+if (switchAccount) {
+  switchAccount.addEventListener("click", async (e) => {
+    e.preventDefault();
+    await forceLogout();
   });
 }
 
@@ -175,6 +212,12 @@ if (claimCountryBtn) {
     if (countryInfo) countryInfo.textContent = data?.name ?? "Land toegekend";
     claimCountryBtn.style.display = "none";
   });
+}
+
+// Auto-logout via URL: index.html?logout=1
+const url = new URL(window.location.href);
+if (url.searchParams.get("logout") === "1") {
+  await forceLogout();
 }
 
 // Sessiewijzigingen volgen
