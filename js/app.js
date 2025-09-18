@@ -35,7 +35,6 @@ async function updateUI(session) {
   const user = session.user;
   welcome.textContent = `Welkom, ${user.email}`;
 
-  // Admin check via admins table (op email)
   const { data: isAdmin, error: aErr } = await supabase
     .from("admins")
     .select("email")
@@ -44,7 +43,6 @@ async function updateUI(session) {
   if (aErr) console.error("Admin check error:", aErr);
   adminLink.style.display = isAdmin ? "inline-block" : "none";
 
-  // Profiel + land
   const { data: profile, error: pErr } = await supabase
     .from("profiles")
     .select("country_id")
@@ -66,11 +64,11 @@ async function updateUI(session) {
     claimCountryBtn.style.display = "inline-block";
   }
 
-  // Demo: toon edities
+  // Edities tonen (zonder jaar_fictief)
   const { data: eds, error: edErr } = await supabase
     .from("editions")
     .select("*")
-    .order("start_datum", { ascending: true });
+    .order("editie_id", { ascending: true });
 
   editionsList.innerHTML = "";
   if (edErr) {
@@ -78,7 +76,13 @@ async function updateUI(session) {
   } else if (eds) {
     eds.forEach(e => {
       const li = document.createElement("li");
-      li.textContent = `${e.type}editie ${e.nummer} – ${e.locatie} (${e.jaar_fictief})`;
+      let text = `${e.type}editie ${e.nummer} – ${e.locatie}`;
+      if (e.start_datum || e.eind_datum) {
+        const s = e.start_datum ?? "?";
+        const t = e.eind_datum ?? "?";
+        text += ` (${s} – ${t})`;
+      }
+      li.textContent = text;
       editionsList.appendChild(li);
     });
   }
@@ -101,7 +105,7 @@ authForm.addEventListener("submit", async (e) => {
   }
 });
 
-// Registreren (email+password)
+// Registreren
 registerBtn.addEventListener("click", async () => {
   authMsg.textContent = "";
   const email = document.getElementById("email").value.trim();
@@ -116,27 +120,29 @@ registerBtn.addEventListener("click", async () => {
   }
 });
 
-// Magic link (handig om snel te testen)
-magicBtn.addEventListener("click", async () => {
-  authMsg.textContent = "";
-  const email = document.getElementById("email").value.trim();
-  if (!email) {
-    setMsg("Vul een e-mail in om een magic link te sturen.");
-    return;
-  }
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
-    options: {
-      emailRedirectTo: window.location.href // terug naar deze pagina
+// Magic link
+if (magicBtn) {
+  magicBtn.addEventListener("click", async () => {
+    authMsg.textContent = "";
+    const email = document.getElementById("email").value.trim();
+    if (!email) {
+      setMsg("Vul een e-mail in om een magic link te sturen.");
+      return;
+    }
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: window.location.href
+      }
+    });
+    if (error) {
+      console.error("Magic link error:", error);
+      setMsg(error.message || "Magic link verzenden mislukt.");
+    } else {
+      setMsg("Magic link verzonden — check je e-mail.", true);
     }
   });
-  if (error) {
-    console.error("Magic link error:", error);
-    setMsg(error.message || "Magic link verzenden mislukt.");
-  } else {
-    setMsg("Magic link verzonden — check je e-mail.", true);
-  }
-});
+}
 
 // Uitloggen
 logoutBtn.addEventListener("click", async () => {
