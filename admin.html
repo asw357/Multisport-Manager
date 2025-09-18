@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Admin • Multisport Manager</title>
   <link rel="stylesheet" href="styles.css" />
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; max-width: 1000px; margin: 2rem auto; padding: 0 1rem; }
+    input, select, button, textarea { padding: .5rem; font-size: 1rem; }
+    details { margin: 1rem 0; }
+  </style>
 </head>
 <body>
   <header>
@@ -98,7 +103,6 @@
   </main>
 
   <script type="module">
-    import { supabase } from "./js/supabaseClient.js";
     import "./js/admin.js";
   </script>
 </body>
