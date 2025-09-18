@@ -9,6 +9,7 @@
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; max-width: 1000px; margin: 2rem auto; padding: 0 1rem; }
     input, select, button, textarea { padding: .5rem; font-size: 1rem; }
     details { margin: 1rem 0; }
+    .hint { color:#666; font-size:.95rem; }
   </style>
 </head>
 <body>
@@ -38,6 +39,7 @@
         <summary><strong>Sporten / Disciplines / Onderdelen</strong></summary>
         <div>
           <h3>Sport toevoegen</h3>
+          <p class="hint">“Discipline” is <em>niet verplicht</em>; sla die sectie gerust over als jouw sport geen aparte disciplines heeft.</p>
           <label>Naam <input id="sportName" /></label>
           <label>Categorie 
             <select id="sportSeason">
@@ -51,7 +53,8 @@
         </div>
 
         <div>
-          <h3>Discipline toevoegen</h3>
+          <h3>Discipline toevoegen (optioneel)</h3>
+          <p class="hint">Alleen nodig als je de sport wil opsplitsen (bijv. “Sprint”, “Allround”).</p>
           <label>Sport ID <input id="disciplineSportId" type="number" /></label>
           <label>Naam <input id="disciplineName" /></label>
           <button id="addDisciplineBtn">Discipline opslaan</button>
@@ -71,6 +74,7 @@
           </label>
           <label>Formaat <input id="eventFormat" placeholder="individueel / team / 6v6…" /></label>
           <label>Record type <input id="eventRecordType" value="MR/NR/PR/CR" /></label>
+          <p class="hint">Tip: als je geen disciplines gebruikt, maak één “algemene” discipline aan en hang events daaraan.</p>
           <button id="addEventBtn">Event opslaan</button>
           <p id="eventMsg"></p>
         </div>
@@ -83,7 +87,7 @@
         </label>
         <label>Nummer <input id="edNum" type="number" value="1" /></label>
         <label>Locatie <input id="edLoc" placeholder="Athene, Griekenland" /></label>
-        <label>Jaar (fictief) <input id="edYear" type="number" value="2024" /></label>
+        <div class="hint">Start- en einddatum zijn <em>optioneel</em>; je kunt die later invullen of wijzigen.</div>
         <label>Start datum <input id="edStart" type="date" /></label>
         <label>Eind datum <input id="edEnd" type="date" /></label>
         <button id="createEditionBtn">Maak editie</button>
