@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Multisport Manager</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <h1>Multisport Manager</h1>
+    <nav>
+      <a id="adminLink" href="admin.html" style="display:none;">Admin</a>
+      <button id="logoutBtn" style="display:none;">Uitloggen</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="authSection">
+      <h2>Inloggen / Registreren</h2>
+      <form id="authForm">
+        <label>E-mail <input type="email" id="email" required /></label>
+        <label>Wachtwoord <input type="password" id="password" required /></label>
+        <button type="submit">Inloggen</button>
+        <button type="button" id="registerBtn">Registreren</button>
+      </form>
+      <p id="authMsg"></p>
+    </section>
+
+    <section id="appSection" style="display:none;">
+      <h2>Dashboard</h2>
+      <p id="welcome"></p>
+
+      <div id="countryCard">
+        <h3>Land</h3>
+        <p id="countryInfo">Nog geen land gekoppeld.</p>
+        <button id="claimCountryBtn">Claim mijn land</button>
+      </div>
+
+      <div>
+        <h3>Actieve edities (voorbeeld)</h3>
+        <ul id="editionsList"></ul>
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { supabase } from "./js/supabaseClient.js";
+    import "./js/app.js";
+  </script>
+</body>
+</html>
