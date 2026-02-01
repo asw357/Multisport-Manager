@@ -9,9 +9,9 @@ supabase: Client = create_client(url, key)
 
 st.set_page_config(page_title="Multi Sport Online", layout="wide")
 
-# LIJSTEN VOOR RANDOM NAMEN (Skelet versie, breiden we later uit)
-FIRST_NAMES = ["Lars", "Sanne", "Thijs", "Aniek", "Bram", "Jack", "Emma", "Marek", "Elena", "Jean", "Pierre", "Hans", "Ingrid"]
-LAST_NAMES = ["de Jong", "Jansen", "Meijer", "Bakker", "Smit", "Thompson", "Müller", "Dubois", "Petrov", "Novak"]
+# UITGEBREIDERE NAMENLIJST (Voor meer variatie)
+FIRST_NAMES = ["Lars", "Sanne", "Thijs", "Aniek", "Bram", "Jack", "Emma", "Marek", "Elena", "Jean", "Pierre", "Hans", "Ingrid", "Luca", "Sophie", "Boris", "Nina"]
+LAST_NAMES = ["de Jong", "Jansen", "Meijer", "Bakker", "Smit", "Thompson", "Müller", "Dubois", "Petrov", "Novak", "Garcia", "Silva", "Ferrari"]
 
 def get_countries():
     response = supabase.table("countries").select("*").order("registration_order").execute()
@@ -23,7 +23,7 @@ def generate_athletes(country_id, amount=15):
         new_athlete = {
             "country_id": country_id,
             "name": f"{random.choice(FIRST_NAMES)} {random.choice(LAST_NAMES)}",
-            "gender": random.choice(["Mman", "Vrouw"]),
+            "gender": random.choice(["Man", "Vrouw"]), # FIX: Mman is nu Man
             "skill_speed": random.randint(50, 70),
             "skill_strength": random.randint(50, 70),
             "skill_stamina": random.randint(50, 70),
@@ -43,22 +43,37 @@ def main():
     if choice == "Home":
         st.subheader("Landen Overzicht")
         landen = get_countries()
-        for l in landen:
-            st.write(f"- {l['name']} (MP: {l['mp_balance']})")
+        col1, col2 = st.columns(2)
+        for i, l in enumerate(landen):
+            with (col1 if i % 2 == 0 else col2):
+                st.info(f"**{l['name']}** | MP: {l['mp_balance']}")
 
     elif choice == "Manager Dashboard":
         st.header("Manager Dashboard")
-        land_naam = st.selectbox("Kies je land:", [l['name'] for l in get_countries()])
+        landen_lijst = get_countries()
+        land_naam = st.selectbox("Kies je land:", [l['name'] for l in landen_lijst])
         
-        # Haal de atleten op voor dit land
-        land_data = supabase.table("countries").select("id").eq("name", land_naam).single().execute()
-        atleten = supabase.table("athletes").select("*").eq("country_id", land_data.data['id']).execute()
+        # Haal data op
+        land_data = next(item for item in landen_lijst if item["name"] == land_naam)
+        atleten = supabase.table("athletes").select("*").eq("country_id", land_data['id']).execute()
         
         if not atleten.data:
-            st.warning("Er zijn nog geen atleten voor dit land. Vraag de Admin om ze te genereren.")
+            st.warning("Er zijn nog geen atleten voor dit land.")
         else:
             st.write(f"### Atleten van {land_naam}")
-            st.table(atleten.data)
+            # We maken de tabel mooier door de ID-kolommen te verbergen
+            display_df = []
+            for a in atleten.data:
+                display_df.append({
+                    "Naam": a['name'],
+                    "Geslacht": a['gender'],
+                    "Snelheid": a['skill_speed'],
+                    "Kracht": a['skill_strength'],
+                    "Uithouding": a['skill_stamina'],
+                    "Techniek": a['skill_technique'],
+                    "Focus": a['skill_focus']
+                })
+            st.table(display_df)
 
     elif choice == "Admin Paneel":
         st.header("🕹️ Admin Paneel")
@@ -66,21 +81,24 @@ def main():
         if pw == "admin123":
             st.success("Toegang verleend")
             
-            if st.button("🚀 Genereer 15 Starters voor alle landen"):
+            # Knoppen voor Admin acties
+            if st.button("🚀 Genereer Starters voor nieuwe landen"):
                 landen = get_countries()
                 for l in landen:
-                    # Check of ze al atleten hebben (om dubbelen te voorkomen)
                     check = supabase.table("athletes").select("id").eq("country_id", l['id']).execute()
                     if not check.data:
                         generate_athletes(l['id'])
                         st.write(f"✅ Atleten gemaakt voor {l['name']}")
-                    else:
-                        st.write(f"ℹ️ {l['name']} heeft al atleten.")
                 st.balloons()
+            
+            if st.button("🗑️ Reset alle atleten (LET OP!)"):
+                # Voor jou om te testen: dit gooit de atleten tabel leeg
+                supabase.table("athletes").delete().neq("id", 0).execute()
+                st.warning("Alle atleten zijn verwijderd uit de database.")
 
     elif choice == "Reglement":
         st.header("📜 Reglement")
-        st.write("De Admin heeft altijd het laatste woord.")
+        st.markdown("> **ADMIN NOTITIE:** De Admin heeft altijd het laatste woord bij technische fouten of onvoorziene situaties.")
 
 if __name__ == '__main__':
     main()
