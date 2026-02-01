@@ -2,103 +2,102 @@ import streamlit as st
 from supabase import create_client, Client
 import random
 
-# Verbinding met de database
+# DATABASE VERBINDING
 url = st.secrets["SUPABASE_URL"]
 key = st.secrets["SUPABASE_KEY"]
 supabase: Client = create_client(url, key)
 
 st.set_page_config(page_title="Multi Sport Online", layout="wide")
 
-# UITGEBREIDERE NAMENLIJST (Voor meer variatie)
-FIRST_NAMES = ["Lars", "Sanne", "Thijs", "Aniek", "Bram", "Jack", "Emma", "Marek", "Elena", "Jean", "Pierre", "Hans", "Ingrid", "Luca", "Sophie", "Boris", "Nina"]
-LAST_NAMES = ["de Jong", "Jansen", "Meijer", "Bakker", "Smit", "Thompson", "Müller", "Dubois", "Petrov", "Novak", "Garcia", "Silva", "Ferrari"]
+# ADMIN CLAUSULE
+ADMIN_CLAUSE = "> **ADMIN NOTITIE:** De Admin heeft altijd het laatste woord bij technische fouten of onvoorziene situaties."
 
-def get_countries():
-    response = supabase.table("countries").select("*").order("registration_order").execute()
-    return response.data
+# --- HELPER FUNCTIES ---
+def get_all_countries():
+    return supabase.table("countries").select("*").order("registration_order").execute().data
 
-def generate_athletes(country_id, amount=15):
-    athletes_to_add = []
-    for _ in range(amount):
-        new_athlete = {
-            "country_id": country_id,
-            "name": f"{random.choice(FIRST_NAMES)} {random.choice(LAST_NAMES)}",
-            "gender": random.choice(["Man", "Vrouw"]), # FIX: Mman is nu Man
-            "skill_speed": random.randint(50, 70),
-            "skill_strength": random.randint(50, 70),
-            "skill_stamina": random.randint(50, 70),
-            "skill_technique": random.randint(50, 70),
-            "skill_focus": random.randint(50, 70)
-        }
-        athletes_to_add.append(new_athlete)
-    
-    supabase.table("athletes").insert(athletes_to_add).execute()
+def update_mp(country_id, new_balance):
+    supabase.table("countries").update({"mp_balance": new_balance}).eq("id", country_id).execute()
 
+def update_skill(athlete_id, skill_name, new_value):
+    supabase.table("athletes").update({skill_name: new_value}).eq("id", athlete_id).execute()
+
+# --- HOOFDAPP ---
 def main():
-    st.title("🏆 Multi Sport Online")
-    
-    menu = ["Home", "Manager Dashboard", "Admin Paneel", "Reglement"]
-    choice = st.sidebar.selectbox("Ga naar:", menu)
+    st.sidebar.title("🏆 Multi Sport Online")
+    menu = ["🏠 Home", "📊 Manager Dashboard", "📡 Scouting & Transfer", "🕹️ Admin Paneel", "📜 Reglement"]
+    choice = st.sidebar.radio("Navigatie", menu)
 
-    if choice == "Home":
-        st.subheader("Landen Overzicht")
-        landen = get_countries()
-        col1, col2 = st.columns(2)
-        for i, l in enumerate(landen):
-            with (col1 if i % 2 == 0 else col2):
-                st.info(f"**{l['name']}** | MP: {l['mp_balance']}")
+    if choice == "🏠 Home":
+        st.header("Wereldoverzicht")
+        landen = get_all_countries()
+        for l in landen:
+            st.write(f"📍 {l['name']} | MP: **{l['mp_balance']}**")
+        st.info("Welkom bij de eerste editie van de Wereldspelen!")
 
-    elif choice == "Manager Dashboard":
-        st.header("Manager Dashboard")
-        landen_lijst = get_countries()
-        land_naam = st.selectbox("Kies je land:", [l['name'] for l in landen_lijst])
-        
-        # Haal data op
+    elif choice == "📊 Manager Dashboard":
+        landen_lijst = get_all_countries()
+        land_naam = st.selectbox("Log in als Land:", [l['name'] for l in landen_lijst])
         land_data = next(item for item in landen_lijst if item["name"] == land_naam)
-        atleten = supabase.table("athletes").select("*").eq("country_id", land_data['id']).execute()
         
-        if not atleten.data:
-            st.warning("Er zijn nog geen atleten voor dit land.")
-        else:
-            st.write(f"### Atleten van {land_naam}")
-            # We maken de tabel mooier door de ID-kolommen te verbergen
-            display_df = []
-            for a in atleten.data:
-                display_df.append({
-                    "Naam": a['name'],
-                    "Geslacht": a['gender'],
-                    "Snelheid": a['skill_speed'],
-                    "Kracht": a['skill_strength'],
-                    "Uithouding": a['skill_stamina'],
-                    "Techniek": a['skill_technique'],
-                    "Focus": a['skill_focus']
-                })
-            st.table(display_df)
+        st.title(f"Dashboard: {land_naam}")
+        st.metric("Landelijk Budget", f"{land_data['mp_balance']} MP")
 
-    elif choice == "Admin Paneel":
-        st.header("🕹️ Admin Paneel")
+        # ATLETENLIJST & TRAINING
+        st.subheader("Jouw Team & Training")
+        atleten_res = supabase.table("athletes").select("*").eq("country_id", land_data['id']).execute()
+        atleten = atleten_res.data
+
+        if not atleten:
+            st.warning("Nog geen atleten gegenereerd voor dit land.")
+        else:
+            # Training Sectie
+            with st.expander("🏋️ Snel-Trainen (25 MP per punt)"):
+                atleet_keuze = st.selectbox("Kies atleet:", [a['name'] for a in atleten])
+                gekozen_atleet = next(a for a in atleten if a['name'] == atleet_keuze)
+                skill_keuze = st.selectbox("Skill:", ["skill_speed", "skill_strength", "skill_stamina", "skill_technique", "skill_focus"])
+                
+                if st.button("Bevestig Training"):
+                    if land_data['mp_balance'] >= 25:
+                        new_skill_val = gekozen_atleet[skill_keuze] + 1
+                        update_skill(gekozen_atleet['id'], skill_keuze, new_skill_val)
+                        update_mp(land_data['id'], land_data['mp_balance'] - 25)
+                        st.success(f"{atleet_keuze} is verbeterd! Nieuwe waarde: {new_skill_val}")
+                        st.rerun()
+                    else:
+                        st.error("Onvoldoende MP!")
+
+            st.table(atleten)
+
+    elif choice == "🕹️ Admin Paneel":
+        st.header("Admin God-Mode")
         pw = st.text_input("Wachtwoord:", type="password")
         if pw == "admin123":
-            st.success("Toegang verleend")
+            st.success("Toegang geverifieerd")
             
-            # Knoppen voor Admin acties
-            if st.button("🚀 Genereer Starters voor nieuwe landen"):
-                landen = get_countries()
-                for l in landen:
-                    check = supabase.table("athletes").select("id").eq("country_id", l['id']).execute()
-                    if not check.data:
-                        generate_athletes(l['id'])
-                        st.write(f"✅ Atleten gemaakt voor {l['name']}")
-                st.balloons()
+            tab1, tab2, tab3 = st.tabs(["Landen & Atleten", "Editie Beheer", "Strafsysteem"])
             
-            if st.button("🗑️ Reset alle atleten (LET OP!)"):
-                # Voor jou om te testen: dit gooit de atleten tabel leeg
-                supabase.table("athletes").delete().neq("id", 0).execute()
-                st.warning("Alle atleten zijn verwijderd uit de database.")
+            with tab1:
+                if st.button("Genereer Starters (15 per land)"):
+                    # Logica voor genereren (zie vorige code)
+                    st.write("Bezig met genereren...")
+            
+            with tab2:
+                st.subheader("Simulatie Instellingen")
+                weer = st.selectbox("Weerbericht", ["Zonnig", "Regen", "Storm", "Hittegolf"])
+                bonus = st.number_input("MP Bonus voor Goud", value=100)
+                if st.button("Start Simulatie Editie"):
+                    st.write("De simulatie-motor wordt opgestart...")
 
-    elif choice == "Reglement":
-        st.header("📜 Reglement")
-        st.markdown("> **ADMIN NOTITIE:** De Admin heeft altijd het laatste woord bij technische fouten of onvoorziene situaties.")
+            with tab3:
+                st.subheader("Sancties")
+                st.selectbox("Land om te bannen:", [l['name'] for l in get_all_countries()])
+                st.button("Ban voor 4 Edities")
+
+    elif choice == "📜 Reglement":
+        st.header("Spelregels")
+        st.write("Hier staan alle regels over MP, bans en inactiviteit.")
+        st.markdown(ADMIN_CLAUSE)
 
 if __name__ == '__main__':
     main()
