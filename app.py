@@ -1,5 +1,48 @@
 import streamlit as st
 import random
+from supabase import create_client, Client
+
+# 1. Database verbinding (stond er al)
+url = st.secrets["SUPABASE_URL"]
+key = st.secrets["SUPABASE_KEY"]
+supabase: Client = create_client(url, key)
+
+# 2. HIER PLAATS JE DE GENERATOR (Nieuw)
+def generate_local_athlete(country_name, gender="Man"):
+    # Uitgebreide namenlijsten per cultuur (fictief maar passend)
+    naming_data = {
+        "Nederland": ["Lars van den Berg", "Thijs de Boer", "Sven Bakker", "Bram Visser"],
+        "Bulgarije": ["Ivan Petrov", "Georgi Ivanov", "Stoyan Kolev", "Dimitar Bozhilov"],
+        "Australië": ["Jack Thompson", "Riley Wilson", "Cooper Reid", "Lachlan Jones"],
+        "Griekenland": ["Nikolaos Pappas", "Kostas Dimitriou", "Adonis Georgiou", "Yannis Angelos"],
+        "Duitsland": ["Lukas Schmidt", "Max Müller", "Erik Wagner", "Finn Fischer"]
+    }
+    
+    # Kies een naam op basis van het land, of een standaard als het land niet in de lijst staat
+    name_list = naming_data.get(country_name, ["Alex Smith", "Sam Brown", "Jordan Taylor"])
+    name = random.choice(name_list)
+    
+    # Skills genereren (0-100)
+    # Dit is de basis, Admin kan dit later per sport onderdeel laten wegen
+    skills = {
+        "country_id": None, # Wordt ingevuld bij aanroep
+        "name": name,
+        "gender": gender,
+        "age": random.randint(18, 25),
+        "skill_speed": random.randint(45, 80),
+        "skill_strength": random.randint(45, 80),
+        "skill_stamina": random.randint(45, 80),
+        "skill_technique": random.randint(45, 80),
+        "skill_focus": random.randint(45, 80)
+    }
+    return skills
+
+# 3. DE REST VAN JE CODE (Menu, Inschrijven, etc.)
+st.set_page_config(page_title="Multi Sport Online PRO")
+# ... de rest van de interface ...
+
+import streamlit as st
+import random
 import time
 from supabase import create_client, Client
 
