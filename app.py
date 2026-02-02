@@ -57,3 +57,55 @@ elif menu == "Admin":
     pwd = st.text_input("Wachtwoord", type="password")
     if pwd == "jouw_geheime_code":
         st.write("Hier kun je edities starten, weer aanpassen en MP bonussen beheren.")
+        import random
+
+def generate_starter_team(country_id, country_name):
+    # Namenlijstjes per land (als voorbeeld, dit breiden we uit)
+    names_db = {
+        "Australië": ["Jack Thompson", "Cooper Reid", "Lachlan Jones"],
+        "Bulgarije": ["Ivan Petrov", "Georgi Ivanov", "Stoyan Koleve"],
+        "Griekenland": ["Nikolaos Pappas", "Kostas Dimitriou", "Adonis Georgiou"],
+        "Duitsland": ["Lukas Schmidt", "Max Müller", "Erik Wagner"],
+        "Nederland": ["Jan de Vries", "Thijs Bakker", "Lars van Dijk"]
+    }
+    
+    # Pak namen van het land, of algemene namen als het land niet in de lijst staat
+    local_names = names_db.get(country_name, ["John Doe", "Alex Smith", "Sam Brown"])
+    
+    athletes = []
+    
+    # Maak 20 starters-atleten aan
+    for i in range(20):
+        name = random.choice(local_names) + f" {random.randint(1,99)}" # Tijdelijk uniek maken
+        
+        # Editie 1: Alleen mannen
+        gender = "Man"
+        
+        # Leeftijd en Skills
+        if i < 3: # De 'veteranen' (Leraren/Matrozen)
+            age = random.randint(35, 45)
+            status = "veteraan"
+            skill_tech = random.randint(70, 90) # Veteranen zijn technisch beter
+            skill_speed = random.randint(40, 60)
+        else:
+            age = random.randint(18, 28)
+            status = None
+            skill_tech = random.randint(40, 70)
+            skill_speed = random.randint(50, 85)
+
+        athlete_data = {
+            "country_id": country_id,
+            "name": name,
+            "gender": gender,
+            "age": age,
+            "special_status": status,
+            "skill_speed": skill_speed,
+            "skill_strength": random.randint(40, 85),
+            "skill_stamina": random.randint(40, 85),
+            "skill_technique": skill_tech,
+            "skill_focus": random.randint(40, 85)
+        }
+        athletes.append(athlete_data)
+    
+    # Stuur de atleten naar de database
+    supabase.table("athletes").insert(athletes).execute()
