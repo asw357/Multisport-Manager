@@ -1,111 +1,96 @@
 import streamlit as st
+import random
 from supabase import create_client, Client
 
-# Verbinding met jouw database
+# Verbinding maken
 url = st.secrets["SUPABASE_URL"]
 key = st.secrets["SUPABASE_KEY"]
 supabase: Client = create_client(url, key)
 
-# --- TAALINSTELLINGEN ---
-lang = st.sidebar.selectbox("Taal / Language", ["Nederlands", "English", "Deutsch", "Français"])
-texts = {
-    "Nederlands": {"welcome": "Welkom bij Multi Sport Online", "register": "Inschrijven", "dash": "Manager Dashboard"},
-    "English": {"welcome": "Welcome to Multi Sport Online", "register": "Register", "dash": "Manager Dashboard"}
-}
-
-st.title(texts[lang]["welcome"])
-
-menu = st.sidebar.radio("Menu", [texts[lang]["register"], texts[lang]["dash"], "Admin"])
-
-# --- INSCHRIJVEN (BLIND OP VOLGORDE) ---
-if menu == texts[lang]["register"]:
-    st.header("Nieuwe Manager Registratie")
-    manager_name = st.text_input("Kies een Manager Naam")
+# --- FUNCTIE: ATLEET GENERATOR ---
+def generate_starter_team(country_id, country_name):
+    names_db = {
+        "Australië": ["Jack Thompson", "Cooper Reid", "Lachlan Jones", "Riley Wilson"],
+        "Nederland": ["Jan de Vries", "Thijs Bakker", "Lars van Dijk", "Sven Postma"],
+        "Duitsland": ["Lukas Schmidt", "Max Müller", "Erik Wagner", "Finn Fischer"]
+    }
+    local_names = names_db.get(country_name, ["John Smith", "Alex Brown", "Sam Wilson"])
     
-    if st.button("Claim je land"):
-        # Zoek het eerstvolgende vrije land op registration_order
-        res = supabase.table("countries").select("*").is_("manager_id", "NULL").order("registration_order").limit(1).execute()
+    new_athletes = []
+    for i in range(20):
+        # Editie 1: Alleen mannen
+        is_veteraan = i < 3 # Eerste 3 zijn leraren/matrozen
+        age = random.randint(35, 45) if is_veteraan else random.randint(18, 28)
+        
+        athlete = {
+            "country_id": country_id,
+            "name": f"{random.choice(local_names)} ({i+1})",
+            "gender": "Man",
+            "age": age,
+            "special_status": "veteraan" if is_veteraan else None,
+            "skill_speed": random.randint(30, 60) if is_veteraan else random.randint(50, 85),
+            "skill_technique": random.randint(70, 95) if is_veteraan else random.randint(40, 70),
+            "skill_strength": random.randint(40, 80),
+            "skill_stamina": random.randint(40, 80),
+            "skill_focus": random.randint(50, 90)
+        }
+        new_athletes.append(athlete)
+    supabase.table("athletes").insert(new_athletes).execute()
+
+# --- INTERFACE ---
+st.set_page_config(page_title="Multi Sport Online", layout="wide")
+
+lang = st.sidebar.selectbox("Taal / Language", ["Nederlands", "English", "Deutsch", "Français"])
+# (Vertalingen kunnen hier verder worden uitgebreid)
+
+menu = st.sidebar.radio("Navigatie", ["Inschrijven", "Mijn Land", "Admin"])
+
+# --- PAGINA: INSCHRIJVEN ---
+if menu == "Inschrijven":
+    st.title("🏅 Registreer je Land")
+    manager_input = st.text_input("Manager Naam")
+    
+    if st.button("Start Carrière"):
+        # Zoek eerstvolgende land
+        res = supabase.table("countries").select("*").is_("manager_id", "null").order("registration_order").limit(1).execute()
         
         if res.data:
             land = res.data[0]
-            supabase.table("countries").update({"manager_id": manager_name, "is_active": True}).eq("id", land['id']).execute()
-            st.success(f"Gefeliciteerd! Je bent de manager van: {land['name']}")
-            st.info("Je krijgt nu je starters atleten voor de huidige editie...")
+            supabase.table("countries").update({"manager_id": manager_name_input}).eq("id", land['id']).execute()
+            
+            # Genereer team
+            generate_starter_team(land['id'], land['name'])
+            
+            st.success(f"Welkom! Je bent nu de manager van {land['name']}!")
+            st.balloons()
         else:
             st.error("Alle landen zijn momenteel bezet.")
 
-# --- DASHBOARD ---
-elif menu == texts[lang]["dash"]:
-    name = st.text_input("Voer je manager naam in")
-    if name:
-        land_res = supabase.table("countries").select("*").eq("manager_id", name).execute()
-        if land_res.data:
-            land = land_res.data[0]
-            st.subheader(f"Land: {land['name']} 🇳🇱") # Vlag wordt dynamisch
-            st.write(f"Management Punten (MP): {land['mp']}")
+# --- PAGINA: DASHBOARD ---
+elif menu == "Mijn Land":
+    m_name = st.sidebar.text_input("Manager Naam Login")
+    if m_name:
+        res = supabase.table("countries").select("*").eq("manager_id", m_name).execute()
+        if res.data:
+            land = res.data[0]
+            st.title(f"Dashboard: {land['name']}")
+            st.metric("Management Punten", f"{land['mp']} MP")
             
-            # Hier komen de tabbladen voor Training, Scouting, etc.
-            tab1, tab2, tab3 = st.tabs(["Mijn Atleten", "Training", "Scouting"])
-            with tab1:
-                st.write("Lijst met atleten verschijnt hier...")
+            # Atleten tonen
+            atleten_res = supabase.table("athletes").select("*").eq("country_id", land['id']).execute()
+            if atleten_res.data:
+                st.write("### Jouw Atleten")
+                st.table(atleten_res.data)
         else:
-            st.error("Manager niet gevonden.")
+            st.warning("Geen land gevonden voor deze manager.")
 
-# --- ADMIN PANEEL ---
+# --- PAGINA: ADMIN ---
 elif menu == "Admin":
-    st.header("Admin Controlekamer")
-    pwd = st.text_input("Wachtwoord", type="password")
-    if pwd == "jouw_geheime_code":
-        st.write("Hier kun je edities starten, weer aanpassen en MP bonussen beheren.")
-        import random
-
-def generate_starter_team(country_id, country_name):
-    # Namenlijstjes per land (als voorbeeld, dit breiden we uit)
-    names_db = {
-        "Australië": ["Jack Thompson", "Cooper Reid", "Lachlan Jones"],
-        "Bulgarije": ["Ivan Petrov", "Georgi Ivanov", "Stoyan Koleve"],
-        "Griekenland": ["Nikolaos Pappas", "Kostas Dimitriou", "Adonis Georgiou"],
-        "Duitsland": ["Lukas Schmidt", "Max Müller", "Erik Wagner"],
-        "Nederland": ["Jan de Vries", "Thijs Bakker", "Lars van Dijk"]
-    }
-    
-    # Pak namen van het land, of algemene namen als het land niet in de lijst staat
-    local_names = names_db.get(country_name, ["John Doe", "Alex Smith", "Sam Brown"])
-    
-    athletes = []
-    
-    # Maak 20 starters-atleten aan
-    for i in range(20):
-        name = random.choice(local_names) + f" {random.randint(1,99)}" # Tijdelijk uniek maken
-        
-        # Editie 1: Alleen mannen
-        gender = "Man"
-        
-        # Leeftijd en Skills
-        if i < 3: # De 'veteranen' (Leraren/Matrozen)
-            age = random.randint(35, 45)
-            status = "veteraan"
-            skill_tech = random.randint(70, 90) # Veteranen zijn technisch beter
-            skill_speed = random.randint(40, 60)
-        else:
-            age = random.randint(18, 28)
-            status = None
-            skill_tech = random.randint(40, 70)
-            skill_speed = random.randint(50, 85)
-
-        athlete_data = {
-            "country_id": country_id,
-            "name": name,
-            "gender": gender,
-            "age": age,
-            "special_status": status,
-            "skill_speed": skill_speed,
-            "skill_strength": random.randint(40, 85),
-            "skill_stamina": random.randint(40, 85),
-            "skill_technique": skill_tech,
-            "skill_focus": random.randint(40, 85)
-        }
-        athletes.append(athlete_data)
-    
-    # Stuur de atleten naar de database
-    supabase.table("athletes").insert(athletes).execute()
+    st.title("🔒 Admin Panel")
+    pw = st.text_input("Wachtwoord", type="password")
+    if pw == "MultiSport2026!":
+        st.success("Toegang verleend.")
+        # Admin knoppen voor edities, etc.
+        if st.button("Reset Alle Inschrijvingen (TESTING ONLY)"):
+            supabase.table("countries").update({"manager_id": None, "is_active": False}).neq("id", 0).execute()
+            st.warning("Alle landen zijn weer vrij.")
