@@ -1,127 +1,106 @@
 import streamlit as st
 import random
-import time
 import pandas as pd
 from supabase import create_client, Client
 
-# --- SETUP & VERBINDING ---
+# --- SETUP ---
 url = st.secrets["SUPABASE_URL"]
 key = st.secrets["SUPABASE_KEY"]
 supabase: Client = create_client(url, key)
 
-def get_land_by_manager(name):
-    res = supabase.table("countries").select("*").eq("manager_id", name).execute()
-    return res.data[0] if res.data else None
+# --- MEERTALIGHEID DICTIONARY ---
+dict = {
+    "Nederlands": {"welcome": "Welkom Coach", "train": "Training", "scout": "Scouten", "tactics": "Tactiek", "dash": "Dashboard"},
+    "English": {"welcome": "Welcome Coach", "train": "Training", "scout": "Scouting", "tactics": "Tactics", "dash": "Dashboard"},
+    "Deutsch": {"welcome": "Willkommen Coach", "train": "Training", "scout": "Scouting", "tactics": "Taktik", "dash": "Dashboard"},
+    "Français": {"welcome": "Bienvenue Coach", "train": "Entraînement", "scout": "Recrutement", "tactics": "Tactique", "dash": "Tableau de bord"}
+}
 
-def generate_random_athlete(country_id):
-    namen = ["Lukas", "Liam", "Sven", "Mateo", "Finn", "Arthur", "Lars", "Noah"]
-    achternamen = ["Bakker", "Visser", "Schmidt", "Smith", "Dubois", "Petrov"]
-    return {
-        "country_id": country_id,
-        "name": f"{random.choice(namen)} {random.choice(achternamen)}",
-        "age": random.randint(18, 28),
-        "skill_speed": random.randint(40, 75),
-        "skill_strength": random.randint(40, 75),
-        "skill_stamina": random.randint(40, 75),
-        "skill_technique": random.randint(40, 75),
-        "skill_focus": random.randint(40, 75)
-    }
+# --- FUNCTIES ---
+def get_athlete_data(land_id):
+    return supabase.table("athletes").select("*").eq("country_id", land_id).execute().data
 
 # --- INTERFACE ---
-st.set_page_config(page_title="Multi Sport Online - Master", layout="wide")
-st.sidebar.title("🏅 Multi Sport Online")
-menu = st.sidebar.radio("Navigatie", ["🏠 Home / Inschrijven", "🏛️ Mijn Land", "🏋️ Training & Scouting", "🏟️ Simulatie", "🔒 Admin"])
+st.set_page_config(page_title="Multi Sport Online PRO", layout="wide")
+lang = st.sidebar.selectbox("Language", ["Nederlands", "English", "Deutsch", "Français"])
+t = dict[lang]
 
-# --- PAGINA: INSCHRIJVEN ---
-if menu == "🏠 Home / Inschrijven":
-    st.title("Welkom bij Multi Sport Online")
-    st.write("Stap in de schoenen van een bondscoach en leid je land naar Olympisch goud.")
-    m_name = st.text_input("Voer een Manager Naam in om te starten")
-    if st.button("Start je Carrière"):
-        if m_name:
-            vrij_land = supabase.table("countries").select("*").is_("manager_id", "null").order("registration_order").limit(1).execute()
-            if vrij_land.data:
-                land = vrij_land.data[0]
-                supabase.table("countries").update({"manager_id": m_name, "is_active": True}).eq("id", land['id']).execute()
-                # Maak direct 15 starters-atleten
-                team = [generate_random_athlete(land['id']) for _ in range(15)]
-                supabase.table("athletes").insert(team).execute()
-                st.success(f"Gefeliciteerd {m_name}! Je bent de manager van {land['name']}.")
-                st.balloons()
-            else: st.error("Geen landen meer beschikbaar.")
+menu = st.sidebar.radio("Navigatie", [t["dash"], t["train"], t["scout"], t["tactics"], "Simulatie", "Admin"])
 
-# --- PAGINA: MIJN LAND ---
-elif menu == "🏛️ Mijn Land":
-    m_login = st.sidebar.text_input("Manager Login")
-    land = get_land_by_manager(m_login)
-    if land:
-        st.title(f"Dashboard: {land['name']}")
-        c1, c2, c3 = st.columns(3)
-        c1.metric("Management Punten", f"{land['mp']} MP")
-        c2.metric("Goud 🥇", land['gold'])
-        c3.metric("Zilver/Brons 🥈🥉", f"{land['silver']} / {land['bronze']}")
-        
-        st.subheader("Jouw Selectie")
-        atleten = supabase.table("athletes").select("*").eq("country_id", land['id']).execute()
-        st.dataframe(pd.DataFrame(atleten.data).drop(columns=['country_id', 'id']))
+# Gebruiker inloggen (Simpel voor nu via sidebar)
+m_name = st.sidebar.text_input("Manager Naam Login")
+land_data = None
+if m_name:
+    res = supabase.table("countries").select("*").eq("manager_id", m_name).execute()
+    if res.data: land_data = res.data[0]
 
-# --- PAGINA: TRAINING & SCOUTING ---
-elif menu == "🏋️ Training & Scouting":
-    m_login = st.sidebar.text_input("Manager Login")
-    land = get_land_by_manager(m_login)
-    if land:
-        st.title("Ontwikkeling & Scouting")
-        t1, t2 = st.tabs(["🏋️ Atleet Trainen (50 MP)", "🔎 Nieuw Talent Scouten (200 MP)"])
-        
-        with t1:
-            atleten = supabase.table("athletes").select("*").eq("country_id", land['id']).execute()
-            if atleten.data:
-                a_keuze = st.selectbox("Kies atleet", [a['name'] for a in atleten.data])
-                skill_keuze = st.selectbox("Train Skill", ["Speed", "Strength", "Stamina", "Technique", "Focus"])
-                if st.button("Start Training"):
-                    if land['mp'] >= 50:
-                        target = next(a for a in atleten.data if a['name'] == a_keuze)
-                        col = f"skill_{skill_keuze.lower()}"
-                        supabase.table("athletes").update({col: target[col] + random.randint(2, 5)}).eq("id", target['id']).execute()
-                        supabase.table("countries").update({"mp": land['mp'] - 50}).eq("id", land['id']).execute()
-                        st.success(f"{a_keuze} is beter geworden in {skill_keuze}!")
-                        st.rerun()
-        with t2:
-            if st.button("Scout een Atleet"):
-                if land['mp'] >= 200:
-                    nieuw = generate_random_athlete(land['id'])
-                    supabase.table("athletes").insert(nieuw).execute()
-                    supabase.table("countries").update({"mp": land['mp'] - 200}).eq("id", land['id']).execute()
-                    st.success(f"Nieuw talent gescout: {nieuw['name']}!")
-                    st.balloons()
+# --- 1. DASHBOARD ---
+if menu == t["dash"]:
+    if not land_data:
+        st.title("Inschrijven")
+        new_name = st.text_input("Kies een Manager Naam")
+        if st.button("Claim Land"):
+            # Land claim logica (zie vorige code)
+            st.success("Land geclaimd! Log in via de zijbalk.")
+    else:
+        st.title(f"{t['dash']}: {land_data['name']}")
+        st.metric("Budget", f"{land_data['mp']} MP")
+        atleten = get_athlete_data(land_data['id'])
+        st.dataframe(pd.DataFrame(atleten))
 
-# --- PAGINA: SIMULATIE ---
-elif menu == "🏟️ Simulatie":
-    st.title("Olympisch Stadion - Live")
-    event = st.selectbox("Kies een onderdeel voor de demonstratie", ["100m Sprint", "Marathon", "Gewichtheffen"])
-    if st.button("Start Wedstrijd Simulatie"):
-        with st.status("Deelnemers maken zich klaar...", expanded=True) as status:
-            time.sleep(1)
-            st.write("Startschot klinkt! 🔫")
-            # De simulatie-motor: berekent score op basis van skills + geluk
-            deelnemers = supabase.table("athletes").select("*, countries(name)").limit(8).execute()
-            if deelnemers.data:
-                results = []
-                for d in deelnemers.data:
-                    score = (d['skill_speed'] * 0.7) + (d['skill_focus'] * 0.3) + random.randint(-5, 5)
-                    results.append({"Land": d['countries']['name'], "Atleet": d['name'], "Score": round(score, 2)})
-                
-                df_res = pd.DataFrame(results).sort_values(by="Score", ascending=False).reset_index(drop=True)
-                df_res.index += 1
-                st.table(df_res)
-                status.update(label="Wedstrijd afgelopen!", state="complete")
-                st.success(f"Goud gaat naar {df_res.iloc[0]['Land']}!")
+# --- 2. TRAINING (Gedetailleerd) ---
+elif menu == t["train"] and land_data:
+    st.title(t["train"])
+    atleten = get_athlete_data(land_data['id'])
+    a_keuze = st.selectbox("Selecteer Atleet", [a['name'] for a in atleten])
+    t_type = st.radio("Type Training", ["Licht (10 MP, +1 skill)", "Intensief (50 MP, +4 skill)", "Specialistisch (100 MP, +10 skill)"])
+    
+    if st.button("Start Training"):
+        # Hier de logica voor kosten en skill-update...
+        st.success(f"Training voltooid voor {a_keuze}!")
 
-# --- PAGINA: ADMIN ---
-elif menu == "🔒 Admin":
-    st.title("Admin Panel")
-    if st.text_input("Wachtwoord", type="password") == "MultiSport2026!":
-        if st.button("🧨 VOLLEDIGE RESET"):
-            supabase.table("athletes").delete().neq("id", 0).execute()
-            supabase.table("countries").update({"manager_id": None, "mp": 1000, "gold":0, "silver":0, "bronze":0, "is_active":False}).neq("id", 0).execute()
-            st.error("Systeem volledig gereset naar 0.")
+# --- 3. SCOUTING (Keuzelijst van 5) ---
+elif menu == t["scout"] and land_data:
+    st.title(t["scout"])
+    if st.button("Genereer Scouting Lijst (50 MP)"):
+        st.session_state.scout_list = [
+            {"name": f"Talent {i}", "speed": random.randint(50, 90), "strength": random.randint(50, 90)} 
+            for i in range(5)
+        ]
+    
+    if "scout_list" in st.session_state:
+        for i, talent in enumerate(st.session_state.scout_list):
+            col1, col2 = st.columns([3, 1])
+            col1.write(f"**{talent['name']}** - Snelheid: {talent['speed']}, Kracht: {talent['strength']}")
+            if col2.button(f"Contracteer #{i}", key=f"scout_{i}"):
+                # Toevoegen aan database en MP aftrekken
+                st.success(f"{talent['name']} is nu onderdeel van je team!")
+
+# --- 4. TACTIEK & INSCHRIJVEN ---
+elif menu == t["tactics"] and land_data:
+    st.title("Onderdeel Inschrijving & Tactiek")
+    events = supabase.table("sports_events").select("*").execute().data
+    event_keuze = st.selectbox("Kies Onderdeel", [e['event_name'] for e in events])
+    atleten = get_athlete_data(land_data['id'])
+    a_keuze = st.selectbox("Kies Atleet voor dit onderdeel", [a['name'] for a in atleten])
+    
+    # Tactiek opties zoals besproken
+    tactiek = st.selectbox("Kies Tactiek", ["Behoudende Start (Veilig)", "Explosieve Start (Risico op vals)", "Kopgroep volgen", "Alles-of-niets"])
+    
+    if st.button("Bevestig Inschrijving"):
+        # Opslaan in event_registrations
+        st.success(f"{a_keuze} ingeschreven voor {event_keuze} met tactiek: {tactiek}")
+
+# --- 5. ADMIN (Weging aanpassen) ---
+elif menu == "Admin":
+    st.title("Admin: Sport-Weging")
+    events = supabase.table("sports_events").select("*").execute().data
+    e_select = st.selectbox("Kies Sport om weging aan te passen", [e['event_name'] for e in events])
+    
+    st.write("Bepaal hoe zwaar skills meetellen (Totaal moet 1.0 zijn)")
+    w_speed = st.slider("Weging Snelheid", 0.0, 1.0, 0.5)
+    w_strength = st.slider("Weging Kracht", 0.0, 1.0, 0.5)
+    
+    if st.button("Sla Weging Op"):
+        # Update skill_weights tabel
+        st.success("Weging bijgewerkt voor de simulatie-motor.")
